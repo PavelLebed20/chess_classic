@@ -13,10 +13,12 @@
 # N\n - knight
 # R\r - rook
 # P\p - pawn
+import copy
+from typing import List
 
 from vectormath import Vector2
 
-from ChessBoard.chess_figure import Side, Figure, FigureType
+from ChessBoard.chess_figure import Side, King, Queen, Bishop, Knight, Rook, Pawn
 
 
 class Board:
@@ -44,24 +46,60 @@ class Board:
                       for i in range(0, Board.COLUMN_SIZE)]
         for i in range(0, Board.COLUMN_SIZE):
             for j in range(0, Board.ROW_SIZE):
-                figure_letter = board_position[i * Board.COLUMN_SIZE + Board.ROW_SIZE]
+                figure_letter = board_position[i * Board.COLUMN_SIZE + j]
                 if figure_letter.isupper():
                     side = Side.WHITE
                     figure_letter = figure_letter.lower()
                 else:
                     side = Side.BLACK
                 if figure_letter == 'k':
-                    figure_type = FigureType.KING
+                    self.board[j][i] = King(side, Vector2(i, j))
                 elif figure_letter == 'q':
-                    figure_type = FigureType.QUEEN
+                    self.board[j][i] = Queen(side, Vector2(i, j))
                 elif figure_letter == 'b':
-                    figure_type = FigureType.BISHOP
+                    self.board[j][i] = Bishop(side, Vector2(i, j))
                 elif figure_letter == 'n':
-                    figure_type = FigureType.KNIGHT
+                    self.board[j][i] = Knight(side, Vector2(i, j))
                 elif figure_letter == 'r':
-                    figure_type = FigureType.ROOK
+                    self.board[j][i] = Rook(side, Vector2(i, j))
                 elif figure_letter == 'p':
-                    figure_type = FigureType.PAWN
+                    self.board[j][i] = Pawn(side, Vector2(i, j))
                 else:
                     continue
-                self.board[i][j] = Figure(figure_type, side, Vector2(i, j))
+
+    def print(self):
+        for i in range(0, Board.COLUMN_SIZE):
+            for j in range(0, Board.ROW_SIZE):
+                if self.board[j][i] is not None:
+                    self.board[j][i].print()
+                else:
+                    print(' ', end='')
+            print()
+
+    def get(self, x, y):
+        return self.board[x][y]
+
+    def get(self, position):
+        return self.board[position.x][position.y]
+
+    def get_king_cell(self, side):
+        for i in range(0, Board.COLUMN_SIZE):
+            for j in range(0, Board.ROW_SIZE):
+                if (self.board[j][i] is not None):
+                    if isinstance(self.board[j][i], King) and self.board[j][i].side == side:
+                        return Vector2(i, j)
+
+    def get_figures_list(self, side):
+        figures = []
+        for i in range(0, Board.COLUMN_SIZE):
+            for j in range(0, Board.ROW_SIZE):
+                if (self.board[j][i] is not None):
+                    if isinstance(self.board[j][i], King) and self.board[j][i].side == side:
+                        figures.append(self.board[j][i])
+        return figures
+
+    def make_move(self, move):
+        cell_to = self.get(move.point_to)
+        cell_from = self.get(move.point_from)
+        cell_to = copy.deepcopy(cell_from)
+        cell_from = None
