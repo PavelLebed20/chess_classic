@@ -5,15 +5,18 @@
 ###############################
 
 from enum import Enum
-
 from direct.showbase.ShowBase import ShowBase
-
+from direct.gui.OnscreenImage import OnscreenImage
+from panda3d.core import WindowProperties
+import ChessBoard
 
 class RenderState(Enum):
     INPUT = 0,
     MENU = 1,
     GAME = 2
 
+WIDTH = 480
+HEIGHT = 480
 
 class Render(ShowBase):
 
@@ -21,6 +24,15 @@ class Render(ShowBase):
         """
         Initialize render function
         """
+        ShowBase.__init__(self)
+
+        props = WindowProperties()
+        props.clearSize()
+        props.setSize(WIDTH, HEIGHT)
+        self.win.requestProperties(props)
+
+        self.myImage = OnscreenImage(image = 'ChessRender/data/chess_board.png', pos = (0, 0, 0))
+        
         print("Render initialize")
 
     def set_menu_state(self, buttons, text_fields, text_fields_obtainer_func):
@@ -51,3 +63,4 @@ class Render(ShowBase):
         Render scene function
         :return: NONE.
         """
+        print("rendering")
