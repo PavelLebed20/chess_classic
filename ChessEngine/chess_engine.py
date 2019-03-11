@@ -23,4 +23,4 @@ class Engine:
         :return: NONE.
         """
         while True is True:
-            self.render.run()
+            self.render.render()
