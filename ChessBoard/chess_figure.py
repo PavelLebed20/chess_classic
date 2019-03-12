@@ -6,7 +6,6 @@
 import copy
 from enum import Enum
 
-
 class FigureType(Enum):
     KING = 0,
     QUEEN = 1,
@@ -20,10 +19,16 @@ class Side(Enum):
     WHITE = 0,
     BLACK = 1
 
+    @staticmethod
+    def get_oposite(side):
+        if side == Side.WHITE:
+            return Side.BLACK
+        else:
+            return Side.WHITE
 
 class Figure:
 
-    def __init__(self, figure_type, side, position):
+    def __init__(self, side, position):
         """
         Initialize ChessFigure class instance
         :param figure_type: type of chess figure (ChessFigureType)
