@@ -3,9 +3,8 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 03/03/2019     #
 ###############################
-
+import copy
 from enum import Enum
-from vectormath import Vector2
 
 
 class FigureType(Enum):
@@ -31,6 +30,8 @@ class Figure:
         :param side: player side (ChessSide)
         :param position: board position (Vector2d)
         """
-        self.figure_type = ChessFigureType(figure_type)
-        self.side = ChessSide(side)
-        self.position = Vector2(position)
+        self.figure_type = FigureType(figure_type)
+        self.side = Side(side)
+        self.position = copy.deepcopy(position)
+
+

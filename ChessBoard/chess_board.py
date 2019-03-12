@@ -14,9 +14,9 @@
 # R\r - rook
 # P\p - pawn
 
-from vectormath import Vector2
 
 from ChessBoard.chess_figure import Side, Figure, FigureType
+from Vector2d.Vector2d import Vector2d
 
 
 class Board:
@@ -44,7 +44,7 @@ class Board:
                       for i in range(0, Board.COLUMN_SIZE)]
         for i in range(0, Board.COLUMN_SIZE):
             for j in range(0, Board.ROW_SIZE):
-                figure_letter = board_position[i * Board.COLUMN_SIZE + Board.ROW_SIZE]
+                figure_letter = board_position[i * Board.COLUMN_SIZE + j]
                 if figure_letter.isupper():
                     side = Side.WHITE
                     figure_letter = figure_letter.lower()
@@ -64,4 +64,4 @@ class Board:
                     figure_type = FigureType.PAWN
                 else:
                     continue
-                self.board[i][j] = Figure(figure_type, side, Vector2(i, j))
+                self.board[j][i] = Figure(figure_type, side, Vector2d(j, i))
