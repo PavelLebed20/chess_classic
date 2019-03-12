@@ -49,9 +49,31 @@ def loadObject(text=None, pos=LPoint3(0, 0), depth=DEPTH, scale=3,
 
     obj.setBin("unsorted", 0)
     obj.setDepthTest(False)
+
     if transparency:
         obj.setTransparency(TransparencyAttrib.MAlpha)
     return obj
+
+def initPosition(str_board ="rnbqkbkr" \
+                            "pppppppp" \
+                            "........" \
+                            "........" \
+                            "........" \
+                            "........" \
+                            "PPPPPPPP" \
+                            "RNBQKBNR"):
+    figues = []
+
+    for i in range(0, 8):
+        figues.append([])
+        for j in range(0, 8):
+            if str_board[i + j*8] != ".":
+                figues[i].append(
+                    loadObject("ChessRender/data/chess_figues/" + trLiter(str_board[i + j*8]) + ".png", posOfIndex(i, j)))
+            else:
+                figues[i].append(None)
+
+    return figues
 
 class Render(ShowBase):
 
@@ -66,14 +88,8 @@ class Render(ShowBase):
         props.setSize(WIDTH, HEIGHT)
         self.win.requestProperties(props)
 
-        self.chess_board = loadObject("ChessRender/data/chess_board.png", scale=29.5)
-
-        for i in range(0, 8):
-            for j in range(0, 8):
-                if (i != 0)*(j != 0):
-                    self.obj = loadObject("ChessRender/data/chess_figues/"+trLiter("k")+".png", posOfIndex(i, j))
-                else:
-                    self.obj = loadObject("ChessRender/data/chess_figues/"+trLiter("q")+".png", posOfIndex(i, j))
+        self.chess_board = loadObject("ChessRender/data/chess_board.png", scale=29.5, transparency=False)
+        self.figues = initPosition()
 
         print("Render initialize")
 
