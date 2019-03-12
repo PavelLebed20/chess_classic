@@ -16,9 +16,8 @@
 import copy
 from typing import List
 
-from vectormath import Vector2
-
-from ChessBoard.chess_figure import Side, King, Queen, Bishop, Knight, Rook, Pawn
+from ChessBoard.chess_figure import Side, Figure, FigureType
+from Vector2d.Vector2d import Vector2d
 
 
 class Board:
@@ -66,40 +65,4 @@ class Board:
                     self.board[j][i] = Pawn(side, Vector2(i, j))
                 else:
                     continue
-
-    def print(self):
-        for i in range(0, Board.COLUMN_SIZE):
-            for j in range(0, Board.ROW_SIZE):
-                if self.board[j][i] is not None:
-                    self.board[j][i].print()
-                else:
-                    print(' ', end='')
-            print()
-
-    def get(self, x, y):
-        return self.board[x][y]
-
-    def get(self, position):
-        return self.board[position.x][position.y]
-
-    def get_king_cell(self, side):
-        for i in range(0, Board.COLUMN_SIZE):
-            for j in range(0, Board.ROW_SIZE):
-                if (self.board[j][i] is not None):
-                    if isinstance(self.board[j][i], King) and self.board[j][i].side == side:
-                        return Vector2(i, j)
-
-    def get_figures_list(self, side):
-        figures = []
-        for i in range(0, Board.COLUMN_SIZE):
-            for j in range(0, Board.ROW_SIZE):
-                if (self.board[j][i] is not None):
-                    if isinstance(self.board[j][i], King) and self.board[j][i].side == side:
-                        figures.append(self.board[j][i])
-        return figures
-
-    def make_move(self, move):
-        cell_to = self.get(move.point_to)
-        cell_from = self.get(move.point_from)
-        cell_to = copy.deepcopy(cell_from)
-        cell_from = None
+                self.board[j][i] = Figure(figure_type, side, Vector2d(j, i))
