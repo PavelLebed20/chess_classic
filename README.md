@@ -1,9 +1,19 @@
 # chess classic 
-
+# Project description
+The purpose of the project is to develop open source online chess with posiibility of
+offline game against AI. 
+### Our features are
+* Modern game vizualization and animation
+* Low server part hardware requirements
+* High server resilience
+* Project is open source
+### Analogue
+* http://chessplanet.ru/
+Our advantage are 3d game render, open source, fully free to play
 # Git workflow
 * Main demonstration branch - *master*
 * Main coding branch - *develop*
-* For feature development branch from *develop*, use the template: <task_number>_<brief_description>
+* For feature development branch from *develop*, use the template: #<issue_number>_<brief_description>
 * Feature branch merges only with *develop* branch
 * *develop* merges with *master* at the end of each sprint
 * Create new commit for each branch
@@ -11,11 +21,11 @@
 
 ### Example of branches
 ```
-228_add_user_registration
-1488_add_random_ai
+#228_add_user_registration
+#1488_add_random_ai
 ```
 ## Commit
-* Subject line is **short** complete summary
+* Subject line is **short** complete summary, starting with #<issue_number>
 * Do not end the subject line with a period
 * Capitalize the subject line and each paragraph
 * Use the imperative mood in the subject line
@@ -27,12 +37,17 @@
 ### Example
 Subject line:
 ```
-Add Encryption
+#322 Add Encryption
 ```
 Body:
 ```
 - Add start key creation.
 ```
+# Code style
+## Python
+* Each file start with header taht contains module purpose, author, last update date
+* Each function starts with """ header, contains function arguments, returns type, and function purpose
+* Other style definitions are described in https://pythonworld.ru/osnovy/pep-8-rukovodstvo-po-napisaniyu-koda-na-python.html
 
 # Development team
 1) [Lebed Pavel](https://github.com/PavelLebed20) - **teamlead**
