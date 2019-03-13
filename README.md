@@ -1,15 +1,18 @@
-# chess classic 
+# Chess Classic 
 # Project description
-The purpose of the project is to develop open source online chess with posiibility of
-offline game against AI. 
+Chess classic is open source online chess supports possibility of
+offline game against AI with chess board and figures skinning. 
 ### Our features are
-* Modern game vizualization and animation
-* Low server part hardware requirements
-* High server resilience
+* Modern game visualization and animation
+* Possibility of changing figures render models
+* Possibility of showing your game skin to online opponent
 * Project is open source
-### Analogue
-* http://chessplanet.ru/
-Our advantage are 3d game render, open source, fully free to play
+## Analogue
+* http://chessplanet.ru/, https://www.chess.com/, https://lichess.org/
+### Our advantage are
+* 3d game render 
+* Skin changes, that makes your own figures style
+* Project is open source
 # Git workflow
 * Main demonstration branch - *master*
 * Main coding branch - *develop*
