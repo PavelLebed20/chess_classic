@@ -76,11 +76,13 @@ class GameBoard:
                     continue
 
     def export_chess_board(self):
-        export_board = [['.' for j in range(0, Board.ROW_SIZE)]
-                      for i in range(0, Board.COLUMN_SIZE)]
+        export_board = ['.' for j in range(0, Board.ROW_SIZE)
+                        for i in range(0, Board.COLUMN_SIZE)]
 
         for i in range(0, Board.COLUMN_SIZE):
             for j in range(0, Board.ROW_SIZE):
+                if self.board[j][i] is None:
+                    continue
                 figure_type = self.board[j][i].figure_type
                 side = self.board[j][i].side
 
@@ -96,12 +98,10 @@ class GameBoard:
                     latter = 'b'
                 elif figure_type == FigureType.PAWN:
                     latter = 'p'
-                else:
-                    continue
 
                 if side == Side.WHITE:
                     latter = latter.upper()
-                export_board[j][i] = latter
+                export_board[i * Board.ROW_SIZE + j] = latter
 
         return export_board
 

@@ -3,6 +3,7 @@
 # AUTHOR: Fedorov Dmitrii                       #
 # LAST UPDATE: 03/03/2019                       #
 #################################################
+import copy
 
 
 class Vector2d:
@@ -24,5 +25,5 @@ class Vector2d:
 
 class Move:
     def __init__(self, point_from, point_to):
-        self.point_from = point_from
-        self.point_to = point_to
+        self.point_from = copy.deepcopy(point_from)
+        self.point_to = copy.deepcopy(point_to)

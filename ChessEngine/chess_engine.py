@@ -17,11 +17,17 @@ class Engine:
         Initialize Engine class function
         """
         self.render = Render()
+
         self.player_turn = 0
         self.players = [LocalPlayer(Side.WHITE), LocalPlayer(Side.BLACK)]
         self.players[0].make_move()
         self.chess_board = Board()
         self.game_controller = GameController(self.chess_board)
+
+        # set current state
+        self.render.set_game_state(Board.DEFAULT_BOARD_POSITION,
+                                   self.players[self.player_turn].set_move, None, None, None)
+
 
     def run(self):
         """
@@ -29,12 +35,14 @@ class Engine:
         :return: NONE.
         """
         while True:
-            move = self.players[self.player_turn].get_move()
+            cur_player = self.players[self.player_turn]
+            move = cur_player.get_move()
             if move is not None:
-                if self.game_controller.check_move(move, self.players[self.player_turn].side) != MoveResult.INCORRECT:
+                if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
                     self.game_controller.update(move)
                     self.player_turn = (self.player_turn + 1) % 2
-                    self.chess_board = Board(self.game_controller.export_to_chess_board_str())
-                    self.render.set_game_state(self.chess_board, self.players[self.player_turn].set_move,
-                                               None, None, None)
+                board_str = self.game_controller.export_to_chess_board_str()
+                self.chess_board = Board(board_str)
+                self.render.set_game_state(board_str, self.players[self.player_turn].set_move,
+                                       None, None, None)
             self.render.step()

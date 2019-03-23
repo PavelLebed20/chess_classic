@@ -24,8 +24,9 @@ class LocalPlayer(Player):
         :return: NONE - player don't make move yet,
                  move - otherwise
         """
-        yield self.move
+        res = self.move
         self.move = None
+        return res
 
     def set_move(self, move):
         """

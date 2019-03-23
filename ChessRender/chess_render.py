@@ -18,6 +18,10 @@ from panda3d.core import GeomNode
 from direct.task.Task import Task
 import sys
 
+from ChessBoard.chess_board import Board
+from Vector2d.Vector2d import Move, Vector2d
+
+
 class RenderState(Enum):
     INPUT = 0,
     MENU = 1,
@@ -97,14 +101,11 @@ class Render(ShowBase):
 
         self.mouseTask = taskMgr.add(self.mouseTask, 'mouseTask')
 
-        self.chess_board = loadObject("ChessRender/data/chess_board.png", scale=29.5, transparency=False)
-        self.figues = initPosition()
-        self.current_figue = None
-
         self.accept("mouse1", self.mouse_press)
         self.accept("mouse1-up", self.mouse_release)
 
-        print("Render initialize")
+        self.set_game_state(Board.DEFAULT_BOARD_POSITION, None, None, None, None)
+
 
     def set_menu_state(self, buttons, text_fields, text_fields_obtainer_func):
         """
@@ -116,7 +117,7 @@ class Render(ShowBase):
         """
         print("Set state to input")
 
-    def set_game_state(self, chess_board, chess_board_obtainer_func,
+    def set_game_state(self, chess_board_str, chess_board_obtainer_func,
                        buttons, text_fields, text_fields_obtainer_func):
         """
         Set render state to game mode
@@ -127,7 +128,15 @@ class Render(ShowBase):
         :param text_fields_obtainer_func: text fields result obtainer
         :return: NONE.
         """
-        print("Set state to game")
+        self.chess_run_func = None
+        self.last_pos = None
+
+        self.chess_board = loadObject("ChessRender/data/chess_board.png", scale=29.5, transparency=False)
+
+        self.figues = initPosition(chess_board_str)
+        self.current_figue = None
+
+        self.chess_run_func = chess_board_obtainer_func
 
     def init_ray(self):
         self.myTraverser = CollisionTraverser()
@@ -156,6 +165,11 @@ class Render(ShowBase):
             pickedObj = self.myHandler.getEntry(0).getIntoNodePath().findNetTag("figue_tag").getTag("figue_tag")
             if pickedObj != '':
                 self.current_figue = self.figues[int(pickedObj)]
+                ####  - calculate position
+                last_pos = self.current_figue.getPos()
+                i = int((last_pos.getX() + 15) * 8 / 30)
+                j = int((15 - last_pos.getZ()) * 8 / 30)
+                self.last_pos = Vector2d(i, j)
 
     def mouse_release(self):
         if self.current_figue != None:
@@ -163,8 +177,16 @@ class Render(ShowBase):
             i = int((pos.getX() + 15)*8/30)
             j = int((15 - pos.getZ())*8/30)
             pos = posOfIndex(i, j)
-            self.current_figue.setPos(pos.getX(), DEPTH, pos.getY())
-            self.current_figue = None
+
+            # run engine function
+            if self.last_pos is not None:
+                move = Move(self.last_pos, Vector2d(i, j))
+
+                self.last_pos = None
+
+                if self.chess_run_func is not None:
+                    self.chess_run_func(move)
+
 
     def step(self):
         """

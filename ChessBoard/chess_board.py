@@ -1,7 +1,7 @@
 ###############################
 # MODULE: Chess board class   #
 # AUTHOR: Lebed' Pavel        #
-# LAST UPDATE: 03/03/2019     #
+# LAST UPDATE: 23/03/2019     #
 ###############################
 
 # BOARD FORMAT DESCRIPTION
@@ -21,7 +21,7 @@ from Vector2d.Vector2d import Vector2d
 
 
 class Board:
-    _DEFAULT_BOARD_POSITION = "rnbqkbnr" \
+    DEFAULT_BOARD_POSITION = "rnbqkbnr" \
                               "pppppppp" \
                               "........" \
                               "........" \
@@ -34,7 +34,7 @@ class Board:
     ROW_SIZE = 8
     FULL_SIZE = COLUMN_SIZE * ROW_SIZE
 
-    def __init__(self, board_position=_DEFAULT_BOARD_POSITION):
+    def __init__(self, board_position=DEFAULT_BOARD_POSITION):
         """
         Initialize ChessBoard class function
         :param board_position: board position in special format (str),
