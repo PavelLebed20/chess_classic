@@ -10,7 +10,11 @@ from direct.showbase.ShowBase import ShowBase
 from direct.gui.OnscreenImage import OnscreenImage
 from panda3d.core import WindowProperties
 from panda3d.core import TransparencyAttrib
-from panda3d.core import LPoint3, LVector3
+from panda3d.core import LPoint3, LVector3, BitMask32
+from panda3d.core import CollisionTraverser, CollisionNode
+from panda3d.core import CollisionHandlerQueue, CollisionRay
+from panda3d.core import GeomNode
+from direct.task.Task import Task
 import sys
 
 class RenderState(Enum):
@@ -54,7 +58,7 @@ def loadObject(text=None, pos=LPoint3(0, 0), depth=DEPTH, scale=3,
         obj.setTransparency(TransparencyAttrib.MAlpha)
     return obj
 
-def initPosition(str_board ="rnbqkbkr" \
+def initPosition(str_board ="rnbqkbnr" \
                             "pppppppp" \
                             "........" \
                             "........" \
@@ -63,15 +67,15 @@ def initPosition(str_board ="rnbqkbkr" \
                             "PPPPPPPP" \
                             "RNBQKBNR"):
     figues = []
+    key = 0
 
     for i in range(0, 8):
-        figues.append([])
         for j in range(0, 8):
             if str_board[i + j*8] != ".":
-                figues[i].append(
+                figues.append(
                     loadObject("ChessRender/data/chess_figues/" + trLiter(str_board[i + j*8]) + ".png", posOfIndex(i, j)))
-            else:
-                figues[i].append(None)
+                figues[key].setTag("figue_tag", str(key))
+                key += 1
 
     return figues
 
@@ -88,8 +92,16 @@ class Render(ShowBase):
         props.setSize(WIDTH, HEIGHT)
         self.win.requestProperties(props)
 
+        self.init_ray()
+
+        self.mouseTask = taskMgr.add(self.mouseTask, 'mouseTask')
+
         self.chess_board = loadObject("ChessRender/data/chess_board.png", scale=29.5, transparency=False)
         self.figues = initPosition()
+        self.current_figue = None
+
+        self.accept("mouse1", self.mouse_press)
+        self.accept("mouse1-up", self.mouse_release)
 
         print("Render initialize")
 
@@ -116,7 +128,44 @@ class Render(ShowBase):
         """
         print("Set state to game")
 
-    def render(self):
+    def init_ray(self):
+        self.myTraverser = CollisionTraverser()
+        self.myHandler = CollisionHandlerQueue()
+        self.pickerNode = CollisionNode('mouseRay')
+        self.pickerNP = self.camera.attachNewNode(self.pickerNode)
+        self.pickerNode.setFromCollideMask(GeomNode.getDefaultCollideMask())
+        self.pickerRay = CollisionRay()
+        self.pickerNode.addSolid(self.pickerRay)
+        self.myTraverser.addCollider(self.pickerNP, self.myHandler)
+
+    def mouseTask(self, task):
+        if self.mouseWatcherNode.hasMouse():
+            if self.current_figue != None:
+                mpos = self.mouseWatcherNode.getMouse()
+                self.current_figue.setPos(mpos.getX()*14.5, DEPTH, mpos.getY()*14.5)
+        return Task.cont
+
+    def mouse_press(self):
+        mpos = self.mouseWatcherNode.getMouse()
+        self.pickerRay.setFromLens(self.camNode, mpos.getX(), mpos.getY())
+        pickedObj = None
+        self.myTraverser.traverse(render)
+        if self.myHandler.getNumEntries() > 0:
+            self.myHandler.sortEntries()
+            pickedObj = self.myHandler.getEntry(0).getIntoNodePath().findNetTag("figue_tag").getTag("figue_tag")
+            if pickedObj != '':
+                self.current_figue = self.figues[int(pickedObj)]
+
+    def mouse_release(self):
+        if self.current_figue != None:
+            pos = self.current_figue.getPos()
+            i = int((pos.getX() + 15)*8/30)
+            j = int((15 - pos.getZ())*8/30)
+            pos = posOfIndex(i, j)
+            self.current_figue.setPos(pos.getX(), DEPTH, pos.getY())
+            self.current_figue = None
+
+    def step(self):
         """
         Render scene function
         :return: NONE.
