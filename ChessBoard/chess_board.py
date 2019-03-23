@@ -21,7 +21,7 @@ from Vector2d.Vector2d import Vector2d
 
 
 class Board:
-    _DEFAULT_BOARD_POSITION = "rnbqkbkr" \
+    _DEFAULT_BOARD_POSITION = "rnbqkbnr" \
                               "pppppppp" \
                               "........" \
                               "........" \
@@ -52,17 +52,17 @@ class Board:
                 else:
                     side = Side.BLACK
                 if figure_letter == 'k':
-                    self.board[j][i] = King(side, Vector2(i, j))
+                    figure_type = FigureType.KING
                 elif figure_letter == 'q':
-                    self.board[j][i] = Queen(side, Vector2(i, j))
+                    figure_type = FigureType.QUEEN
                 elif figure_letter == 'b':
-                    self.board[j][i] = Bishop(side, Vector2(i, j))
+                    figure_type = FigureType.BISHOP
                 elif figure_letter == 'n':
-                    self.board[j][i] = Knight(side, Vector2(i, j))
+                    figure_type = FigureType.KNIGHT
                 elif figure_letter == 'r':
-                    self.board[j][i] = Rook(side, Vector2(i, j))
+                    figure_type = FigureType.ROOK
                 elif figure_letter == 'p':
-                    self.board[j][i] = Pawn(side, Vector2(i, j))
+                    figure_type = FigureType.PAWN
                 else:
                     continue
                 self.board[j][i] = Figure(figure_type, side, Vector2d(j, i))
