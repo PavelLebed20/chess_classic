@@ -10,6 +10,7 @@ from direct.showbase.ShowBase import ShowBase
 from direct.gui.OnscreenImage import OnscreenImage
 from panda3d.core import WindowProperties
 from panda3d.core import TransparencyAttrib
+
 from panda3d.core import LPoint3, LVector3, BitMask32
 from panda3d.core import CollisionTraverser, CollisionNode
 from panda3d.core import CollisionHandlerQueue, CollisionRay
@@ -58,6 +59,7 @@ def loadObject(text=None, pos=LPoint3(0, 0), depth=DEPTH, scale=3,
         obj.setTransparency(TransparencyAttrib.MAlpha)
     return obj
 
+
 def initPosition(str_board ="rnbqkbnr" \
                             "pppppppp" \
                             "........" \
@@ -76,7 +78,6 @@ def initPosition(str_board ="rnbqkbnr" \
                     loadObject("ChessRender/data/chess_figues/" + trLiter(str_board[i + j*8]) + ".png", posOfIndex(i, j)))
                 figues[key].setTag("figue_tag", str(key))
                 key += 1
-
     return figues
 
 class Render(ShowBase):

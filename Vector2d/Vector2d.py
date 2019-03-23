@@ -1,3 +1,9 @@
+#################################################
+# MODULE: Vector and move classes implementation#
+# AUTHOR: Fedorov Dmitrii                       #
+# LAST UPDATE: 03/03/2019                       #
+#################################################
+
 
 class Vector2d:
     def __init__(self, x, y):

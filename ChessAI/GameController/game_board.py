@@ -75,6 +75,36 @@ class GameBoard:
                 else:
                     continue
 
+    def export_chess_board(self):
+        export_board = [['.' for j in range(0, Board.ROW_SIZE)]
+                      for i in range(0, Board.COLUMN_SIZE)]
+
+        for i in range(0, Board.COLUMN_SIZE):
+            for j in range(0, Board.ROW_SIZE):
+                figure_type = self.board[j][i].figure_type
+                side = self.board[j][i].side
+
+                if figure_type == FigureType.KING:
+                    latter = 'k'
+                elif figure_type == FigureType.QUEEN:
+                    latter = 'q'
+                elif figure_type == FigureType.ROOK:
+                    latter = 'r'
+                elif figure_type == FigureType.KNIGHT:
+                    latter = 'n'
+                elif figure_type == FigureType.BISHOP:
+                    latter = 'b'
+                elif figure_type == FigureType.PAWN:
+                    latter = 'p'
+                else:
+                    continue
+
+                if side == Side.WHITE:
+                    latter = latter.upper()
+                export_board[j][i] = latter
+
+        return export_board
+
     def print(self):
         sys.stdout.write(" ")
         sys.stdout.write(" ")

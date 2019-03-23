@@ -10,6 +10,7 @@ from enum import Enum
 from ChessAI.GameController.game_board import GameBoard
 from ChessAI.GameController.game_figures import Pawn, King, Rook
 from ChessBoard.chess_figure import Side
+import pickle
 
 
 class MoveResult(Enum):
@@ -22,17 +23,27 @@ class MoveResult(Enum):
 
 class GameController:
 
-    def __init__(self, chess_board):
-        self.game_board = GameBoard(chess_board)
+    def __init__(self, chess_board, data=None):
+        if chess_board is not None:
+            self.game_board = GameBoard(chess_board)
+        else:
+            self.game_board = pickle.loads(data)
+
+    def serialize(self):
+        return pickle.dumps(self.game_board)
+
+    def export_to_chess_board_str(self):
+        return self.game_board.export_chess_board()
 
     def update(self, move):
         figure = self.game_board.get(move.point_from)
         assert figure is not None
         self.game_board.make_move(move)
 
-    def check_move(self, move):
+    def check_move(self, move, side):
         """
         Check current position state function
+        :param side: player current side
         :param move: move figure sructure (Vector2d)
         :param chess_board: chess board class (see ChessBoard.Board)
         :return: MoveResult
@@ -40,6 +51,9 @@ class GameController:
         result = MoveResult.INCORRECT
 
         figure_in_src = self.game_board.get(move.point_from)
+
+        if figure_in_src.side != side:
+            return result
 
         if figure_in_src is None:
             return result
