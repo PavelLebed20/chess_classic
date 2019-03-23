@@ -1,7 +1,7 @@
 ###############################
 # MODULE: Chess engine class  #
 # AUTHOR: Lebed' Pavel        #
-# LAST UPDATE: 03/03/2019     #
+# LAST UPDATE: 23/03/2019     #
 ###############################
 from ChessAI.ChessPlayer.LocalPlayer.local_player import LocalPlayer
 from ChessAI.GameController.game_controller import GameController, MoveResult
@@ -28,7 +28,7 @@ class Engine:
         Main loop function
         :return: NONE.
         """
-        while True is True:
+        while True:
             move = self.players[self.player_turn].get_move()
             if move is not None:
                 if self.game_controller.check_move(move, self.players[self.player_turn].side) != MoveResult.INCORRECT:
@@ -37,4 +37,4 @@ class Engine:
                     self.chess_board = Board(self.game_controller.export_to_chess_board_str())
                     self.render.set_game_state(self.chess_board, self.players[self.player_turn].set_move,
                                                None, None, None)
-            self.render.render()
+            self.render.step()
