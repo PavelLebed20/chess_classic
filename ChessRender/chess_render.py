@@ -137,7 +137,7 @@ class Render(ShowBase):
                     if str_board[i + j * 8] != '.':
                         after_figues.append([str_board[i + j * 8], i, j])
                     if self.board_info[i + j * 8] != '.':
-                        before_figues.append([self.board_info[i + j * 8], i, j, self.pick_figue(i,j)])
+                        before_figues.append([self.board_info[i + j * 8], i, j, self.pick_figue_num(i,j)])
 
         #### - change positions of figues
         for a in before_figues:
@@ -145,27 +145,43 @@ class Render(ShowBase):
                 if a[0] == b[0]:
                     figue = self.pick_figue(a[1],a[2])
                     pos = posOfIndex(b[1], b[2])
-
-                    figue.setPos(pos.getX(), DEPTH, pos.getY())
-                    a[0] = None
-                    b[0] = None
+                    
+                    if figue != None:
+                        figue.setPos(pos.getX(), DEPTH, pos.getY())
+                        a[0] = None
+                        b[0] = None
 
         #### - eat figues
         for a in before_figues:
-            if a[0] != None:
-                a[3].removeNode()
+            if a[0] != None :
+                if a[3] != None:
+                    self.figues[int(a[3])].removeNode()
+                    self.figues[int(a[3])] = None
 
+        #### - create figues
+        for b in after_figues:
+            if b[0] != None :
+                for key in range(0, 32):
+                    self.figues[key] = loadObject("ChessRender/data/chess_figues/" + b[0] + ".png",
+                                            posOfIndex(b[1], b[2]))
+                    self.figues[key].setTag("figue_tag", str(key))
 
         self.board_info = str_board
 
 
-    def pick_figue(self,i,j):
+    def pick_figue_num(self, i, j):
         mpos = posOfIndex(i, j)
         self.pickerRay.setFromLens(self.camNode, mpos.getX()/14.5, mpos.getY()/14.5)
         self.myTraverser.traverse(render)
         if self.myHandler.getNumEntries() > 0:
             self.myHandler.sortEntries()
             pickedObj = self.myHandler.getEntry(0).getIntoNodePath().findNetTag("figue_tag").getTag("figue_tag")
+            return pickedObj
+        return None
+
+    def pick_figue(self, i, j):
+        pickedObj = self.pick_figue_num(i, j)
+        if pickedObj != None and pickedObj != '':
             return self.figues[int(pickedObj)]
         return None
 
