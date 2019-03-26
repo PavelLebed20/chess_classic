@@ -65,7 +65,16 @@ and Tools version
 * *develop* merges with *master* at the end of each sprint
 * Create new commit for each branch
 * Do not delete branches after each merge
-
+# Run program
+## run commands:
+* python main.py
+* In working directory
+# Program debug
+## Install pycharm
+* https://www.jetbrains.com/pycharm/ - install any version
+* open project as pycharm project
+* set python global path in configuration
+* set main.py as start program script
 ### Example of branches
 ```
 #228_add_user_registration
