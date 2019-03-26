@@ -6,6 +6,9 @@
 import copy
 from enum import Enum
 
+from Vector2d.Vector2d import Vector2d
+
+
 class FigureType(Enum):
     KING = 0,
     QUEEN = 1,
@@ -28,7 +31,7 @@ class Side(Enum):
 
 class Figure:
 
-    def __init__(self, side, position):
+    def __init__(self, figure_type, side, position):
         """
         Initialize ChessFigure class instance
         :param figure_type: type of chess figure (ChessFigureType)
@@ -37,6 +40,6 @@ class Figure:
         """
         self.figure_type = FigureType(figure_type)
         self.side = Side(side)
-        self.position = copy.deepcopy(position)
+        self.position = Vector2d(position.x, position.y)
 
 
