@@ -4,8 +4,8 @@ Chess classic is open source online chess supports possibility of
 offline game against AI with chess board and figures skinning. 
 ### Our features are
 * Modern game visualization and animation
-* Possibility of changing figures render models
-* Possibility of showing your game skin to online opponent
+* Changing figures render models
+* Showing your game skin to online opponent
 * Project is open source
 ## Analogue 1
 * https://steamcommunity.com/sharedfiles/filedetails?id=1613886175 - dota auto chess
@@ -14,9 +14,9 @@ offline game against AI with chess board and figures skinning.
  As a custom mode, it's available for free from the Steam Workshop.
 ### Our advantage are
 * Classic chess game rules 
-* Possibility of free skin change
+* Free skin change
 * Project is open source
-* Possibility of choosing own gamestate sound
+* Choosing own gamestate sound
 ## Analogue 2
 * https://www.dreamchess.org/ - DreamChess is an open source chess game. 
  Our primary target platforms are Windows, Mac OS X and Linux. 
@@ -24,8 +24,39 @@ offline game against AI with chess board and figures skinning.
  ranging from classic wooden to flat figurines.
 ### Our advantage are
 * Multilayer 
-* Possibility of free skin change
-* Possibility of choosing own gamestate sound
+* Free skin change
+* Choose own gamestate sound
+# Installation quid
+## Install python
+* https://www.python.org/downloads/release/python-372/ - download python 3.7
+### run commands:
+* pip install --upgrade pip
+* pip install altgraph==0.16.1
+cffi==1.12.2
+cycler==0.10.0
+future==0.17.1
+kiwisolver==1.0.1
+macholib==1.11
+matplotlib==3.0.3
+numpy==1.16.2
+panda3d==1.10.1
+pandas==0.24.1
+pefile==2018.8.8
+pycparser==2.19
+PyInstaller==3.4
+pyparsing==2.3.1
+python-chess==0.26.0
+python-dateutil==2.8.0
+pytz==2018.9
+pywin32-ctypes==0.2.0
+scipy==1.2.1
+seaborn==0.9.0
+six==1.12.0
+vectormath==0.2.1
+## Install sql server
+* https://www.microsoft.com/en-US/download/details.aspx?id=42299 - install Express 
+and Tools version
+* set mixed authorization mode
 # Git workflow
 * Main demonstration branch - *master*
 * Main coding branch - *develop*
