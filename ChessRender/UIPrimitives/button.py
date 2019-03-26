@@ -7,7 +7,7 @@ from panda3d.core import LPoint3
 
 class Button:
 
-    def __init__(self, obtainer_func=None, title="test_start", position=None, size=None):
+    def __init__(self, position, obtainer_func=None, title="test_start", size=None):
         """
         Initialize button function
         :param obtainer_func: obtain click func (Func)
@@ -18,5 +18,5 @@ class Button:
         self.obtainer_func = obtainer_func
         self.title = title
         self.position = position
-        self.real_position = LPoint3(0, 0)
+        self.real_position = LPoint3(position.x, position.y, 0)
         self.size = size

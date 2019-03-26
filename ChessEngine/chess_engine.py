@@ -36,7 +36,6 @@ class Engine:
 
                 if self.render.need_init:
                     # set current state
-                    print("mraz")
                     self.render.set_game_state(Board.DEFAULT_BOARD_POSITION,
                                                self.players[self.player_turn].set_move, None, None, None)
 

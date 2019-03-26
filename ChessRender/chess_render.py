@@ -47,6 +47,9 @@ DEPTH = 55
 TEXT_SCALE = 0.07
 FIGUE_SCALE = 3
 
+BUTTON_SCALE_X = 15
+BUTTON_SCALE_Y = 5
+
 def trLiter(simbol):
     if (simbol.isupper()):
         return "w" + simbol
@@ -75,17 +78,27 @@ def loadObject(text=None, pos=LPoint3(0, 0), depth=DEPTH, scale_x=FIGUE_SCALE,
         obj.setTransparency(TransparencyAttrib.MAlpha)
     return obj
 
-def loadButtons(buttons=[Button()], state=RenderState.DEFAULT):
+def loadButtons(buttons, state=RenderState.DEFAULT):
     button_arr = []
     key = 0
     for b in buttons:
-        textObject = OnscreenText(text=b.title, pos=b.real_position, scale=TEXT_SCALE)
-        obj = loadObject("ChessRender/data/button.png", b.real_position, scale_x=15, scale_z=5)
+        textObject = OnscreenText(text=b.title, pos=b.real_position/BUTTON_SCALE_X,
+                                  scale=TEXT_SCALE)
+        obj = loadObject("ChessRender/data/button.png", b.real_position,
+                         scale_x=BUTTON_SCALE_X, scale_z=BUTTON_SCALE_Y)
         button_arr.append([obj, b, textObject, state])
         button_arr[key][OBJECT_I].setTag("button_tag", str(key))
         key += 1
     return button_arr
 
+
+def begin_game(render):
+    render.state = RenderState.GAME
+    render.need_init = True
+
+    for b in render.button_arr:
+        b[OBJECT_I].removeNode()
+        b[TEXT_I].removeNode()
 
 class Render(ShowBase):
 
@@ -220,7 +233,7 @@ class Render(ShowBase):
         return i,j
 
 
-    def set_menu_state(self, buttons=None, text_fields=None, text_fields_obtainer_func=None):
+    def set_menu_state(self, buttons=[Button(Vector2d(0, 10), begin_game)], text_fields=None, text_fields_obtainer_func=None):
         """
         Set render state to menu mode
         :param buttons: array buttons (see. UIPrimitives.button)
@@ -230,7 +243,7 @@ class Render(ShowBase):
         """
         self.need_init = False
         if not self.button_arr:
-            self.button_arr = loadButtons(buttons=[Button(self.begin_game)],state=self.state)
+            self.button_arr = loadButtons(buttons=buttons, state=self.state)
 
     def set_game_state(self, chess_board_str=None, chess_board_obtainer_func=None,
                        buttons=None, text_fields=None, text_fields_obtainer_func=None):
@@ -312,16 +325,8 @@ class Render(ShowBase):
 
         ####  - buttons action
         if self.current_button is not None:
-            self.current_button[BUTTON_I].obtainer_func()
+            self.current_button[BUTTON_I].obtainer_func(self)
             self.current_button = None
-
-    def begin_game(self):
-        self.state = RenderState.GAME
-        self.need_init = True
-
-        for b in self.button_arr:
-            b[OBJECT_I].removeNode()
-            b[TEXT_I].removeNode()
 
 
     def step(self):
