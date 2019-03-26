@@ -16,7 +16,6 @@ from panda3d.core import CollisionTraverser, CollisionNode
 from panda3d.core import CollisionHandlerQueue, CollisionRay
 from panda3d.core import GeomNode
 from direct.task.Task import Task
-import sys
 
 from ChessBoard.chess_board import Board
 from Vector2d.Vector2d import Move, Vector2d
