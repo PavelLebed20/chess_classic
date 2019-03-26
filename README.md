@@ -7,12 +7,25 @@ offline game against AI with chess board and figures skinning.
 * Possibility of changing figures render models
 * Possibility of showing your game skin to online opponent
 * Project is open source
-## Analogue
-* http://chessplanet.ru/, https://www.chess.com/, https://lichess.org/
+## Analogue 1
+* https://steamcommunity.com/sharedfiles/filedetails?id=1613886175 - dota auto chess
+ is a game that emphasises fast and fluid gameplay that simultaneously avoids the emphasis on APM and twitch-like
+ reflexes. How you play your pieces matters far more than how fast you can click! 
+ As a custom mode, it's available for free from the Steam Workshop.
 ### Our advantage are
-* 3d game render 
-* Skin changes, that makes your own figures style
+* Classic chess game rules 
+* Possibility of free skin change
 * Project is open source
+* Possibility of choosing own gamestate sound
+## Analogue 2
+* https://www.dreamchess.org/ - DreamChess is an open source chess game. 
+ Our primary target platforms are Windows, Mac OS X and Linux. 
+ DreamChess features 3D OpenGL graphics and provides various chess board sets, 
+ ranging from classic wooden to flat figurines.
+### Our advantage are
+* Multilayer 
+* Possibility of free skin change
+* Possibility of choosing own gamestate sound
 # Git workflow
 * Main demonstration branch - *master*
 * Main coding branch - *develop*
