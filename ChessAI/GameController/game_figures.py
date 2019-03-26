@@ -313,7 +313,7 @@ class Pawn(FigureBase):
         enemy_pawn = chess_board.get(self.position + Vector2d(dx, 0))
         if enemy_pawn is not None:
             if isinstance(enemy_pawn, Pawn) and enemy_pawn.side != self.side:
-                if abs(enemy_pawn.prev_move.y - enemy_pawn.position.y) > 1:
+                if enemy_pawn.prev_move is not None and abs(enemy_pawn.prev_move.y - enemy_pawn.position.y) > 1:
                     correct_cells.append(self.position + Vector2d(dx, dy))
 
     def generate_moves(self, chess_board):
