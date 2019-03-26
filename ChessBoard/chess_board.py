@@ -1,7 +1,7 @@
 ###############################
 # MODULE: Chess board class   #
 # AUTHOR: Lebed' Pavel        #
-# LAST UPDATE: 23/03/2019     #
+# LAST UPDATE: 03/03/2019     #
 ###############################
 
 # BOARD FORMAT DESCRIPTION
@@ -21,7 +21,7 @@ from Vector2d.Vector2d import Vector2d
 
 
 class Board:
-    DEFAULT_BOARD_POSITION = "rnbqkbnr" \
+    _DEFAULT_BOARD_POSITION = "rnbqkbkr" \
                               "pppppppp" \
                               "........" \
                               "........" \
@@ -34,7 +34,7 @@ class Board:
     ROW_SIZE = 8
     FULL_SIZE = COLUMN_SIZE * ROW_SIZE
 
-    def __init__(self, board_position=DEFAULT_BOARD_POSITION):
+    def __init__(self, board_position=_DEFAULT_BOARD_POSITION):
         """
         Initialize ChessBoard class function
         :param board_position: board position in special format (str),
@@ -52,17 +52,17 @@ class Board:
                 else:
                     side = Side.BLACK
                 if figure_letter == 'k':
-                    figure_type = FigureType.KING
+                    self.board[j][i] = King(side, Vector2(i, j))
                 elif figure_letter == 'q':
-                    figure_type = FigureType.QUEEN
+                    self.board[j][i] = Queen(side, Vector2(i, j))
                 elif figure_letter == 'b':
-                    figure_type = FigureType.BISHOP
+                    self.board[j][i] = Bishop(side, Vector2(i, j))
                 elif figure_letter == 'n':
-                    figure_type = FigureType.KNIGHT
+                    self.board[j][i] = Knight(side, Vector2(i, j))
                 elif figure_letter == 'r':
-                    figure_type = FigureType.ROOK
+                    self.board[j][i] = Rook(side, Vector2(i, j))
                 elif figure_letter == 'p':
-                    figure_type = FigureType.PAWN
+                    self.board[j][i] = Pawn(side, Vector2(i, j))
                 else:
                     continue
                 self.board[j][i] = Figure(figure_type, side, Vector2d(j, i))
