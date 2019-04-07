@@ -21,7 +21,7 @@ import sys
 from ChessBoard.chess_board import Board
 from Vector2d.Vector2d import Move, Vector2d
 from ChessRender.UIPrimitives.button import Button
-
+from ChessRender.UIPrimitives.text_field import TextField
 
 class RenderState(Enum):
     DEFAULT = -1,
@@ -32,8 +32,10 @@ class RenderState(Enum):
 
 OBJECT_I = 0
 BUTTON_I = 1
+TEXT_FIELD_I = 1
 TEXT_I = 2
 STATE_I = 3
+TEXT_PRINT_I = 4
 
 WIDTH = 480
 HEIGHT = 480
@@ -50,6 +52,9 @@ FIGUE_SCALE = 3
 BUTTON_SCALE_X = 15
 BUTTON_SCALE_Y = 5
 
+TEXT_FIELD_SCALE_X = 15
+TEXT_FIELD_SCALE_Y = 10
+
 def trLiter(simbol):
     if (simbol.isupper()):
         return "w" + simbol
@@ -65,7 +70,7 @@ def loadObject(text=None, pos=LPoint3(0, 0), depth=DEPTH, scale_x=FIGUE_SCALE,
     obj.reparentTo(camera)
 
     texture = loader.loadTexture(text)
-    obj.set_texture(texture, 1)
+    obj.set_texture(texture)
 
     obj.setPos(pos.getX(), depth, pos.getY())
     obj.setSx(scale_x)
@@ -78,7 +83,7 @@ def loadObject(text=None, pos=LPoint3(0, 0), depth=DEPTH, scale_x=FIGUE_SCALE,
         obj.setTransparency(TransparencyAttrib.MAlpha)
     return obj
 
-def loadButtons(buttons, state=RenderState.DEFAULT):
+def loadButtons(buttons, state):
     button_arr = []
     key = 0
     for b in buttons:
@@ -91,6 +96,20 @@ def loadButtons(buttons, state=RenderState.DEFAULT):
         key += 1
     return button_arr
 
+def loadTextField(text_fields, state):
+    text_field_arr = []
+    key = 0
+    for b in text_fields:
+        textObject = OnscreenText(text=b.title, pos=b.title_position / TEXT_FIELD_SCALE_X,
+                                  scale=TEXT_SCALE)
+        textPrint = OnscreenText(text=b.text, pos=b.text_position / TEXT_FIELD_SCALE_X,
+                                  scale=TEXT_SCALE)
+        obj = loadObject("ChessRender/data/text_field.png", b.real_position,
+                         scale_x=TEXT_FIELD_SCALE_X, scale_z=TEXT_FIELD_SCALE_Y)
+        text_field_arr.append([obj, b, textObject, state, textPrint])
+        text_field_arr[key][OBJECT_I].setTag("text_field_tag", str(key))
+        key += 1
+    return text_field_arr
 
 def begin_game(render):
     render.state = RenderState.GAME
@@ -99,6 +118,11 @@ def begin_game(render):
     for b in render.button_arr:
         b[OBJECT_I].removeNode()
         b[TEXT_I].removeNode()
+
+    for b in render.text_field_arr:
+        b[OBJECT_I].removeNode()
+        b[TEXT_I].removeNode()
+        b[TEXT_PRINT_I].removeNode()
 
 class Render(ShowBase):
 
@@ -115,7 +139,7 @@ class Render(ShowBase):
 
         self.init_ray()
 
-        self.mouseTask = taskMgr.add(self.mouseTask, 'mouseTask')
+        taskMgr.add(self.mouseTask, 'mouseTask')
 
         self.chess_run_func = None
         self.last_pos = None
@@ -123,18 +147,24 @@ class Render(ShowBase):
         self.accept("mouse1", self.mouse_press)
         self.accept("mouse1-up", self.mouse_release)
 
+        self.buttonThrowers[0].node().setKeystrokeEvent('keystroke')
+        self.accept("keystroke", self.key_print)
+
         self.state = RenderState.MENU
         self.need_init = True
 
         #### - game objects
         self.chess_board = None
         self.figues = None
-
         self.current_figue = None
+
         #### - buttons objects
         self.button_arr = []
-
         self.current_button = None
+
+        #### - text_fields objects
+        self.text_field_arr = []
+        self.current_text_field = None
 
     def initPosition(self, str_board="rnbqkbnr" \
                                "pppppppp" \
@@ -233,7 +263,8 @@ class Render(ShowBase):
         return i,j
 
 
-    def set_menu_state(self, buttons=[Button(Vector2d(0, 10), begin_game)], text_fields=None, text_fields_obtainer_func=None):
+    def set_menu_state(self, buttons=[Button(Vector2d(0, 10), begin_game)], text_fields=[TextField(Vector2d(0, 0), begin_game),
+                                                                                         TextField(Vector2d(0, 5), begin_game)], text_fields_obtainer_func=None):
         """
         Set render state to menu mode
         :param buttons: array buttons (see. UIPrimitives.button)
@@ -244,6 +275,9 @@ class Render(ShowBase):
         self.need_init = False
         if not self.button_arr:
             self.button_arr = loadButtons(buttons=buttons, state=self.state)
+
+        if not self.text_field_arr:
+            self.text_field_arr = loadTextField(text_fields=text_fields, state=self.state)
 
     def set_game_state(self, chess_board_str=None, chess_board_obtainer_func=None,
                        buttons=None, text_fields=None, text_fields_obtainer_func=None):
@@ -260,7 +294,7 @@ class Render(ShowBase):
 
         if self.chess_board is None:
             self.chess_board = loadObject("ChessRender/data/chess_board.png",
-                                          scale_x=29.5, scale_z=29.5, transparency=False)
+                                          scale_x=29.5, scale_z=29.5, depth=DEPTH, transparency=False)
         if self.figues is None:
             self.figues = self.initPosition(chess_board_str)
 
@@ -306,6 +340,10 @@ class Render(ShowBase):
             if pickedObj != '':
                 self.current_button = self.button_arr[int(pickedObj)]
 
+            pickedObj = self.myHandler.getEntry(0).getIntoNodePath().findNetTag("text_field_tag").getTag("text_field_tag")
+            if pickedObj != '':
+                self.current_text_field = self.text_field_arr[int(pickedObj)]
+
     def mouse_release(self):
         ####  - figues action
         if self.current_figue is not None:
@@ -328,6 +366,11 @@ class Render(ShowBase):
             self.current_button[BUTTON_I].obtainer_func(self)
             self.current_button = None
 
+    def key_print(self, keyname):
+        if self.current_text_field is not None:
+            kascad = self.current_text_field
+            kascad[TEXT_FIELD_I].add_text(keyname)
+            kascad[TEXT_PRINT_I].text = kascad[TEXT_FIELD_I].text
 
     def step(self):
         """
