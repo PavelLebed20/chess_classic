@@ -1,9 +1,10 @@
 ###############################
 # MODULE: Chess Player class  #
 # AUTHOR: Pavel Lebed         #
-# LAST UPDATE: 23/03/2019     #
+# LAST UPDATE: 07/04/2019     #
 ###############################
 import copy
+import threading
 from random import randint
 from ChessAI.ChessPlayer.chess_player import Player
 from ChessAI.GameController.game_controller import MoveResult
@@ -17,21 +18,36 @@ def evaluate_board(game_board):
 
 class MinmaxBot(Player):
 
-    def __init__(self, side):
+    def __init__(self, side, game_controller):
         """
         Initialize bot class function
         """
         self.side = Side(side)
         self.move = None
+        self.game_controller = game_controller
+        self.is_move_calculating = False
+        self.is_move_calculated = False
+        self.value = None
+        self.depth = 2
 
-    def get_move(self, game_controller=None):
+    def get_move(self):
         """
         Try get move calculation results
         :return: NONE - player don't make move yet,
                  move - otherwise
         """
-        value, move = self.calc_best_move(2, game_controller, self.side)
-        return move
+        if not self.is_move_calculating:
+            self.is_move_calculating = True
+            self.is_move_calculated = False
+            self.move_calc_thread = threading.Thread(target=self.calc_best_move,
+                                                     args=(self.depth, self.game_controller, self.side))
+            self.move_calc_thread.start()
+            return None
+        if not self.is_move_calculated:
+            return None
+        self.is_move_calculating = False
+        self.is_move_calculated = False
+        return self.move
 
     def set_move(self, move):
         """
@@ -76,7 +92,8 @@ class MinmaxBot(Player):
                 new_game.update(possible_moves[i])
 
                 # Recursively get the value from this move
-                value, move_side_effect = self.calc_best_move(depth - 1, new_game, Side.get_oposite(player_color), alpha, beta, not is_maximizing_player)
+                value, move_side_effect = self.calc_best_move(depth - 1, new_game, Side.get_oposite(player_color),
+                                                              alpha, beta, not is_maximizing_player)
 
                 if is_maximizing_player:
                     # Look for moves that maximize position
@@ -89,11 +106,16 @@ class MinmaxBot(Player):
                     if value < best_move_value:
                         best_move_value = value
                         best_move = move
-                    beta = min(beta, value);
+                    beta = min(beta, value)
 
                 # Check for alpha beta pruning
                 if beta <= alpha:
                     # print('Prune', alpha, beta)
                     return best_move_value, best_move
+
+        if depth == self.depth:
+            self.move = best_move
+            self.value = best_move_value
+            self.is_move_calculated = True
 
         return best_move_value, best_move
