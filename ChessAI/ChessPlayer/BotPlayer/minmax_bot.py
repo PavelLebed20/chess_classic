@@ -26,7 +26,6 @@ class MinmaxBot(Player):
         self.move = None
         self.game_controller = game_controller
         self.is_move_calculating = False
-        self.is_move_calculated = False
         self.value = None
         self.depth = 2
 
@@ -38,15 +37,14 @@ class MinmaxBot(Player):
         """
         if not self.is_move_calculating:
             self.is_move_calculating = True
-            self.is_move_calculated = False
+
             self.move_calc_thread = threading.Thread(target=self.calc_best_move,
                                                      args=(self.depth, self.game_controller, self.side))
             self.move_calc_thread.start()
             return None
-        if not self.is_move_calculated:
+        if self.move_calc_thread.is_alive():
             return None
         self.is_move_calculating = False
-        self.is_move_calculated = False
         return self.move
 
     def set_move(self, move):
@@ -116,6 +114,5 @@ class MinmaxBot(Player):
         if depth == self.depth:
             self.move = best_move
             self.value = best_move_value
-            self.is_move_calculated = True
 
         return best_move_value, best_move
