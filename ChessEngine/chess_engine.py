@@ -9,6 +9,7 @@ from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
 from ChessRender.chess_render import Render
 from ChessRender.chess_render import RenderState
+import ChessRender.obtain_functions as of
 
 class Engine:
 
@@ -51,6 +52,6 @@ class Engine:
                                            None, None, None)
 
             if self.render.state == RenderState.MENU:
-                self.render.set_menu_state()
+                self.render.set_menu_state(buttons=of.buttons_arr, text_fields=of.text_fields_arr)
 
             self.render.step()
