@@ -107,7 +107,7 @@ BEGIN
 	call chess.add_message(p_data := v_user1_data, p_user_id := v_user1_id, p_action_name := 'update_game');
   end;
   begin
-	call chess.add_message(p_data := v_user2_data, p_user_id := v_user1_id, p_action_name := 'update_game');
+	call chess.add_message(p_data := v_user2_data, p_user_id := v_user2_id, p_action_name := 'update_game');
   end;
 
 END;
