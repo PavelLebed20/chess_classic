@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION chess.get_messages(
-  p_request_id bigint;
+  p_request_id bigint,
 	p_max_count integer default 1000,
 	p_delta_over_time TIME default TIME '00:01:00') RETURNS table(user_id int, data varchar) AS $$
 DECLARE
