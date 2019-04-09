@@ -13,7 +13,7 @@ BEGIN
                                                                          chess.message_types.action_name = p_action_name;
 
   BEGIN
-  LOCK TABLE ONLY chess.game;
+  --LOCK TABLE ONLY chess.game;
     -- update message data if have such message in database not send
     update chess.messages set data = p_data, request_id = -1, send_time = null where user_id = p_user_id and
                                                                    message_type_id = v_message_type_id;
