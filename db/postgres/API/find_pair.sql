@@ -21,7 +21,7 @@ IF EXISTS (SELECT 1 FROM chess.game WHERE
 END IF;
 
 
-LOCK TABLE ONLY chess.pairing;
+----LOCK TABLE ONLY chess.pairing;
 
 UPDATE chess.pairing SET low_rate = p_low_rate, high_rate = p_high_rate WHERE
 chess.pairing.user_id = p_user_id and chess.pairing.game_time = p_game_time and

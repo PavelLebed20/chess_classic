@@ -17,7 +17,7 @@ BEGIN
   SELECT chess.game.game_id into v_game_id FROM chess.game WHERE chess.game.user_id1 = p_user_id and
                                                                  chess.game.is_playing = 1::bit LIMIT 1;
   if v_game_id notnull then
-      LOCK TABLE ONLY chess.game;
+      ----LOCK TABLE ONLY chess.game;
       update chess.game set player1_time_left = p_left_time, board = p_board, is_playing = p_is_playing,
                             game_result = p_game_result where chess.game.game_id=v_game_id;
 
@@ -26,7 +26,7 @@ BEGIN
   else
       SELECT chess.game.game_id into v_game_id FROM chess.game WHERE chess.game.user_id2 = p_user_id and
                                                                      chess.game.is_playing = 1::bit LIMIT 1;
-      LOCK TABLE ONLY chess.game;
+      --LOCK TABLE ONLY chess.game;
       update chess.game set player2_time_left = p_left_time, board = p_board, is_playing = p_is_playing,
                             game_result = p_game_result where chess.game.game_id=v_game_id;
 
@@ -37,7 +37,7 @@ BEGIN
 
   -- obtain rate
   if p_is_playing = 0::bit then
-      LOCK TABLE ONLY chess.players;
+      --LOCK TABLE ONLY chess.players;
       update chess.players set rate = case
                                         when p_game_result isnull then rate + (SELECT chess.game.draw_cost FROM
                                                                                  chess.game WHERE
@@ -67,7 +67,7 @@ BEGIN
       WHERE user_id = (SELECT chess.game.user_id2 FROM chess.game WHERE chess.game.game_id=v_game_id);
   end if;
 
-  SELECT CONCAT('update_game?&board=', (select cast(chess.game.board as varchar)
+  SELECT CONCAT('update_game?board=', (select cast(chess.game.board as varchar)
                                         FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1) ,
                 '&opponent_login=', (select cast(chess.players.login as varchar) FROM chess.players WHERE
                                                  chess.players.user_id=v_user2_id LIMIT 1) ,
@@ -85,7 +85,7 @@ BEGIN
              '&result=', (select cast(chess.game.game_result as varchar) FROM chess.game WHERE
                                          chess.game.game_id=v_game_id LIMIT 1)) INTO v_user1_data;
 
-  SELECT CONCAT('update_game?&board=', (select cast(chess.game.board as varchar)
+  SELECT CONCAT('update_game?board=', (select cast(chess.game.board as varchar)
                                         FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1) ,
                 '&opponent_login=', (select cast(chess.players.login as varchar) FROM chess.players WHERE
                                                  chess.players.user_id=v_user1_id LIMIT 1) ,

@@ -7,7 +7,7 @@ DECLARE
 BEGIN
   SELECT NOW() - p_delta_over_time into v_over_time;
 
-  LOCK TABLE ONLY chess.messages;
+  ----LOCK TABLE ONLY chess.messages;
 
   DROP TABLE IF EXISTS message_ids_tmp;
   CREATE TEMP TABLE message_ids_tmp
