@@ -178,9 +178,27 @@ class GameBoard:
                 if figure is not None and figure.side == side:
                     if isinstance(figure, Figures.King):
                         attacked_cells = attacked_cells + figure.generate_moves(self, False)
+                    elif isinstance(figure, Figures.Pawn):
+                        attacked_cells = attacked_cells + figure.generate_moves(self, True)
                     else:
                         attacked_cells = attacked_cells + figure.generate_moves(self)
         return attacked_cells
+
+    def summary_moves(self, side, my_turn=False):
+        summary_moves = []
+        attacked_cells = []
+        for j in range(Board.ROW_SIZE):
+            for i in range(Board.COLUMN_SIZE):
+                attacked_cells.clear()
+                figure = self.get_by_pos(j, i)
+                if figure is not None and figure.side == side:
+                    if isinstance(figure, Figures.King):
+                        attacked_cells = attacked_cells + figure.generate_moves(self, my_turn)
+                    else:
+                        attacked_cells = attacked_cells + figure.generate_moves(self)
+                    for k in range(len(attacked_cells)):
+                        summary_moves.append(Move(Vector2d(j, i), attacked_cells[k]))
+        return summary_moves
 
     def is_that_check(self, my_side):
         attacked_cells = self.summary_attacked_cells(my_side)
@@ -212,7 +230,21 @@ class GameBoard:
                 available_moves = cur_figure.generate_moves(self)
                 for j in range(len(available_moves)):
                     new_chess_board = copy.deepcopy(self)
-                    new_chess_board.make_move(available_moves[j])
+                    new_chess_board.make_move(Move(cur_figure.position, available_moves[j]))
                     if new_chess_board.is_that_check(my_side) is False:
                         return False
         return True
+
+    def evaluate(self, side):
+        total = 0
+        for j in range(Board.ROW_SIZE):
+            for i in range(Board.COLUMN_SIZE):
+                pos = Vector2d(j, i)
+                figure = self.get(pos)
+                if figure is not None:
+                    if figure.side is side:
+                        sign = 1
+                    else:
+                        sign = -1
+                    total = total + (figure.evaluate(j, i) * sign)
+        return total

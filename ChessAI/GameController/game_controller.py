@@ -52,6 +52,9 @@ class GameController:
 
         figure_in_src = self.game_board.get(move.point_from)
 
+        if figure_in_src is None:
+            return result
+
         if figure_in_src.side != side:
             return result
 

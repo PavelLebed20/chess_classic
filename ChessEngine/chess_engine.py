@@ -1,8 +1,9 @@
 ###############################
 # MODULE: Chess engine class  #
 # AUTHOR: Lebed' Pavel        #
-# LAST UPDATE: 23/03/2019     #
+# LAST UPDATE: 07/04/2019     #
 ###############################
+from ChessAI.ChessPlayer.BotPlayer.minmax_bot import MinmaxBot
 from ChessAI.ChessPlayer.LocalPlayer.local_player import LocalPlayer
 from ChessAI.GameController.game_controller import GameController, MoveResult
 from ChessBoard.chess_board import Board
@@ -19,11 +20,10 @@ class Engine:
         self.render = Render()
 
         self.player_turn = 0
-        self.players = [LocalPlayer(Side.WHITE), LocalPlayer(Side.BLACK)]
-        self.players[0].make_move()
         self.chess_board = Board()
         self.game_controller = GameController(self.chess_board)
-
+        self.players = [LocalPlayer(Side.WHITE), MinmaxBot(Side.BLACK, self.game_controller)]
+        self.players[0].make_move()
 
     def run(self):
         """
