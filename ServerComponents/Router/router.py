@@ -1,7 +1,5 @@
 import ServerComponents.Controllers.ChessGameController.game_controller as game_controller
 import ServerComponents.Controllers.ChessUsersController.users_controller as users_controller
-import pyodbc
-
 """
 class for route messages to controller function on server
 """
