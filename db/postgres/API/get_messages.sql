@@ -20,7 +20,8 @@ BEGIN
                                                                              WHERE request_id < 0 or
                                                                              (chess.messages.send_time NOTNULL
                                                                               and chess.messages.send_time <
-                                                                              v_over_time) ORDER BY chess.messages.priority DESC LIMIT p_max_count);
+                                                                              v_over_time) ORDER BY
+                                            chess.messages.user_id, chess.messages.priority DESC LIMIT p_max_count);
 
   UPDATE chess.messages set request_id = p_request_id, send_time = NOW() WHERE message_id in
                                                                                (SELECT message_id FROM message_ids_tmp);

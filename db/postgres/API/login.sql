@@ -14,7 +14,7 @@ BEGIN
                                                                                      chess.players.password_salt);
   if v_user_id notnull then
     SELECT CONCAT('login?self_rate=', (select cast(chess.players.rate as varchar) FROM chess.players
-      where chess.players.user_id=v_user_id)) into v_login_data;
+      where chess.players.user_id=v_user_id), '&self_id=', v_user_id) into v_login_data;
 
     begin
 	  call chess.add_message(p_data := v_login_data, p_user_id := v_user_id, p_action_name := 'login');
