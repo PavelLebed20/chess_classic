@@ -6,8 +6,9 @@
 import ChessRender.UIPrimitives.object_manage as om
 import ChessRender.UIPrimitives.text_field as tf
 import ChessRender.UIPrimitives.button as bu
+import ChessRender.UIPrimitives.room as rm
 
-from Vector2d.Vector2d import Move, Vector2d
+from Vector2d.Vector2d import Vector2d
 
 def clear_fun(render):
     if render.button_arr is not None:
@@ -34,38 +35,45 @@ def game_fun(render):
 def main_menu(render):
     render.state = om.RenderState.MENU
     clear_fun(render)
-    global buttons_arr
-    buttons_arr = [bu.Button(Vector2d(0, 10), game_fun, title="Start game"),
+    render.room.buttons_prim = [bu.Button(Vector2d(0, 10), game_fun, title="Start game"),
                    bu.Button(Vector2d(0, 5), online_fun, title="Online game"),
                    bu.Button(Vector2d(0, 0), exit_fun, title="Exit")]
-    global text_fields_arr
-    text_fields_arr = None
+
+    render.room.text_fields_prim = None
 
 def online_fun(render):
     render.state = om.RenderState.MENU
     clear_fun(render)
-    global buttons_arr
-    buttons_arr = [bu.Button(Vector2d(0, -5), main_menu, title="Back"),
+
+    render.room.buttons_prim = [bu.Button(Vector2d(0, -5), main_menu, title="Back"),
                    bu.Button(Vector2d(0, 0), find_player_fun, title="Next")]
-    global text_fields_arr
-    text_fields_arr = [tf.TextField(Vector2d(0, 10), title="Login"),
-                        tf.TextField(Vector2d(0, 5), title="Parol")]
+
+    render.room.text_fields_prim = [tf.TextField(Vector2d(0, 10), title=rm.L_LOGIN),
+                        tf.TextField(Vector2d(0, 5), title=rm.L_PAROL)]
 
 def find_player_fun(render):
+    #### - get values from text fields
+    render.room.process_data()
+
     render.state = om.RenderState.MENU
     clear_fun(render)
-    global buttons_arr
-    buttons_arr = [bu.Button(Vector2d(0, -5), main_menu, title="Back"),
-                   bu.Button(Vector2d(0, 0), game_fun, title="Next")]
-    global text_fields_arr
-    text_fields_arr = [tf.TextField(Vector2d(-7, 10), title="Game time",
+
+    render.room.buttons_prim = [bu.Button(Vector2d(0, -5), main_menu, title="Back"),
+                   bu.Button(Vector2d(0, 0), game_online_fun, title="Next")]
+
+    render.room.text_fields_prim = [tf.TextField(Vector2d(-7, 10), title=rm.L_GAME_TIME,
                                     size=Vector2d(tf.MINI_SCALE_X, tf.TEXT_FIELD_SCALE_Y)),
-                       tf.TextField(Vector2d(7, 10), title="Move time",
+                       tf.TextField(Vector2d(7, 10), title=rm.L_MOVE_TIME,
                                     size=Vector2d(tf.MINI_SCALE_X, tf.TEXT_FIELD_SCALE_Y)),
-                       tf.TextField(Vector2d(-7, 5), title="Min. rate",
+                       tf.TextField(Vector2d(-7, 5), title=rm.L_MIN_RATE,
                                      size=Vector2d(tf.MINI_SCALE_X, tf.TEXT_FIELD_SCALE_Y)),
-                       tf.TextField(Vector2d(7, 5), title="Max. rate",
+                       tf.TextField(Vector2d(7, 5), title=rm.L_MAX_RATE,
                                      size=Vector2d(tf.MINI_SCALE_X, tf.TEXT_FIELD_SCALE_Y))]
 
-buttons_arr =  None
-text_fields_arr = None
+def game_online_fun(render):
+    #### - get values from text fields
+    render.room.process_data()
+
+    render.state = om.RenderState.GAME
+    render.need_init = True
+    clear_fun(render)

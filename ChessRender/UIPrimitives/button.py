@@ -10,7 +10,6 @@ from direct.gui.OnscreenText import OnscreenText
 
 OBJECT_I = 0
 BUTTON_I = 1
-TEXT_FIELD_I = 1
 TEXT_I = 2
 STATE_I = 3
 

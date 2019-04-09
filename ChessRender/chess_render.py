@@ -22,6 +22,7 @@ import ChessRender.UIPrimitives.text_field as tf
 import ChessRender.UIPrimitives.button as bu
 import ChessRender.obtain_functions as of
 from ChessRender.UIPrimitives.object_manage import RenderState
+from ChessRender.UIPrimitives.room import room
 
 WIDTH = 480
 HEIGHT = 480
@@ -68,6 +69,7 @@ class Render(ShowBase):
 
         self.state = RenderState.MENU
         self.need_init = True
+        self.room = room()
 
         #### - game objects
         self.chess_board = None
