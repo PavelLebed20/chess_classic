@@ -1,63 +1,78 @@
 CREATE OR REPLACE PROCEDURE chess.game_start(
-	user_id1 integer,
-	user_id2 integer,
-	game_time TIME,
-	adding_time integer,
-	user1_side bit, -- (0 - white, 1 - black, NULL - any)
-	user2_side bit) -- (0 - white, 1 - black, NULL - any)
-	LANGUAGE 'plpgsql'
+	p_user_id1 integer,
+	p_user_id2 integer,
+	p_game_time TIME,
+	p_adding_time integer,
+	p_user1_side bit,
+	p_user2_side bit)
+LANGUAGE 'plpgsql'
 
 AS $BODY$
 DECLARE
-  user_id1_by_side integer;
-  user_id2_by_side integer;
-  users_swap_flag bit;
-  delta_rate integer;
-  user1_rate integer;
-  user2_rate integer;
-  rate_coef float;
+  v_user_id1_by_side integer;
+  v_user_id2_by_side integer;
+  v_users_swap_flag bit;
+  v_rate_coef float;
+  v_user1_data varchar;
+  v_user2_data varchar;
 BEGIN
-
 LOCK TABLE ONLY chess.game;
 
-SET users_swap_flag = 0;
+SELECT 0::BIT into v_users_swap_flag;
 -- calculate game sides
-IF user1_side ISNULL THEN
-    IF user2_side NOTNULL THEN
-	    IF user2_side = 0 THEN
-            SET users_swap_flag = 1;
-	    ELSE
-		    SET users_swap_flag = 0;
-		  END IF;
+IF p_user1_side ISNULL THEN
+    IF p_user2_side NOTNULL THEN
+	    IF p_user2_side = 0 THEN
+            SELECT 1::BIT INTO v_users_swap_flag;
+		END IF;
     END IF;
 ELSE
-    SET users_swap_flag = user1_side;
+    SELECT p_user1_side::BIT INTO v_users_swap_flag;
 END IF;
 
-IF users_swap_flag != 0 THEN
-    user_id1_by_side = user_id2;
-    user_id2_by_side = user_id1;
+IF v_users_swap_flag = 1::BIT THEN
+    SELECT p_user_id2 INTO v_user_id1_by_side;
+    SELECT p_user_id1 INTO v_user_id2_by_side;
 ELSE
-    user_id1_by_side = user_id1;
-    user_id2_by_side = user_id2;
+    SELECT p_user_id1 INTO v_user_id1_by_side;
+    SELECT p_user_id2 INTO v_user_id2_by_side;
 END IF;
 
-SELECT chess.players.rate FROM chess.players INTO user1_rate WHERE user_id = user_id1;
-SELECT chess.players.rate FROM chess.players INTO user2_rate WHERE user_id = user_id2;
-SELECT CAST(ABS(user_id1 - user_id2) AS INTEGER) INTO delta_rate;
-SELECT 1 / (1 + power(10, delta_rate / 400)) INTO rate_coef;
+SELECT 1 / (1 + power(10, CAST(ABS((SELECT chess.players.rate FROM chess.players
+                                    WHERE chess.players.user_id = p_user_id1) -
+                                   (SELECT chess.players.rate FROM chess.players
+                                    WHERE chess.players.user_id = p_user_id2)) AS INTEGER) /
+                                   400.0)) INTO v_rate_coef;
 
-INSERT INTO chess.game (user_id1_by_side, user_id2_by_side, win_cost, draw_cost,
+INSERT INTO chess.game (user_id1, user_id2, win_cost, draw_cost,
                         adding_time, player1_time_left,
                         player2_time_left) VALUES
-                        (user_id1_by_side, user_id2_by_side, CAST(rate_coef AS integer),
-                         CAST(rate_coef / 2 AS integer), adding_time,
-                         game_time, game_time);
+                        (v_user_id1_by_side, v_user_id2_by_side, CAST(v_rate_coef AS integer),
+                         CAST(v_rate_coef / 2 AS integer), p_adding_time,
+                         p_game_time, p_game_time);
 
-INSERT INTO chess.messages(data, user_id, message_type_id, priority) VALUES
-     ("", user_id1_by_side, 1, 1), ("", user_id2_by_side, 1, 1);
+SELECT CONCAT('update_game?&board=', '&opponent_login=',
+	    (select cast(chess.players.login as varchar) FROM chess.players WHERE
+                                                         chess.players.user_id=v_user_id2_by_side LIMIT 1) ,
+             '&opponent_rate=' , (select cast(chess.players.rate as varchar)
+                            FROM chess.players WHERE chess.players.user_id=v_user_id2_by_side LIMIT 1) ,
+             '&self_time=' , cast(p_game_time as varchar) , '&opponent_time=' , cast(p_game_time as varchar) ,
+             '&is_over=0' , '&delta_rate=&result=') INTO v_user1_data;
 
-COMMIT;
+SELECT  CONCAT('update_game?&board=', '&opponent_login=',
+	    (select cast(chess.players.login as varchar) FROM chess.players WHERE
+                                                         chess.players.user_id=v_user_id1_by_side LIMIT 1) ,
+             '&opponent_rate=' , (select cast(chess.players.rate as varchar)
+                            FROM chess.players WHERE chess.players.user_id=v_user_id1_by_side LIMIT 1) ,
+             '&self_time=' , cast(p_game_time as varchar) , '&opponent_time=' , cast(p_game_time as varchar) ,
+             '&is_over=0' , '&delta_rate=&result=') INTO v_user2_data;
+
+begin
+	call chess.add_message(p_data := v_user1_data, p_user_id := v_user_id1_by_side, p_action_name := 'update_game');
+end;
+begin
+	call chess.add_message(p_data := v_user2_data, p_user_id := v_user_id2_by_side, p_action_name := 'update_game');
+end;
 END;
 
 $BODY$;
