@@ -1,3 +1,5 @@
+
+
 import psycopg2
 
 class db:
@@ -12,9 +14,17 @@ class db:
             print ("Error while connecting to PostgreSQL", error)
 
 
-#db_ = db()
-#cur = db_.con.cursor()
-#cur.execute("select * from chess.message_types")
-#record = cur.fetchone()
-#print(record[0])
+def getParamsValMap(data):
+    paramsVal = str(data).split('&')
+    res = {}
 
+    for paramVal in paramsVal:
+        paramToVal = str(paramVal).split('=')
+        res[paramToVal[0]] = paramToVal[1]
+    return res
+
+def getkeyByVal(dict, find_val):
+    for key, val in dict.items():
+        if (val == find_val):
+            return key
+    return None
