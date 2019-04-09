@@ -11,6 +11,25 @@ from ChessBoard.chess_figure import Side
 from ChessRender.chess_render import Render
 from ChessRender.chess_render import RenderState
 
+
+def process_login(text_dict):
+    """
+    Process text from text fields (login, parol)
+    :param text_dict: dictionary, where
+    keys are one the string const of the form L_SOME (see. UIPrimitives.room)
+    values are strings (print by user)
+    """
+    print(text_dict)
+
+def process_find_player(text_dict):
+    """
+    Process text from text fields (login, parol)
+    :param text_dict: dictionary, where
+    keys are one the string const of the form L_SOME (see. UIPrimitives.room)
+    values are strings (print by user)
+    """
+    print(text_dict)
+
 class Engine:
 
     def __init__(self):
@@ -18,6 +37,9 @@ class Engine:
         Initialize Engine class function
         """
         self.render = Render()
+        #### - functions to process data from users
+        self.render.room.process_login = process_login
+        self.render.room.process_find_player = process_find_player
 
         self.player_turn = 0
         self.chess_board = Board()
@@ -51,6 +73,7 @@ class Engine:
                                            None, None, None)
 
             if self.render.state == RenderState.MENU:
-                self.render.set_menu_state()
+                self.render.set_menu_state(buttons=self.render.room.buttons_prim,
+                                           text_fields=self.render.room.text_fields_prim)
 
             self.render.step()
