@@ -9,11 +9,12 @@ BEGIN
 
   ----LOCK TABLE ONLY chess.messages;
 
-  DROP TABLE IF EXISTS message_ids_tmp;
-  CREATE TEMP TABLE message_ids_tmp
+
+  CREATE TEMP TABLE IF NOT EXISTS message_ids_tmp
   (
     message_id bigint
-  );
+  ) ON COMMIT DELETE ROWS;
+  TRUNCATE message_ids_tmp;
 
 
   INSERT INTO message_ids_tmp (SELECT distinct on (chess.messages.user_id) chess.messages.message_id from chess.messages
