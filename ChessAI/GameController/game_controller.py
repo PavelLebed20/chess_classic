@@ -11,6 +11,7 @@ from ChessAI.GameController.game_board import GameBoard
 from ChessAI.GameController.game_figures import Pawn, King, Rook
 from ChessBoard.chess_figure import Side
 import pickle
+from Vector2d.Vector2d import Vector2d, Move
 
 
 class MoveResult(Enum):
@@ -89,6 +90,27 @@ class GameController:
                 result = MoveResult.STALEMATE
 
         return result
+
+    def get_correct_move_for_cell(self, cell):
+        """
+        Return correct cells, that figure in cell make move to
+        :param cell: coordinates of cell on chess board(Vector2d)
+        :return: list of correct moves (Move[])
+        """
+        figure = self.game_board.get(cell)
+        if figure is None:
+            return None
+
+        attacked_cells = []
+        attacked_cells = attacked_cells + figure.generate_moves(self.game_board)
+        res_cells = []
+        for i in range(len(attacked_cells)):
+            move = Move(cell, attacked_cells[i])
+            if self.check_move(Move(cell, attacked_cells[i]), figure.side) is not MoveResult.INCORRECT:
+                res_cells.append(attacked_cells[i])
+
+        return res_cells
+
 
 ### USAGE EXAMPLE ###
 # chess_board = Board()
