@@ -25,7 +25,9 @@ BEGIN
   UPDATE chess.messages set request_id = p_request_id, send_time = NOW() WHERE message_id in
                                                                                (SELECT message_id FROM message_ids_tmp);
 
-  RETURN QUERY SELECT chess.messages.user_id, chess.messages.data FROM chess.messages WHERE chess.messages.request_id = p_request_id;
+  RETURN QUERY SELECT chess.messages.user_id,
+                      CAST (CONCAT(chess.messages.data, '&request_id=', CAST(p_request_id AS VARCHAR)) AS VARCHAR)
+  FROM chess.messages WHERE chess.messages.request_id = p_request_id;
 END;
 
 $$ LANGUAGE 'plpgsql';
