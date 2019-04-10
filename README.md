@@ -26,6 +26,14 @@ offline game against AI with chess board and figures skinning.
 * Multilayer 
 * Free skin change
 * Choose own gamestate sound
+# Requirements
+## System
+* OS - Mac OS X 10.6 and later or Windows 7 and later or Ubuntu 14.04 or later
+* Pentium 
+## Hardware
+* 64mb HDD
+* GPU(CPU with MMX/SSX) or a GPU with OpenGL 1.1 or DirectX 3 support and 10-60MB GDDR RAM for the best performance
+64-128MB RAM
 # Installation quid
 ## Install python
 * https://www.python.org/downloads/release/python-372/ - download python 3.7
