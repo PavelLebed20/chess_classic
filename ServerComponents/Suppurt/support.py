@@ -21,7 +21,7 @@ def getParamsValMap(data):
 
     for paramVal in paramsVal:
         paramToVal = str(paramVal).split('=')
-        res[paramToVal[0]] = paramToVal[1]
+        res.update({paramToVal[0]: paramToVal[1]})
     return res
 
 def getkeyByVal(dict, find_val):

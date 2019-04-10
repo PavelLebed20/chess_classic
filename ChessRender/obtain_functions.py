@@ -35,7 +35,7 @@ def game_fun(render):
 def main_menu(render):
     render.state = om.RenderState.MENU
     clear_fun(render)
-    render.room.buttons_prim = [bu.Button(Vector2d(0, 10), game_fun, title="Start game"),
+    render.room.buttons_prim = [bu.Button(Vector2d(0, 10), render.process_offline_game, title="Start game"),
                    bu.Button(Vector2d(0, 5), online_fun, title="Online game"),
                    bu.Button(Vector2d(0, 0), exit_fun, title="Exit")]
 
@@ -46,20 +46,18 @@ def online_fun(render):
     clear_fun(render)
 
     render.room.buttons_prim = [bu.Button(Vector2d(0, -5), main_menu, title="Back"),
-                   bu.Button(Vector2d(0, 0), find_player_fun, title="Next")]
+                   bu.Button(Vector2d(0, 0), render.room.process_data, title="Next")]
 
     render.room.text_fields_prim = [tf.TextField(Vector2d(0, 10), title=rm.L_LOGIN),
                         tf.TextField(Vector2d(0, 5), title=rm.L_PAROL)]
 
 def find_player_fun(render):
     #### - get values from text fields
-    render.room.process_data()
-
     render.state = om.RenderState.MENU
     clear_fun(render)
 
     render.room.buttons_prim = [bu.Button(Vector2d(0, -5), main_menu, title="Back"),
-                   bu.Button(Vector2d(0, 0), game_online_fun, title="Next")]
+                   bu.Button(Vector2d(0, 0), render.room.process_data, title="Next")]
 
     render.room.text_fields_prim = [tf.TextField(Vector2d(-7, 10), title=rm.L_GAME_TIME,
                                     size=Vector2d(tf.MINI_SCALE_X, tf.TEXT_FIELD_SCALE_Y)),
@@ -71,9 +69,6 @@ def find_player_fun(render):
                                      size=Vector2d(tf.MINI_SCALE_X, tf.TEXT_FIELD_SCALE_Y))]
 
 def game_online_fun(render):
-    #### - get values from text fields
-    render.room.process_data()
-
     render.state = om.RenderState.GAME
     render.need_init = True
     clear_fun(render)

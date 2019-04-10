@@ -22,7 +22,7 @@ class room():
         self.process_login = None
         self.process_find_player = None
 
-    def process_data(self):
+    def process_data(self, render):
         text_dict = {}
         if self.text_fields_prim is not None:
             for i in range(0, len(self.text_fields_prim)):

@@ -19,7 +19,8 @@ BEGIN
   if v_game_id notnull then
       ----LOCK TABLE ONLY chess.game;
       update chess.game set player1_time_left = p_left_time, board = p_board, is_playing = p_is_playing,
-                            game_result = p_game_result where chess.game.game_id=v_game_id;
+                            game_result = p_game_result, next_move_player = case when = 0::bit then 1::bit else 0::bit end
+                            where chess.game.game_id=v_game_id;
 
       select chess.game.user_id1 into v_user1_id where chess.game.game_id=v_game_id LIMIT 1;
       select chess.game.user_id2 into v_user2_id where chess.game.game_id=v_game_id LIMIT 1;
@@ -28,7 +29,8 @@ BEGIN
                                                                      chess.game.is_playing = 1::bit LIMIT 1;
       --LOCK TABLE ONLY chess.game;
       update chess.game set player2_time_left = p_left_time, board = p_board, is_playing = p_is_playing,
-                            game_result = p_game_result where chess.game.game_id=v_game_id;
+                            game_result = p_game_result, next_move_player = case when = 0::bit then 1::bit else 0::bit end
+                            where chess.game.game_id=v_game_id;
 
 
       select chess.game.user_id2 into v_user1_id where chess.game.game_id=v_game_id LIMIT 1;
@@ -83,6 +85,9 @@ BEGIN
              '&self_rate=', (select cast(chess.players.rate as varchar) FROM chess.players WHERE
                                          chess.players.user_id=v_user1_id LIMIT 1),
              '&result=', (select cast(chess.game.game_result as varchar) FROM chess.game WHERE
+                                         chess.game.game_id=v_game_id LIMIT 1) ,
+             '&side=0',
+             '&next_move=', (select cast(chess.game.next_move_player as varchar) FROM chess.game WHERE
                                          chess.game.game_id=v_game_id LIMIT 1)) INTO v_user1_data;
 
   SELECT CONCAT('update_game?board=', (select cast(chess.game.board as varchar)
@@ -101,6 +106,9 @@ BEGIN
              '&self_rate=', (select cast(chess.players.rate as varchar) FROM chess.players WHERE
                                          chess.players.user_id=v_user2_id LIMIT 1),
              '&result=', (select cast(chess.game.game_result as varchar) FROM chess.game WHERE
+                                         chess.game.game_id=v_game_id LIMIT 1),
+             '&side=1',
+             '&next_move=', (select cast(chess.game.next_move_player as varchar) FROM chess.game WHERE
                                          chess.game.game_id=v_game_id LIMIT 1)) INTO v_user2_data;
 
   begin
