@@ -84,9 +84,6 @@ class Render(ShowBase):
         self.text_field_arr = []
         self.current_text_field = None
 
-        #### - init main menu
-        of.main_menu(self)
-
     def initPosition(self, str_board="rnbqkbnr" \
                                "pppppppp" \
                                "........" \
