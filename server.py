@@ -1,6 +1,6 @@
 
 # database and gamecontroller imports
-import ServerComponents.Server.support as supp
+import ServerComponents.Suppurt.support as supp
 import pickle
 import ChessAI.GameController.game_controller as game_controller
 import Vector2d.Vector2d as vec
@@ -49,15 +49,25 @@ class Server:
 
 @socketio.on('connect')
 def on_connect():
-    print("%s connected" % (request.remote_addr))
+    print("%s connected" % (request.sid))
     Server.clients[request.sid] = None
 
 
 @socketio.on('disconnect')
 def on_disconnect():
-    print("%s disconnected" % (request.remote_addr))
+    print("%s disconnected" % (request.sid))
     Server.clients.pop(request.sid)
 
+@socketio.on('verify_message')
+def on_verify_message(data):
+    print("Message recieved: " + str(data) + "from client " + str(Server.clients[request.sid]))
+
+    paramsDict = supp.getParamsValMap(data)
+    cursor = Server.con_sync.cursor()
+
+    cursor.execute("call chess.verify_message('{0}', '{1}')".format(paramsDict['request_id'], Server.clients[request.sid]))
+    Server.con_sync.commit()
+    cursor.close()
 
 @socketio.on('login')
 def on_login(data):
@@ -74,18 +84,22 @@ def on_login(data):
 
 @socketio.on('find_pair')
 def on_find_pair(data):
+    print("Message recieved: " + str(data))
     paramsDict = supp.getParamsValMap(data)
-    cursor = db.con.cursor()
+    cursor = Server.con_sync.cursor()
 
     cursor.execute("call chess.find_pair({0}, {1}, {2}, p_adding_time := TIME '00:00:00',"
                    " p_game_time := TIME '00:03:00')".format
                    (Server.clients[request.sid], paramsDict['low_rate'], paramsDict['hight_rate']))
 
+    Server.con_sync.commit()
+    cursor.close()
 
 @socketio.on('update_board')
 def on_update_board(data):
+    print("Message recieved: " + str(data))
     paramsDict = supp.getParamsValMap(data)
-    cursor = db.con.cursor()
+    cursor = Server.con_sync.cursor()
 
     # get board from database
     cursor.execute("call chess.get_current_game_board({0})".format(Server.clients[request.sid]))
@@ -102,6 +116,8 @@ def on_update_board(data):
 
     cursor.execute("call chess.update_game_board({0}, '{1}')".format(Server.clients[request.sid], cur_game_controller))
 
+    Server.con_sync.commit()
+    cursor.close()
 
 @socketio.on('message')
 def on_message(data):
