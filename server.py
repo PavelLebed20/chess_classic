@@ -4,6 +4,7 @@ import ServerComponents.Server.support as supp
 import pickle
 import ChessAI.GameController.game_controller as game_controller
 import Vector2d.Vector2d as vec
+import ast
 
 # server connection
 import eventlet
@@ -13,12 +14,12 @@ from flask_socketio import SocketIO
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='eventlet')
-db = supp.db()
 usersAddr = {}
-
 
 class Server:
     clients = {}
+    con_sync = supp.db().con
+    con_async = supp.db().con
 
     def __init__(self, port):
         self.port = port
@@ -29,16 +30,21 @@ class Server:
 
     def message_queue_processing(self):
         while True:
-            cursor = db.con.cursor()
+            cursor = self.con_async.cursor()
             cursor.execute("select chess.get_request()")
             rec_id = cursor.fetchone()[0]
             cursor.execute("select chess.get_messages({})".format(rec_id))
             records = cursor.fetchall()
             for rec in records:
-                print(rec)
-                action = str(rec[1]).split('?')[0]
-                user_sid = supp.getkeyByVal(self.clients, rec[0])
-                socketio.emit(action, rec[1], room=user_sid)
+                user_id_to_action = rec[0].split(',')
+                user_id = int(str(user_id_to_action[0][1:]))
+                actionToParams = user_id_to_action[1][:-1].split('?')
+                action = actionToParams[0]
+                user_sid = supp.getkeyByVal(self.clients, user_id)
+
+                socketio.emit(action, actionToParams[1], room=user_sid)
+            self.con_async.commit()
+            cursor.close()
 
 
 @socketio.on('connect')
@@ -56,12 +62,15 @@ def on_disconnect():
 @socketio.on('login')
 def on_login(data):
     print("Message recieved: " + str(data))
+
     paramsDict = supp.getParamsValMap(data)
-    cursor = db.con.cursor()
+    cursor = Server.con_sync.cursor()
+
     cursor.execute("select chess.login('{0}', '{1}')".format(paramsDict['login'], paramsDict['password']))
     # set user_id for session
     Server.clients[request.sid] = cursor.fetchone()[0]
-
+    Server.con_sync.commit()
+    cursor.close()
 
 @socketio.on('find_pair')
 def on_find_pair(data):

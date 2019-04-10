@@ -14,6 +14,7 @@ class db:
             print ("Error while connecting to PostgreSQL", error)
 
 
+
 def getParamsValMap(data):
     paramsVal = str(data).split('&')
     res = {}

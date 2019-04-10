@@ -8,6 +8,7 @@ class Client:
         self.sio.on('connect', self.on_connect)
         self.sio.on('disconnect', self.on_disconnect)
         self.sio.on('message', self.on_message)
+        self.sio.on('login', self.on_message)
 
         self.sio.connect(adress)
 
@@ -20,6 +21,9 @@ class Client:
 
     def send_message(self, event, data):
         self.sio.emit(event, data)
+
+    def on_login(self, data):
+        print('Recieved message: ' + str(data))
 
     def on_message(self, data):
         print('Recieved message: ' + str(data))
