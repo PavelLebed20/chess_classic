@@ -13,7 +13,7 @@ class Player:
         """
         pass
 
-    def make_move(self):
+    def make_move(self, game_controller=None):
         """
         Make player start calculate his move
         :return:

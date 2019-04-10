@@ -3,6 +3,8 @@ import sys
 from enum import Enum
 
 import ChessAI.GameController.game_board as gb
+from ChessAI.ChessPlayer.BotPlayer.figure_cost import pawn_cost, rook_cost, knight_cost, bishop_cost, queen_cost, \
+    king_cost
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Figure, FigureType, Side
 from Vector2d.Vector2d import Vector2d, Move
@@ -212,6 +214,12 @@ class King(FigureBase):
         else:
             sys.stdout.write('k')
 
+    def evaluate(self, x, y):
+        cost = king_cost
+        if self.side == Side.BLACK:
+            cost.reverse()
+        return 900 + cost[y][x]
+
 
 class Queen(FigureBase):
     def __init__(self, side, position):
@@ -232,6 +240,12 @@ class Queen(FigureBase):
         else:
             sys.stdout.write('q')
 
+    def evaluate(self, x, y):
+        cost = queen_cost
+        if self.side == Side.BLACK:
+            cost.reverse()
+        return 90 + queen_cost[y][x]
+
 
 class Bishop(FigureBase):
     def __init__(self, side, position):
@@ -249,6 +263,12 @@ class Bishop(FigureBase):
             sys.stdout.write('B')
         else:
             sys.stdout.write('b')
+
+    def evaluate(self, x, y):
+        cost = bishop_cost
+        if self.side == Side.BLACK:
+            cost.reverse()
+        return 30 + cost[y][x]
 
 
 class Knight(FigureBase):
@@ -280,6 +300,12 @@ class Knight(FigureBase):
         else:
             sys.stdout.write('n')
 
+    def evaluate(self, x, y):
+        cost = knight_cost
+        if self.side == Side.BLACK:
+            cost.reverse()
+        return 30 + cost[y][x]
+
 
 class Rook(FigureBase):
     def __init__(self, side, position, was_moved):
@@ -303,6 +329,12 @@ class Rook(FigureBase):
         else:
             sys.stdout.write('r')
 
+    def evaluate(self, x, y):
+        cost = rook_cost
+        if self.side == Side.BLACK:
+            cost.reverse()
+        return 50 + cost[y][x]
+
 
 class Pawn(FigureBase):
     def __init__(self, side, position, was_moved):
@@ -316,7 +348,7 @@ class Pawn(FigureBase):
                 if enemy_pawn.prev_move is not None and abs(enemy_pawn.prev_move.y - enemy_pawn.position.y) > 1:
                     correct_cells.append(self.position + Vector2d(dx, dy))
 
-    def generate_moves(self, chess_board):
+    def generate_moves(self, chess_board, is_attack=False):
         correct_cells = []
 
         if self.side == Side.WHITE:
@@ -335,7 +367,7 @@ class Pawn(FigureBase):
             x = self.position.x - 1
             y = self.position.y + delta_y
             attack_cell = chess_board.get_by_pos(x, y)
-            if attack_cell is not None and attack_cell.side != self.side:
+            if attack_cell is not None and attack_cell.side != self.side or is_attack:
                 correct_cells.append(Vector2d(x, y))
 
         if self.position.x < Board.ROW_SIZE - 1:
@@ -345,11 +377,11 @@ class Pawn(FigureBase):
             x = self.position.x + 1
             y = self.position.y + delta_y
             attack_cell = chess_board.get_by_pos(x, y)
-            if attack_cell is not None and attack_cell.side != self.side:
+            if attack_cell is not None and attack_cell.side != self.side or is_attack:
                 correct_cells.append(Vector2d(x, y))
 
         # pawn go forward
-        if self.prev_move is None:
+        if self.prev_move is None and not is_attack:
             _add_correct_cells_by_ray(self.position, correct_cells, chess_board, self.side, 0, delta_y, 2, False)
         else:
             _add_correct_cells_by_ray(self.position, correct_cells, chess_board, self.side, 0, delta_y, 1, False)
@@ -381,3 +413,10 @@ class Pawn(FigureBase):
             sys.stdout.write('P')
         else:
             sys.stdout.write('p')
+
+    def evaluate(self, x, y):
+        cost = pawn_cost
+        if self.side == Side.BLACK:
+            cost.reverse()
+        return 10 + cost[y][x]
+

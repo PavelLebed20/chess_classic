@@ -4,36 +4,25 @@
 # LAST UPDATE: 03/03/2019     #
 ###############################
 
-from enum import Enum
 from direct.showbase.ShowBase import ShowBase
 
 from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import WindowProperties
-from panda3d.core import TransparencyAttrib
 
 from panda3d.core import LPoint3, LVector3, BitMask32
 from panda3d.core import CollisionTraverser, CollisionNode
 from panda3d.core import CollisionHandlerQueue, CollisionRay
 from panda3d.core import GeomNode
 from direct.task.Task import Task
-import sys
 
-from ChessBoard.chess_board import Board
 from Vector2d.Vector2d import Move, Vector2d
-from ChessRender.UIPrimitives.button import Button
 
-
-class RenderState(Enum):
-    DEFAULT = -1,
-    INPUT = 0,
-    MENU = 1,
-    GAME = 2
-
-
-OBJECT_I = 0
-BUTTON_I = 1
-TEXT_I = 2
-STATE_I = 3
+import ChessRender.UIPrimitives.object_manage as om
+import ChessRender.UIPrimitives.text_field as tf
+import ChessRender.UIPrimitives.button as bu
+import ChessRender.obtain_functions as of
+from ChessRender.UIPrimitives.object_manage import RenderState
+from ChessRender.UIPrimitives.room import room
 
 WIDTH = 480
 HEIGHT = 480
@@ -42,13 +31,6 @@ CENTER_X = 3.5
 CENTER_Y = 3.5
 STEP_X = 3.7
 STEP_Y = -3.7
-DEPTH = 55
-
-TEXT_SCALE = 0.07
-FIGUE_SCALE = 3
-
-BUTTON_SCALE_X = 15
-BUTTON_SCALE_Y = 5
 
 def trLiter(simbol):
     if (simbol.isupper()):
@@ -58,47 +40,6 @@ def trLiter(simbol):
 
 def posOfIndex(i, j):
     return LPoint3((i-CENTER_X)*STEP_X, (j-CENTER_Y)*STEP_Y, 0)
-
-def loadObject(text=None, pos=LPoint3(0, 0), depth=DEPTH, scale_x=FIGUE_SCALE,
-               scale_z=FIGUE_SCALE, transparency=True):
-    obj = loader.loadModel("ChessRender/data/chess_figues/plane")
-    obj.reparentTo(camera)
-
-    texture = loader.loadTexture(text)
-    obj.set_texture(texture, 1)
-
-    obj.setPos(pos.getX(), depth, pos.getY())
-    obj.setSx(scale_x)
-    obj.setSz(scale_z)
-
-    obj.setBin("unsorted", 0)
-    obj.setDepthTest(False)
-
-    if transparency:
-        obj.setTransparency(TransparencyAttrib.MAlpha)
-    return obj
-
-def loadButtons(buttons, state=RenderState.DEFAULT):
-    button_arr = []
-    key = 0
-    for b in buttons:
-        textObject = OnscreenText(text=b.title, pos=b.real_position/BUTTON_SCALE_X,
-                                  scale=TEXT_SCALE)
-        obj = loadObject("ChessRender/data/button.png", b.real_position,
-                         scale_x=BUTTON_SCALE_X, scale_z=BUTTON_SCALE_Y)
-        button_arr.append([obj, b, textObject, state])
-        button_arr[key][OBJECT_I].setTag("button_tag", str(key))
-        key += 1
-    return button_arr
-
-
-def begin_game(render):
-    render.state = RenderState.GAME
-    render.need_init = True
-
-    for b in render.button_arr:
-        b[OBJECT_I].removeNode()
-        b[TEXT_I].removeNode()
 
 class Render(ShowBase):
 
@@ -115,7 +56,7 @@ class Render(ShowBase):
 
         self.init_ray()
 
-        self.mouseTask = taskMgr.add(self.mouseTask, 'mouseTask')
+        taskMgr.add(self.mouseTask, 'mouseTask')
 
         self.chess_run_func = None
         self.last_pos = None
@@ -123,18 +64,25 @@ class Render(ShowBase):
         self.accept("mouse1", self.mouse_press)
         self.accept("mouse1-up", self.mouse_release)
 
+        self.buttonThrowers[0].node().setKeystrokeEvent('keystroke')
+        self.accept("keystroke", self.key_print)
+
         self.state = RenderState.MENU
         self.need_init = True
+        self.room = room()
 
         #### - game objects
         self.chess_board = None
         self.figues = None
-
         self.current_figue = None
+
         #### - buttons objects
         self.button_arr = []
-
         self.current_button = None
+
+        #### - text_fields objects
+        self.text_field_arr = []
+        self.current_text_field = None
 
     def initPosition(self, str_board="rnbqkbnr" \
                                "pppppppp" \
@@ -157,7 +105,7 @@ class Render(ShowBase):
             for j in range(0, 8):
                 if str_board[i + j * 8] != ".":
                     figues.append(
-                        loadObject("ChessRender/data/chess_figues/" + trLiter(str_board[i + j * 8]) + ".png",
+                        om.loadObject("ChessRender/data/chess_figues/" + trLiter(str_board[i + j * 8]) + ".png",
                                    posOfIndex(i, j)))
                     figues[key].setTag("figue_tag", str(key))
                     key += 1
@@ -188,7 +136,7 @@ class Render(ShowBase):
                     pos = posOfIndex(b[1], b[2])
 
                     if figue is not None:
-                        figue.setPos(pos.getX(), DEPTH, pos.getY())
+                        figue.setPos(pos.getX(), om.DEPTH, pos.getY())
                         a[0] = None
                         b[0] = None
 
@@ -203,7 +151,7 @@ class Render(ShowBase):
         for b in after_figues:
             if b[0] is not None :
                 for key in range(0, 32):
-                    self.figues[key] = loadObject("ChessRender/data/chess_figues/" + trLiter(b[0]) + ".png",
+                    self.figues[key] = om.loadObject("ChessRender/data/chess_figues/" + trLiter(b[0]) + ".png",
                                             posOfIndex(b[1], b[2]))
                     self.figues[key].setTag("figue_tag", str(key))
 
@@ -233,7 +181,7 @@ class Render(ShowBase):
         return i,j
 
 
-    def set_menu_state(self, buttons=[Button(Vector2d(0, 10), begin_game)], text_fields=None, text_fields_obtainer_func=None):
+    def set_menu_state(self, buttons=None, text_fields=None, text_fields_obtainer_func=None):
         """
         Set render state to menu mode
         :param buttons: array buttons (see. UIPrimitives.button)
@@ -243,7 +191,10 @@ class Render(ShowBase):
         """
         self.need_init = False
         if not self.button_arr:
-            self.button_arr = loadButtons(buttons=buttons, state=self.state)
+            self.button_arr = bu.loadButtons(buttons=buttons, state=self.state)
+
+        if not self.text_field_arr:
+            self.text_field_arr = tf.loadTextField(text_fields=text_fields, state=self.state)
 
     def set_game_state(self, chess_board_str=None, chess_board_obtainer_func=None,
                        buttons=None, text_fields=None, text_fields_obtainer_func=None):
@@ -259,8 +210,8 @@ class Render(ShowBase):
         self.need_init = False
 
         if self.chess_board is None:
-            self.chess_board = loadObject("ChessRender/data/chess_board.png",
-                                          scale_x=29.5, scale_z=29.5, transparency=False)
+            self.chess_board = om.loadObject("ChessRender/data/chess_board.png",
+                                          scale_x=32, scale_z=32, depth=om.DEPTH+5, transparency=False)
         if self.figues is None:
             self.figues = self.initPosition(chess_board_str)
 
@@ -283,7 +234,7 @@ class Render(ShowBase):
         if self.mouseWatcherNode.hasMouse():
             if self.current_figue != None:
                 mpos = self.mouseWatcherNode.getMouse()
-                self.current_figue.setPos(mpos.getX()*14.5, DEPTH, mpos.getY()*14.5)
+                self.current_figue.setPos(mpos.getX()*14.5, om.DEPTH, mpos.getY()*14.5)
         return Task.cont
 
     def mouse_press(self):
@@ -306,6 +257,10 @@ class Render(ShowBase):
             if pickedObj != '':
                 self.current_button = self.button_arr[int(pickedObj)]
 
+            pickedObj = self.myHandler.getEntry(0).getIntoNodePath().findNetTag("text_field_tag").getTag("text_field_tag")
+            if pickedObj != '':
+                self.current_text_field = self.text_field_arr[int(pickedObj)]
+
     def mouse_release(self):
         ####  - figues action
         if self.current_figue is not None:
@@ -319,15 +274,20 @@ class Render(ShowBase):
 
                 self.last_pos = None
                 if self.chess_run_func is not None:
-                    self.current_figue.setPos(self.render_last_pos.getX(), DEPTH, self.render_last_pos.getZ())
+                    self.current_figue.setPos(self.render_last_pos.getX(), om.DEPTH, self.render_last_pos.getZ())
                     self.current_figue = None
                     self.chess_run_func(move)
 
         ####  - buttons action
         if self.current_button is not None:
-            self.current_button[BUTTON_I].obtainer_func(self)
+            self.current_button[bu.BUTTON_I].obtainer_func(self)
             self.current_button = None
 
+    def key_print(self, keyname):
+        if self.current_text_field is not None:
+            kascad = self.current_text_field
+            kascad[tf.TEXT_FIELD_I].add_text(keyname)
+            kascad[tf.TEXT_PRINT_I].text = kascad[tf.TEXT_FIELD_I].text
 
     def step(self):
         """
