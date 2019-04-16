@@ -20,7 +20,7 @@ def get_execution_command(file_rel_path):
            ''.format(host, database, user, port, dir_path, file_rel_path)
 
 
-commands_str = 'set PGPASSWORD={0}'.format(password)
+#commands_str = 'set PGPASSWORD={0}'.format(password)
 commands_str = 'setx PGPASSWORD {0}'.format(password)
 
 commands_str += get_execution_command('SCH\\tables_full.sql')
