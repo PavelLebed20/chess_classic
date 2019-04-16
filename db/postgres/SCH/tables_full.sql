@@ -1,4 +1,4 @@
-LANGUAGE 'plpgsql';
+--LANGUAGE 'plpgsql';
 
 DROP SCHEMA IF EXISTS chess cascade;
 CREATE SCHEMA chess;
