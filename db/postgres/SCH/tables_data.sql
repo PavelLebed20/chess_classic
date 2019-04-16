@@ -1,5 +1,4 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-LANGUAGE 'plpgsql';
 
 TRUNCATE chess.message_types cascade;
 INSERT INTO chess.message_types (action_name, priority, description) VALUES
@@ -8,5 +7,5 @@ INSERT INTO chess.message_types (action_name, priority, description) VALUES
 
 TRUNCATE chess.players cascade;
 INSERT INTO chess.players (login, password_salt, rate, email) VALUES
-                          ('admin1', crypt('admin1', gen_salt('bf')), 3000, 'amin1@mail.com'),
-                          ('admin2', crypt('admin2', gen_salt('bf')), 3000, 'amin2@mail.com');
+                          ('a', crypt('a', gen_salt('bf')), 1, 'amin1@mail.com'),
+                          ('b', crypt('b', gen_salt('bf')), 1, 'amin2@mail.com');
