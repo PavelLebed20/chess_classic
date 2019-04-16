@@ -3,7 +3,7 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 10/04/2019     #
 ###############################
-
+import threading
 from enum import Enum
 import ChessRender.obtain_functions as render_obtain_funcs
 import ChessRender.UIPrimitives.room
@@ -44,6 +44,12 @@ class Engine:
         #### - init main menu
         render_obtain_funcs.main_menu(self.render)
 
+        self.move_calc_thread = threading.Thread(target=self.run,
+                                                 args=())
+        self.move_calc_thread.start()
+
+        self.render.run()
+
     def run(self):
         """
         Main loop function
@@ -83,7 +89,6 @@ class Engine:
                 self.render.set_menu_state(buttons=self.render.room.buttons_prim,
                                            text_fields=self.render.room.text_fields_prim)
 
-            self.render.step()
 
     def process_offline_game(self, render):
         self.player_turn = 0
