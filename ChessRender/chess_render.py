@@ -296,4 +296,4 @@ class Render(ShowBase):
         """
         if self.appRunner is None or self.appRunner.dummy or \
            (self.appRunner.interactiveConsole and not self.appRunner.initialAppImport):
-            self.taskMgr.run()
+            self.taskMgr.step()

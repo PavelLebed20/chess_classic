@@ -64,10 +64,7 @@ class Engine:
                         if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
                             self.game_controller.update(move)
                             self.player_turn = (self.player_turn + 1) % 2
-                        board_str = self.game_controller.export_to_chess_board_str()
-                        self.chess_board = Board(board_str)
-                        self.render.set_game_state(board_str, self.players[self.player_turn].set_move,
-                                               None, None, None)
+                        self.render_update_board(self.players[self.player_turn])
                 else:
                     if self.current_move == int(self.local_player.side):
                         cur_player = self.local_player
@@ -76,11 +73,11 @@ class Engine:
                             if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
                                 self.game_controller.update(move)
                                 self.current_move = (self.current_move + 1) % 2
-                            board_str = self.game_controller.export_to_chess_board_str()
-                            self.chess_board = Board(board_str)
-                            self.render.set_game_state(board_str, self.local_player.set_move,
-                                                       None, None, None)
-                            self.client.send_message('update_board', "p1={}&p2={}&p3={}&p4={}".format(move.point_from.x, move.point_from.y, move.point_to.x, move.point_to.y))
+                                self.client.send_message('update_board', "p1={}&p2={}&p3={}&p4={}".format(move.point_from.x,
+                                                                                                      move.point_from.y,
+                                                                                                      move.point_to.x,
+                                                                                                      move.point_to.y))
+                            self.render_update_board(self.local_player)
 
             if self.render.state == RenderState.MENU:
                 self.render.set_menu_state(buttons=self.render.room.buttons_prim,
@@ -88,7 +85,7 @@ class Engine:
 
             self.render.step()
 
-    def process_offline_game(self):
+    def process_offline_game(self, render):
         self.player_turn = 0
         self.chess_board = Board()
         self.game_controller = GameController(self.chess_board)
@@ -103,6 +100,7 @@ class Engine:
         keys are one the string const of the form L_SOME (see. UIPrimitives.room)
         values are strings (print by user)
         """
+
         login = text_dict[ChessRender.UIPrimitives.room.L_LOGIN]
         password = text_dict[ChessRender.UIPrimitives.room.L_PAROL]
 
@@ -131,6 +129,13 @@ class Engine:
         else:
             self.game_controller = text_dict['board']
             self.current_move = text_dict['next_move']
+            self.render_update_board(self.local_player)
+
+    def render_update_board(self, player):
+        board_str = self.game_controller.export_to_chess_board_str()
+        self.chess_board = Board(board_str)
+        self.render.set_game_state(board_str, player.set_move,
+                                   None, None, None)
 
     def process_find_player(self, text_dict):
         """
