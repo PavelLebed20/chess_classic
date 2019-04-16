@@ -17,7 +17,7 @@ begin
                                                                               and chess.messages.send_time <
                                                                               v_over_time) ORDER BY
                                             chess.messages.user_id, chess.messages.priority DESC LIMIT p_max_count);
-commit;
+end;
 
   RETURN QUERY SELECT chess.messages.user_id,
                       CAST (CONCAT(chess.messages.data, '&request_id=', CAST(p_request_id AS VARCHAR)) AS VARCHAR)
