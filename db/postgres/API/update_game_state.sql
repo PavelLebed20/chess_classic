@@ -19,7 +19,7 @@ BEGIN
   if v_game_id notnull then
       ----LOCK TABLE ONLY chess.game;
       update chess.game set player1_time_left = p_left_time, board = p_board, is_playing = p_is_playing,
-                            game_result = p_game_result, next_move_player = case when = 0::bit then 1::bit else 0::bit end
+                            game_result = p_game_result, next_move_player = case when next_move_player = 0::bit then 1::bit else 0::bit end
                             where chess.game.game_id=v_game_id;
 
       select chess.game.user_id1 into v_user1_id where chess.game.game_id=v_game_id LIMIT 1;
@@ -29,7 +29,7 @@ BEGIN
                                                                      chess.game.is_playing = 1::bit LIMIT 1;
       --LOCK TABLE ONLY chess.game;
       update chess.game set player2_time_left = p_left_time, board = p_board, is_playing = p_is_playing,
-                            game_result = p_game_result, next_move_player = case when = 0::bit then 1::bit else 0::bit end
+                            game_result = p_game_result, next_move_player = case when next_move_player = 0::bit then 1::bit else 0::bit end
                             where chess.game.game_id=v_game_id;
 
 

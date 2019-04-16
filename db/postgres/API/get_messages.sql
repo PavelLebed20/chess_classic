@@ -7,23 +7,17 @@ DECLARE
 BEGIN
   SELECT NOW() - p_delta_over_time into v_over_time;
 
-  ----LOCK TABLE ONLY chess.messages;
-  CREATE TEMP TABLE IF NOT EXISTS message_ids_tmp
-  (
-    message_id bigint
-  ) ON COMMIT DELETE ROWS;
-  TRUNCATE table message_ids_tmp;
-
-
-  INSERT INTO message_ids_tmp (SELECT distinct on (chess.messages.user_id) chess.messages.message_id from chess.messages
+begin
+  LOCK TABLE ONLY chess.messages;
+  UPDATE chess.messages set request_id = p_request_id, send_time = NOW() WHERE message_id in
+                                                                            (SELECT distinct on (chess.messages.user_id)
+                                                                             chess.messages.message_id from chess.messages
                                                                              WHERE request_id < 0 or
                                                                              (chess.messages.send_time NOTNULL
                                                                               and chess.messages.send_time <
                                                                               v_over_time) ORDER BY
                                             chess.messages.user_id, chess.messages.priority DESC LIMIT p_max_count);
-
-  UPDATE chess.messages set request_id = p_request_id, send_time = NOW() WHERE message_id in
-                                                                               (SELECT message_id FROM message_ids_tmp);
+commit;
 
   RETURN QUERY SELECT chess.messages.user_id,
                       CAST (CONCAT(chess.messages.data, '&request_id=', CAST(p_request_id AS VARCHAR)) AS VARCHAR)
