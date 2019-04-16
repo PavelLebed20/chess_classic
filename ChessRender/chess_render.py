@@ -294,4 +294,6 @@ class Render(ShowBase):
         Render scene function
         :return: NONE.
         """
-        self.taskMgr.step()
+        if self.appRunner is None or self.appRunner.dummy or \
+           (self.appRunner.interactiveConsole and not self.appRunner.initialAppImport):
+            self.taskMgr.run()
