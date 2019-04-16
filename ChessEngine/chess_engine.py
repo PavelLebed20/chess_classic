@@ -141,7 +141,7 @@ class Engine:
         """
         print(text_dict)
         try:
-            game_time = text_dict[ChessRender.UIPrimitives.room.L_GAME_TIME]
+            game_time = int(text_dict[ChessRender.UIPrimitives.room.L_GAME_TIME])
             move_time = int(text_dict[ChessRender.UIPrimitives.room.L_MOVE_TIME])
             min_rate = int(text_dict[ChessRender.UIPrimitives.room.L_MIN_RATE])
             max_rate = int(text_dict[ChessRender.UIPrimitives.room.L_MAX_RATE])
@@ -150,7 +150,9 @@ class Engine:
             return
 
         # make request
-        self.client.send_message('find_pair', 'low_rate={0}&hight_rate={1}'.format(min_rate, max_rate))
+        self.client.send_message('find_pair',
+                                 'low_rate={0}&hight_rate={1}&game_time={2}&move_time={3}'
+                                 .format(min_rate, max_rate, game_time, move_time))
 
         # justchill render_obtain_funcs.game_online_fun(self.render)
 

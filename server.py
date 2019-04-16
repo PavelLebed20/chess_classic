@@ -40,12 +40,15 @@ class Server:
                 user_id = int(str(user_id_to_action[0][1:]))
                 actionToParams = user_id_to_action[1][:-1].split('?')
                 action = actionToParams[0]
-                user_sid = supp.getkeyByVal(self.clients, user_id)
+                user_sid = supp.getkeyByVal(Server.clients, user_id)
+
+                print("user id is: " + user_id)
+                print("action is: " + action)
+                print("action params is: " + actionToParams[1])
 
                 socketio.emit(action, actionToParams[1], room=user_sid)
-            self.con_async.commit()
+            Server.con_async.commit()
             cursor.close()
-
 
 @socketio.on('connect')
 def on_connect():
@@ -88,9 +91,10 @@ def on_find_pair(data):
     paramsDict = supp.getParamsValMap(data)
     cursor = Server.con_sync.cursor()
 
-    cursor.execute("call chess.find_pair({0}, {1}, {2}, p_adding_time := TIME '00:00:00',"
-                   " p_game_time := TIME '00:03:00')".format
-                   (Server.clients[request.sid], paramsDict['low_rate'], paramsDict['hight_rate']))
+    cursor.execute("call chess.find_pair({0}, {1}, {2}, {3},"
+                   " p_game_time := TIME '00:0{4}:00')".format
+                   (Server.clients[request.sid], paramsDict['low_rate'], paramsDict['hight_rate'],
+                    paramsDict['move_time'], paramsDict['game_time']))
 
     Server.con_sync.commit()
     cursor.close()
