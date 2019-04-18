@@ -73,8 +73,9 @@ class Render(ShowBase):
 
         #### - game objects
         self.chess_board = None
-        self.figues = None
-        self.current_figue = None
+        self.figues_tag = None
+        self.figues_pos = None
+        self.current_figure = None
 
         #### - buttons objects
         self.button_arr = []
@@ -97,19 +98,21 @@ class Render(ShowBase):
         :param str_board: chess board in string format
         :return: figues: array of objects.
         """
-        figues = []
+        f_tag = []
+        f_pos = dict()
         key = 0
         self.board_info = str_board
 
         for i in range(0, 8):
             for j in range(0, 8):
                 if str_board[i + j * 8] != ".":
-                    figues.append(
-                        om.loadObject("ChessRender/data/chess_figues/" + trLiter(str_board[i + j * 8]) + ".png",
-                                   posOfIndex(i, j)))
-                    figues[key].setTag("figue_tag", str(key))
+                    obj = om.loadObject("ChessRender/data/chess_figues/" + trLiter(str_board[i + j * 8]) + ".png",
+                                   posOfIndex(i, j))
+                    f_tag.append(obj)
+                    f_pos[posOfIndex(i, j)] = obj
+                    f_tag[key].setTag("figue_tag", str(key))
                     key += 1
-        return figues
+        return f_tag, f_pos
 
     def updatePosition(self, str_board):
         """
@@ -117,62 +120,37 @@ class Render(ShowBase):
         :param str_board: chess board in string format
         :return: None.
         """
-        before_figues = list()
-        after_figues = list()
+        before_figures = dict()
+        after_figures = dict()
+        buffer = dict()
 
         for i in range(0, 8):
             for j in range(0, 8):
                 if str_board[i + j * 8] != self.board_info[i + j * 8]:
                     if str_board[i + j * 8] != '.':
-                        after_figues.append([str_board[i + j * 8], i, j])
+                        after_figures[posOfIndex(i, j)] = str_board[i + j * 8]
                     if self.board_info[i + j * 8] != '.':
-                        before_figues.append([self.board_info[i + j * 8], i, j, self.pick_figue_num(i,j)])
+                        before_figures[posOfIndex(i, j)] = self.board_info[i + j * 8]
 
         #### - change positions of figues
-        for a in before_figues:
-            for b in after_figues:
-                if a[0] == b[0]:
-                    figue = self.pick_figue(a[1],a[2])
-                    pos = posOfIndex(b[1], b[2])
+        for b in before_figures.keys():
+            fig = self.figues_pos.pop(b)
+            is_dead = True
+            for a in after_figures.keys():
+                if before_figures[b] == after_figures[a]:
+                    buffer[a] = fig
+                    after_figures.pop(a)
+                    fig.setPos(x=a.getX(),y=om.DEPTH, z=a.getY())
+                    is_dead = False
+                    break
+            if is_dead:
+                if self.current_figure is fig:
+                    self.current_figure = None
+                fig.removeNode()
 
-                    if figue is not None:
-                        figue.setPos(pos.getX(), om.DEPTH, pos.getY())
-                        a[0] = None
-                        b[0] = None
 
-        #### - eat figues
-        for a in before_figues:
-            if a[0] is not None :
-                if a[3] != None:
-                    self.figues[int(a[3])].removeNode()
-                    self.figues[int(a[3])] = None
-
-        #### - create figues
-        for b in after_figues:
-            if b[0] is not None :
-                for key in range(0, 32):
-                    self.figues[key] = om.loadObject("ChessRender/data/chess_figues/" + trLiter(b[0]) + ".png",
-                                            posOfIndex(b[1], b[2]))
-                    self.figues[key].setTag("figue_tag", str(key))
-
+        self.figues_pos.update(buffer)
         self.board_info = str_board
-
-
-    def pick_figue_num(self, i, j):
-        mpos = posOfIndex(i, j)
-        self.pickerRay.setFromLens(self.camNode, mpos.getX()/14.5, mpos.getY()/14.5)
-        self.myTraverser.traverse(render)
-        if self.myHandler.getNumEntries() > 0:
-            self.myHandler.sortEntries()
-            pickedObj = self.myHandler.getEntry(0).getIntoNodePath().findNetTag("figue_tag").getTag("figue_tag")
-            return pickedObj
-        return None
-
-    def pick_figue(self, i, j):
-        pickedObj = self.pick_figue_num(i, j)
-        if pickedObj != None and pickedObj != '':
-            return self.figues[int(pickedObj)]
-        return None
 
     def get_position(self, x, y):
         ####  - calculate position
@@ -212,8 +190,8 @@ class Render(ShowBase):
         if self.chess_board is None:
             self.chess_board = om.loadObject("ChessRender/data/chess_board.png",
                                           scale_x=32, scale_z=32, depth=om.DEPTH+5, transparency=False)
-        if self.figues is None:
-            self.figues = self.initPosition(chess_board_str)
+        if self.figues_tag is None:
+            self.figues_tag, self.figues_pos = self.initPosition(chess_board_str)
 
         self.updatePosition(chess_board_str)
         self.chess_run_func = chess_board_obtainer_func
@@ -232,9 +210,9 @@ class Render(ShowBase):
 
     def mouseTask(self, task):
         if self.mouseWatcherNode.hasMouse():
-            if self.current_figue != None:
+            if self.current_figure != None:
                 mpos = self.mouseWatcherNode.getMouse()
-                self.current_figue.setPos(mpos.getX()*14.5, om.DEPTH, mpos.getY()*14.5)
+                self.current_figure.setPos(mpos.getX() * 14.5, om.DEPTH, mpos.getY() * 14.5)
         return Task.cont
 
     def mouse_press(self):
@@ -247,9 +225,9 @@ class Render(ShowBase):
 
             pickedObj = self.myHandler.getEntry(0).getIntoNodePath().findNetTag("figue_tag").getTag("figue_tag")
             if pickedObj != '':
-                self.current_figue = self.figues[int(pickedObj)]
+                self.current_figure = self.figues_tag[int(pickedObj)]
                 ####  - calculate position
-                self.render_last_pos = self.current_figue.getPos()
+                self.render_last_pos = self.current_figure.getPos()
                 i, j = self.get_position(self.render_last_pos.getX(), self.render_last_pos.getZ())
                 self.last_pos = Vector2d(i, j)
 
@@ -263,8 +241,8 @@ class Render(ShowBase):
 
     def mouse_release(self):
         ####  - figues action
-        if self.current_figue is not None:
-            pos = self.current_figue.getPos()
+        if self.current_figure is not None:
+            pos = self.current_figure.getPos()
             i, j = self.get_position(pos.getX(), pos.getZ())
             pos = posOfIndex(i, j)
 
@@ -274,8 +252,8 @@ class Render(ShowBase):
 
                 self.last_pos = None
                 if self.chess_run_func is not None:
-                    self.current_figue.setPos(self.render_last_pos.getX(), om.DEPTH, self.render_last_pos.getZ())
-                    self.current_figue = None
+                    self.current_figure.setPos(self.render_last_pos.getX(), om.DEPTH, self.render_last_pos.getZ())
+                    self.current_figure = None
                     self.chess_run_func(move)
 
         ####  - buttons action
