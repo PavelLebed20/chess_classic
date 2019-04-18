@@ -41,6 +41,12 @@ def trLiter(simbol):
 def posOfIndex(i, j):
     return LPoint3((i-CENTER_X)*STEP_X, (j-CENTER_Y)*STEP_Y, 0)
 
+def PointAtZ(y, point, vec):
+    if vec.getY() != 0:
+        return point + vec * ((y - point.getY()) / vec.getY())
+    return point
+
+
 class Render(ShowBase):
 
     def __init__(self):
@@ -48,6 +54,7 @@ class Render(ShowBase):
         Initialize render function
         """
         ShowBase.__init__(self)
+        self.disableMouse()
 
         props = WindowProperties()
         props.clearSize()
@@ -205,6 +212,7 @@ class Render(ShowBase):
 
         self.pickerNode.setFromCollideMask(GeomNode.getDefaultCollideMask())
         self.pickerRay = CollisionRay()
+
         self.pickerNode.addSolid(self.pickerRay)
         self.myTraverser.addCollider(self.pickerNP, self.myHandler)
 
@@ -212,7 +220,11 @@ class Render(ShowBase):
         if self.mouseWatcherNode.hasMouse():
             if self.current_figure != None:
                 mpos = self.mouseWatcherNode.getMouse()
-                self.current_figure.setPos(mpos.getX() * 14.5, om.DEPTH, mpos.getY() * 14.5)
+                self.pickerRay.setFromLens(self.camNode, mpos.getX(), mpos.getY())
+                nearPoint = render.getRelativePoint(camera, self.pickerRay.getOrigin())
+                nearVec = render.getRelativeVector(camera, self.pickerRay.getDirection())
+
+                self.current_figure.setPos(PointAtZ(om.DEPTH-0, nearPoint, nearVec))
         return Task.cont
 
     def mouse_press(self):
