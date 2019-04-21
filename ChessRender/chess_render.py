@@ -3,6 +3,7 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 03/03/2019     #
 ###############################
+import copy
 
 from direct.showbase.ShowBase import ShowBase
 
@@ -32,11 +33,6 @@ CENTER_Y = 3.5
 STEP_X = 3.7
 STEP_Y = -3.7
 
-def trLiter(simbol):
-    if (simbol.isupper()):
-        return "w" + simbol
-    else:
-        return "b" + simbol.upper()
 
 def posOfIndex(i, j):
     return LPoint3((i-CENTER_X)*STEP_X, (j-CENTER_Y)*STEP_Y, 0)
@@ -64,25 +60,28 @@ class Render(ShowBase):
         self.init_ray()
 
         taskMgr.add(self.mouseTask, 'mouseTask')
-
-        self.chess_run_func = None
-        self.last_pos = None
-
         self.accept("mouse1", self.mouse_press)
         self.accept("mouse1-up", self.mouse_release)
 
         self.buttonThrowers[0].node().setKeystrokeEvent('keystroke')
         self.accept("keystroke", self.key_print)
 
+        self.chess_run_func = None
+        # picked figure info
+
         self.state = RenderState.MENU
         self.need_init = True
         self.room = room()
+        #### - picked figure info
+        self.picked_figure_last_pos = None
+        self.picked_figue = None
 
         #### - game objects
         self.chess_board = None
         self.figues_tag = None
         self.figues_pos = None
         self.current_figure = None
+
 
         #### - buttons objects
         self.button_arr = []
@@ -91,6 +90,8 @@ class Render(ShowBase):
         #### - text_fields objects
         self.text_field_arr = []
         self.current_text_field = None
+
+        self.objMngr = om.ObjectMngr()
 
     def initPosition(self, str_board="rnbqkbnr" \
                                "pppppppp" \
@@ -120,6 +121,7 @@ class Render(ShowBase):
                     f_tag[key].setTag("figue_tag", str(key))
                     key += 1
         return f_tag, f_pos
+
 
     def updatePosition(self, str_board):
         """
@@ -176,10 +178,10 @@ class Render(ShowBase):
         """
         self.need_init = False
         if not self.button_arr:
-            self.button_arr = bu.loadButtons(buttons=buttons, state=self.state)
+            self.button_arr = self.objMngr.loadButtons(buttons=buttons, state=self.state)
 
         if not self.text_field_arr:
-            self.text_field_arr = tf.loadTextField(text_fields=text_fields, state=self.state)
+            self.text_field_arr = self.objMngr.loadTextField(text_fields=text_fields, state=self.state)
 
     def set_game_state(self, chess_board_str=None, chess_board_obtainer_func=None,
                        buttons=None, text_fields=None, text_fields_obtainer_func=None):
@@ -199,6 +201,7 @@ class Render(ShowBase):
                                           scale_x=32, scale_z=32, depth=om.DEPTH+5, transparency=False)
         if self.figues_tag is None:
             self.figues_tag, self.figues_pos = self.initPosition(chess_board_str)
+
 
         self.updatePosition(chess_board_str)
         self.chess_run_func = chess_board_obtainer_func
@@ -259,10 +262,10 @@ class Render(ShowBase):
             pos = posOfIndex(i, j)
 
             # run engine function
-            if self.last_pos is not None:
-                move = Move(self.last_pos, Vector2d(i, j))
+            if self.picked_figure_last_pos is not None:
+                move = Move(self.picked_figure_last_pos, Vector2d(i, j))
 
-                self.last_pos = None
+                self.picked_figure_last_pos = None
                 if self.chess_run_func is not None:
                     self.current_figure.setPos(self.render_last_pos.getX(), om.DEPTH, self.render_last_pos.getZ())
                     self.current_figure = None
