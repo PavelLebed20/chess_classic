@@ -84,9 +84,6 @@ class Render(ShowBase):
         self.text_field_arr = []
         self.current_text_field = None
 
-        #### - init main menu
-        of.main_menu(self)
-
     def initPosition(self, str_board="rnbqkbnr" \
                                "pppppppp" \
                                "........" \
@@ -297,4 +294,6 @@ class Render(ShowBase):
         Render scene function
         :return: NONE.
         """
-        self.taskMgr.step()
+        if self.appRunner is None or self.appRunner.dummy or \
+           (self.appRunner.interactiveConsole and not self.appRunner.initialAppImport):
+            self.taskMgr.step()

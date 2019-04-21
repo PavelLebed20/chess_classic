@@ -204,7 +204,8 @@ class King(FigureBase):
                     rook_pos = gb.GameBoard.default_black_rook_left_pos
                     delta_rook = Vector2d(1, 0)
 
-            chess_board.make_move(Move(Vector2d(rook_pos.x, rook_pos.y), Vector2d((point_to + delta_rook).x, (point_to + delta_rook).y)))
+            self.position = copy.deepcopy(point_to)
+            chess_board.make_move(Move(rook_pos, point_to + delta_rook))
             return
         super().make_move(chess_board, point_to)
 

@@ -1,7 +1,7 @@
-LANGUAGE 'plpgsql';
+--LANGUAGE 'plpgsql';
 
---DROP SCHEMA IF EXISTS chess cascade;
---CREATE SCHEMA chess;
+DROP SCHEMA IF EXISTS chess cascade;
+CREATE SCHEMA chess;
 
 -- Players table create
 DROP TABLE IF EXISTS chess.players CASCADE;
@@ -63,7 +63,7 @@ DROP TABLE IF EXISTS chess.pairing;
 CREATE TABLE chess.pairing
 (
     pairing_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	user_id INT NOT NULL references chess.players(user_id),
+	user_id INT NOT NULL references chess.players(user_id) UNIQUE,
 	low_rate INT NOT NULL DEFAULT 0 CONSTRAINT low_rate_value CHECK (low_rate >= 0 and low_rate <= 5000),
 	high_rate INT NOT NULL DEFAULT 5000
 	     CONSTRAINT high_rate_value CHECK (high_rate >= 0 and high_rate <= 5000 and high_rate >= low_rate),

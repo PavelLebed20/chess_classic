@@ -184,7 +184,7 @@ class GameBoard:
                         attacked_cells = attacked_cells + figure.generate_moves(self)
         return attacked_cells
 
-    def summary_moves(self, side, my_turn=False):
+    def summary_moves(self, side, my_turn=True):
         summary_moves = []
         attacked_cells = []
         for j in range(Board.ROW_SIZE):
@@ -212,8 +212,10 @@ class GameBoard:
             available_moves = cur_figure.generate_moves(self)
             for j in range(len(available_moves)):
                 new_chess_board = copy.deepcopy(self)
-                new_chess_board.make_move(Move(Vector2d(cur_figure.position.x, cur_figure.position.y),
-                                               Vector2d(available_moves[j].x, available_moves[j].y)))
+                if new_chess_board.get(cur_figure.position) is None:
+                    print(cur_figure.position.x)
+                    print(cur_figure.position.y)
+                new_chess_board.make_move(Move(cur_figure.position, available_moves[j]))
                 if new_chess_board.is_that_check(my_side) is False:
                     return False
         return True
@@ -230,6 +232,10 @@ class GameBoard:
                 available_moves = cur_figure.generate_moves(self)
                 for j in range(len(available_moves)):
                     new_chess_board = copy.deepcopy(self)
+                    if new_chess_board.get(cur_figure.position) is None:
+                        print(cur_figure.position.x)
+                        print(cur_figure.position.y)
+
                     new_chess_board.make_move(Move(cur_figure.position, available_moves[j]))
                     if new_chess_board.is_that_check(my_side) is False:
                         return False
