@@ -7,6 +7,7 @@ import ChessRender.UIPrimitives.object_manage as om
 import ChessRender.UIPrimitives.text_field as tf
 import ChessRender.UIPrimitives.button as bu
 import ChessRender.UIPrimitives.room as rm
+import ChessRender.load_models as lm
 
 from Vector2d.Vector2d import Vector2d
 
@@ -32,14 +33,20 @@ def game_fun(render):
     render.need_init = True
     clear_fun(render)
 
+
 def main_menu(render):
     render.state = om.RenderState.MENU
     clear_fun(render)
     render.room.buttons_prim = [bu.Button(Vector2d(0, 10), render.process_offline_game, title="Start game"),
                    bu.Button(Vector2d(0, 5), online_fun, title="Online game"),
-                   bu.Button(Vector2d(0, 0), exit_fun, title="Exit")]
+                   bu.Button(Vector2d(0, 0),  lm.go_to_load_model_menu_fun, title="Load models"),
+                   bu.Button(Vector2d(0, -5), exit_fun, title="Exit"),
+
+                                ]
 
     render.room.text_fields_prim = None
+
+
 
 def online_fun(render):
     render.state = om.RenderState.MENU

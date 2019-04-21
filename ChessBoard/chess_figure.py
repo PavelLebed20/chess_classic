@@ -10,16 +10,16 @@ from Vector2d.Vector2d import Vector2d
 
 
 class FigureType(Enum):
-    KING = 0,
-    QUEEN = 1,
-    BISHOP = 2,
-    KNIGHT = 3,
-    ROOK = 4,
+    KING = 0
+    QUEEN = 1
+    BISHOP = 2
+    KNIGHT = 3
+    ROOK = 4
     PAWN = 5
 
 
 class Side(Enum):
-    WHITE = 0,
+    WHITE = 0
     BLACK = 1
 
     @staticmethod

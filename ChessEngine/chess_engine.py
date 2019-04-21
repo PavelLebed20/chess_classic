@@ -14,7 +14,7 @@ from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
 from ChessRender.chess_render import Render
 from ChessRender.chess_render import RenderState
-from ServerComponents.Client.client import Client
+#from ServerComponents.Client.client import Client
 from direct.task.Task import Task
 
 class GameStates(Enum):
@@ -32,6 +32,7 @@ class Engine:
         self.render.room.process_login = self.process_login
         self.render.room.process_find_player = self.process_find_player
         self.render.process_offline_game = self.process_offline_game
+        self.render.room.process_load_model = self.process_load_model
         #self.render.room.process_update_game = self.process_update_game
 
         self.rate = 0
@@ -95,6 +96,15 @@ class Engine:
         self.players[0].make_move()
         render_obtain_funcs.game_fun(self.render)
 
+    def process_load_model(self, text_dict, side=None, figure=None):
+        if side is not None and figure is not None:
+            if side == "white":
+                self.render.objMngr.change_skin(text_dict["Path to .png"], figure.upper())
+            else:
+                self.render.objMngr.change_skin(text_dict["Path to .png"], figure.lower())
+        else:
+            self.render.objMngr.change_board(text_dict["Path to .png"])
+
     def process_login(self, text_dict):
         """
         Process text from text fields (login, parol)
@@ -107,7 +117,7 @@ class Engine:
         password = text_dict[ChessRender.UIPrimitives.room.L_PAROL]
 
         # make client
-        self.client = Client('http://localhost:8000', on_login_call=self.on_login, on_update_call=self.on_update_game)
+        #self.client = Client('http://localhost:8000', on_login_call=self.on_login, on_update_call=self.on_update_game)
 
         # make request for connection
         self.client.send_message('login', 'login={0}&password={1}'.format(login, password))
@@ -162,5 +172,6 @@ class Engine:
                                  .format(min_rate, max_rate, game_time, move_time))
 
         # justchill render_obtain_funcs.game_online_fun(self.render)
+
 
 
