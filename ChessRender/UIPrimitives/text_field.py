@@ -18,22 +18,6 @@ TEXT_FIELD_SCALE_X = 15
 MINI_SCALE_X = 10
 TEXT_FIELD_SCALE_Y = 2
 
-def loadTextField(text_fields, state):
-    if text_fields is None:
-        return None
-    text_field_arr = []
-    key = 0
-    for b in text_fields:
-        textObject = OnscreenText(text=b.title, pos=b.title_position / TEXT_FIELD_SCALE_X,
-                                  scale=om.TEXT_SCALE)
-        textPrint = OnscreenText(text=b.text, pos=b.text_position / TEXT_FIELD_SCALE_X,
-                                  scale=om.TEXT_SCALE)
-        obj = om.loadObject("ChessRender/data/text_field.png", b.real_position,
-                         scale_x=b.size.x, scale_z=b.size.y)
-        text_field_arr.append([obj, b, textObject, state, textPrint])
-        text_field_arr[key][OBJECT_I].setTag("text_field_tag", str(key))
-        key += 1
-    return text_field_arr
 
 class TextField:
     def add_text(self, c):
@@ -46,13 +30,14 @@ class TextField:
                 self.text = self.text[0:len(self.text)-1]
                 return -1
             return 0
-        if (c >= 'a' and c <='z') or (c >= 'A' and c <='Z') or (c >= '0' and c <='9'):
+        if (c >= 'a' and c <='z') or (c >= 'A' and c <='Z') or (c >= '0' and c <='9') or c == '/' or c == '.' or c == ':' or c == ' ':
             if len(self.text) < self.max_legth:
                 self.text += c
                 return 1
         return 0
+
     def __init__(self, position, title = "Test:", size=Vector2d(TEXT_FIELD_SCALE_X, TEXT_FIELD_SCALE_Y),
-                 max_length=15):
+                 max_length=100):
         """
         Initialize text field function
         :param title: text field title
