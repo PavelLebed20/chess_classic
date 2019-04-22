@@ -150,8 +150,8 @@ class Render(ShowBase):
                     is_dead = False
                     break
             if is_dead:
-                if self.current_figure is fig:
-                    self.current_figure = None
+                if self.picked_figue is fig:
+                    self.picked_figue = None
                 fig.removeNode()
 
         self.figues_pos.update(buffer)
