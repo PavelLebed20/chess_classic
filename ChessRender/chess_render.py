@@ -120,7 +120,6 @@ class Render(ShowBase):
                     key += 1
         return f_tag, f_pos
 
-
     def updatePosition(self, str_board):
         """
         Update of figues on the board (visual interpretation)
@@ -155,11 +154,9 @@ class Render(ShowBase):
                     self.current_figure = None
                 fig.removeNode()
 
-
         self.figues_pos.update(buffer)
         self.board_info = str_board
 
-        
     def get_position(self, x, y):
         ####  - calculate position
         i = int((x + 15) * 8 / 30)
@@ -198,12 +195,11 @@ class Render(ShowBase):
         if self.chess_board is None:
             self.chess_board = self.objMngr.loadObject(om.RenderObject.BOARD,
                                                        scale_x=32, scale_z=32, depth=om.DEPTH+5, transparency=False)
-        if self.figues is None:
+        if self.figues_tag is None:
             self.figues_tag, self.figues_pos = self.initPosition(chess_board_str)
 
         self.updatePosition(chess_board_str)
         self.chess_run_func = chess_board_obtainer_func
-
 
     def init_ray(self):
         self.myTraverser = CollisionTraverser()
@@ -219,13 +215,13 @@ class Render(ShowBase):
 
     def mouseTask(self, task):
         if self.mouseWatcherNode.hasMouse():
-            if self.current_figure != None:
+            if self.picked_figue != None:
                 mpos = self.mouseWatcherNode.getMouse()
                 self.pickerRay.setFromLens(self.camNode, mpos.getX(), mpos.getY())
                 nearPoint = render.getRelativePoint(camera, self.pickerRay.getOrigin())
                 nearVec = render.getRelativeVector(camera, self.pickerRay.getDirection())
 
-                self.current_figure.setPos(PointAtZ(om.DEPTH-0, nearPoint, nearVec))
+                self.picked_figue.setPos(PointAtZ(om.DEPTH-0, nearPoint, nearVec))
         return Task.cont
 
     def mouse_press(self):
@@ -240,8 +236,8 @@ class Render(ShowBase):
             if pickedObj != '':
                 self.picked_figue = self.figues_tag[int(pickedObj)]
                 ####  - calculate position
-                self.render_last_pos = self.current_figure.getPos()
-                i, j = self.get_position(self.render_last_pos.getX(), self.render_last_pos.getZ())
+                self.picked_figure_render_last_pos = self.picked_figue.getPos()
+                i, j = self.get_position(self.picked_figure_render_last_pos.getX(), self.picked_figure_render_last_pos.getZ())
                 self.picked_figure_last_pos = Vector2d(i, j)
 
             pickedObj = self.myHandler.getEntry(0).getIntoNodePath().findNetTag("button_tag").getTag("button_tag")
