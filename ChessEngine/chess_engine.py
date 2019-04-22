@@ -13,7 +13,7 @@ from ChessAI.GameController.game_controller import GameController, MoveResult
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
 from ChessRender.chess_render import Render
-from ChessRender.chess_render import RenderState
+from ChessRender.UIPrimitives.room import RoomState
 from ServerComponents.Client.client import Client
 from direct.task.Task import Task
 
@@ -53,7 +53,7 @@ class Engine:
         Main loop function
         :return: NONE.
         """
-        if self.render.state == RenderState.GAME:
+        if self.render.room.state == RoomState.GAME:
             if self.game_state == GameStates.OFFLINE_GAME:
                 if self.render.need_init:
                     # set current state
@@ -80,8 +80,7 @@ class Engine:
                                                                                                   move.point_to.x,
                                                                                                   move.point_to.y))
                         self.render_update_board(self.local_player)
-
-        if self.render.state == RenderState.MENU:
+        if self.render.room.state.value >= RoomState.MENU.value:
             self.render.set_menu_state(buttons=self.render.room.buttons_prim,
                                        text_fields=self.render.room.text_fields_prim)
         return Task.cont

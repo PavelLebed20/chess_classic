@@ -5,13 +5,6 @@
 ###############################
 from panda3d.core import LPoint3
 from panda3d.core import TransparencyAttrib
-from enum import Enum
-
-class RenderState(Enum):
-    DEFAULT = -1,
-    INPUT = 0,
-    MENU = 1,
-    GAME = 2
 
 TEXT_SCALE = 0.07
 FIGUE_SCALE = 3

@@ -21,8 +21,7 @@ import ChessRender.UIPrimitives.object_manage as om
 import ChessRender.UIPrimitives.text_field as tf
 import ChessRender.UIPrimitives.button as bu
 import ChessRender.obtain_functions as of
-from ChessRender.UIPrimitives.object_manage import RenderState
-from ChessRender.UIPrimitives.room import room
+from ChessRender.UIPrimitives.room import room, RoomState
 
 WIDTH = 480
 HEIGHT = 480
@@ -74,9 +73,9 @@ class Render(ShowBase):
         self.buttonThrowers[0].node().setKeystrokeEvent('keystroke')
         self.accept("keystroke", self.key_print)
 
-        self.state = RenderState.MENU
         self.need_init = True
         self.room = room()
+        self.room.state = RoomState.MENU
 
         #### - game objects
         self.chess_board = None
@@ -147,6 +146,8 @@ class Render(ShowBase):
                 if before_figures[b] == after_figures[a]:
                     buffer[a] = fig
                     after_figures.pop(a)
+                    if fig is self.current_figure:
+                        self.current_figure = None
                     fig.setPos(x=a.getX(),y=om.DEPTH, z=a.getY())
                     is_dead = False
                     break
@@ -176,10 +177,10 @@ class Render(ShowBase):
         """
         self.need_init = False
         if not self.button_arr:
-            self.button_arr = bu.loadButtons(buttons=buttons, state=self.state)
+            self.button_arr = bu.loadButtons(buttons=buttons, state=self.room.state)
 
         if not self.text_field_arr:
-            self.text_field_arr = tf.loadTextField(text_fields=text_fields, state=self.state)
+            self.text_field_arr = tf.loadTextField(text_fields=text_fields, state=self.room.state)
 
     def set_game_state(self, chess_board_str=None, chess_board_obtainer_func=None,
                        buttons=None, text_fields=None, text_fields_obtainer_func=None):
