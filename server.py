@@ -4,6 +4,7 @@ import ServerComponents.Suppurt.support as supp
 import pickle
 import ChessAI.GameController.game_controller as game_controller
 import Vector2d.Vector2d as vec
+import time
 import ast
 
 # server connection
@@ -42,11 +43,13 @@ class Server:
                 action = actionToParams[0]
                 user_sid = supp.getkeyByVal(Server.clients, user_id)
 
-                print("user id is: " + user_id)
-                print("action is: " + action)
-                print("action params is: " + actionToParams[1])
+                print("user id is: " + str(user_id))
+                print("session id is: " + str(user_sid))
+                print("action is: " + str(action))
+                print("action params is: " + str(actionToParams[1]))
 
                 socketio.emit(action, actionToParams[1], room=user_sid)
+            time.sleep(0.05)
             Server.con_async.commit()
             cursor.close()
 
@@ -55,11 +58,17 @@ def on_connect():
     print("%s connected" % (request.sid))
     Server.clients[request.sid] = None
 
-
 @socketio.on('disconnect')
 def on_disconnect():
     print("%s disconnected" % (request.sid))
     Server.clients.pop(request.sid)
+    cursor = Server.con_sync.cursor()
+
+    #cursor.execute(
+    #    "".format(Server.clients[request.sid]))
+    Server.con_sync.commit()
+    cursor.close()
+
 
 @socketio.on('verify_message')
 def on_verify_message(data):
@@ -108,6 +117,7 @@ def on_update_board(data):
     # get board from database
     cursor.execute("call chess.get_current_game_board({0})".format(Server.clients[request.sid]))
     rec = cursor.fetchone()
+    print("cur_game_board is: " + str(rec))
     # convert to game_controller
     cur_game_controller = game_controller.GameController(pickle.loads(rec))
     move = vec.Move(vec.Vector2d(paramsDict['p1'], paramsDict['p2']),
