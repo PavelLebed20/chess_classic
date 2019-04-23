@@ -13,6 +13,7 @@ CREATE TABLE  chess.players
 	rate INT NOT NULL DEFAULT 0 CONSTRAINT rate_value CHECK (rate >= 0 and rate <= 5000),
 	email varchar(50) NOT NULL UNIQUE,
 	verified bit NOT NULL DEFAULT 0::bit,
+	online bit NOT NULL DEFAULT 0::bit,
 	registration_time timestamp NOT NULL DEFAULT NOW(),
 	last_update timestamp NOT NULL DEFAULT NOW()
 );
@@ -44,7 +45,7 @@ CREATE TABLE chess.game
     game_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	user_id1 INT NOT NULL references chess.players(user_id), -- plays white
 	user_id2 INT NOT NULL references chess.players(user_id), -- plays black
-	board bytea DEFAULT NULL,
+	board varchar(64) DEFAULT NULL,
 	win_cost INT NOT NULL DEFAULT 0 CONSTRAINT win_cost_value CHECK (win_cost >= 0 and win_cost <= 45),
 	draw_cost INT NOT NULL DEFAULT 0 CONSTRAINT draw_cost_value CHECK (draw_cost >= 0 and draw_cost <= 45),
 	next_move_player bit NOT NULL DEFAULT 0::bit, -- (0 - white move, 1 - black move)
@@ -87,6 +88,7 @@ CREATE TABLE chess.message_types
     action_name varchar(64) NOT NULL,
     message_type_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	priority INT NOT NULL,
+	resend_time TIME NOT NULL,
 	description varchar(300) NOT NULL
 );
 
@@ -105,7 +107,8 @@ CREATE TABLE chess.messages
     user_id INT NOT NULL references chess.players(user_id),
     message_type_id INT NOT NULL references chess.message_types(message_type_id),
     priority INT NOT NULL,
-    send_time timestamp DEFAULT NULL
+    send_time timestamp DEFAULT NULL,
+    resend_time TIME NOT NULL
 );
 
 DROP sequence if exists requests_seq;
@@ -114,5 +117,6 @@ create sequence requests_seq maxvalue 9223372036854775807;
 -- INDEXES OBTAIN
 create index messages_send_time_idx ON chess.messages(send_time);
 create index messages_user_id_idx ON chess.messages(user_id);
+create index messages_priority_idx ON chess.messages(priority);
 -- End of Message table create
 
