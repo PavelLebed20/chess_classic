@@ -37,10 +37,15 @@ class room():
         self.buttons_prim = None
         self.text_fields_prim = None
 
+        ####
+        self.user_param = []
+
+
         #### - functions to process data
         self.process_login = dummy_fun
         self.process_find_player = dummy_fun
         self.process_register = dummy_fun
+
 
 
     def process_data(self, render):
@@ -48,7 +53,6 @@ class room():
         if self.text_fields_prim is not None:
             for i in range(0, len(self.text_fields_prim)):
                 text_dict[self.text_fields_prim[i].title] = self.text_fields_prim[i].text
-
         if self.state is RoomState.LOGIN:
             self.process_login(text_dict)
         if self.state is RoomState.FIND_PLAYER:

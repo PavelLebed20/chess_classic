@@ -7,6 +7,7 @@ import ChessRender.UIPrimitives.object_manage as om
 import ChessRender.UIPrimitives.text_field as tf
 import ChessRender.UIPrimitives.button as bu
 import ChessRender.UIPrimitives.room as rm
+import ChessRender.load_models as lm
 
 from Vector2d.Vector2d import Vector2d
 
@@ -32,6 +33,7 @@ def game_fun(render):
     render.need_init = True
     clear_fun(render)
 
+
 def main_menu(render):
     render.room.state = rm.RoomState.MENU
     clear_fun(render)
@@ -44,6 +46,7 @@ def main_menu(render):
 
 def login_menu_fun(render):
     render.room.state = rm.RoomState.LOGIN
+
     clear_fun(render)
 
     render.room.buttons_prim = [bu.Button(Vector2d(0, -5), main_menu, title="Back"),

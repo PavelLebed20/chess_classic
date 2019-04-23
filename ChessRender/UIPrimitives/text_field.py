@@ -35,6 +35,7 @@ def loadTextField(text_fields, state):
         key += 1
     return text_field_arr
 
+
 class TextField:
     def add_text(self, c):
         """
@@ -46,13 +47,14 @@ class TextField:
                 self.text = self.text[0:len(self.text)-1]
                 return -1
             return 0
-        if (c >= 'a' and c <='z') or (c >= 'A' and c <='Z') or (c >= '0' and c <='9'):
+        if (c >= 'a' and c <='z') or (c >= 'A' and c <='Z') or (c >= '0' and c <='9') or c == '/' or c == '.' or c == ':' or c == ' ':
             if len(self.text) < self.max_legth:
                 self.text += c
                 return 1
         return 0
+
     def __init__(self, position, title = "Test:", size=Vector2d(TEXT_FIELD_SCALE_X, TEXT_FIELD_SCALE_Y),
-                 max_length=15):
+                 max_length=100):
         """
         Initialize text field function
         :param title: text field title

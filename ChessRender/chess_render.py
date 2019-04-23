@@ -3,6 +3,7 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 03/03/2019     #
 ###############################
+import copy
 
 from direct.showbase.ShowBase import ShowBase
 
@@ -32,11 +33,6 @@ CENTER_Y = 3.5
 STEP_X = 3.2
 STEP_Y = -3.2
 
-def trLiter(simbol):
-    if (simbol.isupper()):
-        return "w" + simbol
-    else:
-        return "b" + simbol.upper()
 
 def posOfIndex(i, j):
     return LPoint3((i-CENTER_X)*STEP_X, (j-CENTER_Y)*STEP_Y, 0)
@@ -64,10 +60,6 @@ class Render(ShowBase):
         self.init_ray()
 
         taskMgr.add(self.mouseTask, 'mouseTask')
-
-        self.chess_run_func = None
-        self.last_pos = None
-
         self.accept("mouse1", self.mouse_press)
         self.accept("mouse1-up", self.mouse_release)
 
@@ -77,6 +69,7 @@ class Render(ShowBase):
         self.need_init = True
         self.room = room()
         self.room.state = RoomState.MENU
+
 
         #### - game objects
         self.chess_board = None
@@ -91,6 +84,8 @@ class Render(ShowBase):
         #### - text_fields objects
         self.text_field_arr = []
         self.current_text_field = None
+
+        self.objMngr = om.ObjectMngr()
 
     def initPosition(self, str_board="rnbqkbnr" \
                                "pppppppp" \
@@ -113,8 +108,7 @@ class Render(ShowBase):
         for i in range(0, 8):
             for j in range(0, 8):
                 if str_board[i + j * 8] != ".":
-                    obj = om.loadObject("ChessRender/data/chess_figues/" + trLiter(str_board[i + j * 8]) + ".png",
-                                   posOfIndex(i, j))
+                    obj = self.objMngr.load_figure(str_board[i + j * 8], posOfIndex(i, j))
                     f_tag.append(obj)
                     f_pos[posOfIndex(i, j)] = obj
                     f_tag[key].setTag("figue_tag", str(key))
@@ -153,10 +147,9 @@ class Render(ShowBase):
                     is_dead = False
                     break
             if is_dead:
-                if self.current_figure is fig:
-                    self.current_figure = None
+                if self.picked_figue is fig:
+                    self.picked_figue = None
                 fig.removeNode()
-
 
         self.figues_pos.update(buffer)
         self.board_info = str_board
@@ -183,6 +176,7 @@ class Render(ShowBase):
         if not self.text_field_arr:
             self.text_field_arr = tf.loadTextField(text_fields=text_fields, state=self.room.state)
 
+
     def set_game_state(self, chess_board_str=None, chess_board_obtainer_func=None,
                        buttons=None, text_fields=None, text_fields_obtainer_func=None,
                        current_side=Side.WHITE, change_view = False):
@@ -202,6 +196,7 @@ class Render(ShowBase):
         if self.chess_board is None:
             self.chess_board = om.loadObject("ChessRender/data/chess_board_coord.png",
                                           scale_x=32, scale_z=32, depth=om.DEPTH+5, transparency=False)
+
         if self.figues_tag is None:
             self.figues_tag, self.figues_pos = self.initPosition(chess_board_str)
 
@@ -219,7 +214,6 @@ class Render(ShowBase):
                 for obj in self.figues_pos.values():
                     obj.setHpr(0,0,180)
 
-
     def init_ray(self):
         self.myTraverser = CollisionTraverser()
         self.myHandler = CollisionHandlerQueue()
@@ -234,13 +228,13 @@ class Render(ShowBase):
 
     def mouseTask(self, task):
         if self.mouseWatcherNode.hasMouse():
-            if self.current_figure != None:
+            if self.picked_figue != None:
                 mpos = self.mouseWatcherNode.getMouse()
                 self.pickerRay.setFromLens(self.camNode, mpos.getX(), mpos.getY())
                 nearPoint = render.getRelativePoint(camera, self.pickerRay.getOrigin())
                 nearVec = render.getRelativeVector(camera, self.pickerRay.getDirection())
 
-                self.current_figure.setPos(PointAtZ(om.DEPTH-0, nearPoint, nearVec))
+                self.picked_figue.setPos(PointAtZ(om.DEPTH-0, nearPoint, nearVec))
         return Task.cont
 
     def mouse_press(self):
@@ -253,11 +247,11 @@ class Render(ShowBase):
 
             pickedObj = self.myHandler.getEntry(0).getIntoNodePath().findNetTag("figue_tag").getTag("figue_tag")
             if pickedObj != '':
-                self.current_figure = self.figues_tag[int(pickedObj)]
+                self.picked_figue = self.figues_tag[int(pickedObj)]
                 ####  - calculate position
-                self.render_last_pos = self.current_figure.getPos()
-                i, j = self.get_position(self.render_last_pos.getX(), self.render_last_pos.getZ())
-                self.last_pos = Vector2d(i, j)
+                self.picked_figure_render_last_pos = self.picked_figue.getPos()
+                i, j = self.get_position(self.picked_figure_render_last_pos.getX(), self.picked_figure_render_last_pos.getZ())
+                self.picked_figure_last_pos = Vector2d(i, j)
 
             pickedObj = self.myHandler.getEntry(0).getIntoNodePath().findNetTag("button_tag").getTag("button_tag")
             if pickedObj != '':
@@ -269,19 +263,19 @@ class Render(ShowBase):
 
     def mouse_release(self):
         ####  - figues action
-        if self.current_figure is not None:
-            pos = self.current_figure.getPos()
+        if self.picked_figue is not None:
+            pos = self.picked_figue.getPos()
             i, j = self.get_position(pos.getX(), pos.getZ())
             pos = posOfIndex(i, j)
 
             # run engine function
-            if self.last_pos is not None:
-                move = Move(self.last_pos, Vector2d(i, j))
+            if self.picked_figure_last_pos is not None:
+                move = Move(self.picked_figure_last_pos, Vector2d(i, j))
 
-                self.last_pos = None
+                self.picked_figure_last_pos = None
                 if self.chess_run_func is not None:
-                    self.current_figure.setPos(self.render_last_pos.getX(), om.DEPTH, self.render_last_pos.getZ())
-                    self.current_figure = None
+                    self.picked_figue.setPos(self.picked_figure_render_last_pos.getX(), om.DEPTH, self.picked_figure_render_last_pos.getZ())
+                    self.picked_figue = None
                     self.chess_run_func(move)
 
         ####  - buttons action
