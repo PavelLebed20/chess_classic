@@ -6,6 +6,7 @@ LANGUAGE 'plpgsql'
 AS $BODY$
 DECLARE
 BEGIN
+  LOCK TABLE ONLY chess.messages in share row exclusive mode;
   UPDATE chess.messages SET send_time = NULL WHERE request_id = p_request_id AND user_id = p_user_id;
 END;
 $BODY$;

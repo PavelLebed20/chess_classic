@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION chess.get_messages(
   p_request_id bigint,
 	p_max_count integer default 1000,
-	p_delta_over_time TIME default TIME '00:00:02') RETURNS table(user_id int, data varchar, byte_data bytea) AS $$
+	p_delta_over_time TIME default TIME '00:00:02') RETURNS table(user_id int, data varchar) AS $$
 DECLARE
     v_over_time TIMESTAMP;
 BEGIN
@@ -24,8 +24,7 @@ begin
 end;
 
   RETURN QUERY SELECT chess.messages.user_id,
-                      CAST (CONCAT(chess.messages.data, '&request_id=', CAST(p_request_id AS VARCHAR)) AS VARCHAR),
-                      chess.messages.byte_data
+                      CAST (CONCAT(chess.messages.data, '&request_id=', CAST(p_request_id AS VARCHAR)) AS VARCHAR)
   FROM chess.messages WHERE chess.messages.request_id = p_request_id;
 END;
 

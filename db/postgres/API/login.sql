@@ -38,8 +38,10 @@ BEGIN
 
             SELECT chess.game.user_id2 INTO v_user2_id from chess.game where chess.game.game_id = v_game_id limit 1;
 
-            SELECT CONCAT('update_game?',
-                'opponent_login=', (select cast(chess.players.login as varchar) FROM chess.players WHERE
+            SELECT CONCAT('update_game?board=', (select cast(chess.game.board as varchar)
+                                                 FROM chess.game WHERE
+                                                 chess.game.game_id=v_game_id LIMIT 1),
+                '&opponent_login=', (select cast(chess.players.login as varchar) FROM chess.players WHERE
                                                  chess.players.user_id=v_user2_id LIMIT 1) ,
              '&opponent_rate=' , (select cast(chess.players.rate as varchar)
                             FROM chess.players WHERE chess.players.user_id=v_user2_id LIMIT 1) ,
@@ -58,8 +60,10 @@ BEGIN
              '&next_move=', (select cast(chess.game.next_move_player as varchar) FROM chess.game WHERE
                                          chess.game.game_id=v_game_id LIMIT 1)) INTO v_user1_data;
 
-  SELECT CONCAT('update_game?',
-                'opponent_login=', (select cast(chess.players.login as varchar) FROM chess.players WHERE
+  SELECT CONCAT('update_game?board=', (select cast(chess.game.board as varchar)
+                                                 FROM chess.game WHERE
+                                                 chess.game.game_id=v_game_id LIMIT 1),
+                '&opponent_login=', (select cast(chess.players.login as varchar) FROM chess.players WHERE
                                                  chess.players.user_id=v_user1_id LIMIT 1) ,
              '&opponent_rate=' , (select cast(chess.players.rate as varchar)
                             FROM chess.players WHERE chess.players.user_id=v_user1_id LIMIT 1) ,
@@ -81,12 +85,10 @@ BEGIN
   select chess.game.board into v_game_board FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
 
   begin
-	call chess.add_message(p_data := v_user1_data, p_user_id := v_user1_id, p_action_name := 'update_game',
-	    p_byte_data := v_game_board);
+	call chess.add_message(p_data := v_user1_data, p_user_id := v_user1_id, p_action_name := 'update_game');
   end;
   begin
-	call chess.add_message(p_data := v_user2_data, p_user_id := v_user2_id, p_action_name := 'update_game',
-	    p_byte_data := v_game_board);
+	call chess.add_message(p_data := v_user2_data, p_user_id := v_user2_id, p_action_name := 'update_game');
   end;
       end if;
     begin

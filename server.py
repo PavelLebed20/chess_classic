@@ -61,15 +61,8 @@ class Server:
                 print(clients)
                 user_sid = supp.getkeyByVal(clients, user_id)
                 paramsDict = supp.getParamsValMap(params)
-
-                if rec[2] is not None:
-                    byte_arr = bytearray(rec[2])
-                    paramsDict['game_controller_bytea'] = self.bytes_to_int(bytearray(rec[2]))
-                    paramsDict['len'] = byte_arr.__len__()
-                else:
-                    paramsDict['game_controller_bytea'] = None
-
                 emit_params = (action, paramsDict)
+
                 # fill none messages
                 if (user_sid is None):
                     none_messages[user_id] = emit_params
@@ -87,8 +80,6 @@ class Server:
                 if (user_sid is not None):
                     print("user id is: " + str(user_id))
                     print("user SID is: " + str(user_sid))
-                    print("action is: " + none_messages[user_id][0])
-                    print("action params is: " + none_messages[user_id][1])
                     print("emit params " + str(none_messages[user_id]))
                     socketio.emit(none_messages[user_id], room=user_sid)
                     del none_messages[user_id]

@@ -45,7 +45,7 @@ CREATE TABLE chess.game
     game_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	user_id1 INT NOT NULL references chess.players(user_id), -- plays white
 	user_id2 INT NOT NULL references chess.players(user_id), -- plays black
-	board bytea DEFAULT NULL,
+	board varchar(64) DEFAULT NULL,
 	win_cost INT NOT NULL DEFAULT 0 CONSTRAINT win_cost_value CHECK (win_cost >= 0 and win_cost <= 45),
 	draw_cost INT NOT NULL DEFAULT 0 CONSTRAINT draw_cost_value CHECK (draw_cost >= 0 and draw_cost <= 45),
 	next_move_player bit NOT NULL DEFAULT 0::bit, -- (0 - white move, 1 - black move)
@@ -106,8 +106,7 @@ CREATE TABLE chess.messages
     user_id INT NOT NULL references chess.players(user_id),
     message_type_id INT NOT NULL references chess.message_types(message_type_id),
     priority INT NOT NULL,
-    send_time timestamp DEFAULT NULL,
-	byte_data bytea DEFAULT NULL
+    send_time timestamp DEFAULT NULL
 );
 
 DROP sequence if exists requests_seq;
