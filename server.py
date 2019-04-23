@@ -39,12 +39,6 @@ class Server:
         socketio.start_background_task(self.message_queue_processing)
         socketio.run(app, port=self.port)
 
-    def bytes_to_int(self, bytes):
-        result = 0
-        for b in bytes:
-            result = result * 256 + int(b)
-        return result
-
     def message_queue_processing(self):
         while True:
             cursor = con_async.cursor()
@@ -58,10 +52,8 @@ class Server:
                 actionToParams = str(rec[1]).split('?')
                 action = actionToParams[0]
                 params = actionToParams[1]
-                print(clients)
                 user_sid = supp.getkeyByVal(clients, user_id)
-                paramsDict = supp.getParamsValMap(params)
-                emit_params = (action, paramsDict)
+                emit_params = (action, params)
 
                 # fill none messages
                 if (user_sid is None):
@@ -69,8 +61,6 @@ class Server:
                 else:
                     print("user id is: " + str(user_id))
                     print("user SID is: " + str(user_sid))
-                    print("action is: " + action)
-                    print("action params is: " + params)
                     print("emit params " + str(emit_params))
                     socketio.emit(emit_params, room=user_sid)
 
@@ -122,9 +112,9 @@ def on_login(data):
 
     cursor.execute("select chess.login('{0}', '{1}')".format(paramsDict['login'], paramsDict['password']))
     # set user_id for session
-    print("login SID is " + str(request.sid))
+    #print("login SID is " + str(request.sid))
     clients[request.sid] = cursor.fetchone()[0]
-    print("login ID is " + str(clients[request.sid]))
+    #print("login ID is " + str(clients[request.sid]))
     con_sync.commit()
     cursor.close()
 
@@ -152,23 +142,24 @@ def on_update_board(data):
     if (clients[request.sid] is not None):
         cursor.execute("select chess.get_current_game_board({0})".format(clients[request.sid]))
     rec = cursor.fetchone()[0]
-    print("rec is " + str(rec))
+    print("server_board is " + str(rec))
     # convert to game_controller
     if (rec is not None):
-        cur_game_controller = game_controller.GameController(pickle.loads(rec))
+        cur_game_controller = game_controller.GameController(
+            game_controller.GameController.deserialize_from_str(str(rec)))
     else:
         cur_game_controller = game_controller.GameController(Board())
-    print("gay controller is " + str(pickle.dumps(cur_game_controller)))
+
     move = vec.Move(vec.Vector2d(int(paramsDict['p1']), int(paramsDict['p2'])),
                     vec.Vector2d(int(paramsDict['p3']), int(paramsDict['p4'])))
 
     #res = cur_game_controller.check_move(move)
-    # update board
     #if (res != game_controller.MoveResult.INCORRECT):
+
     cur_game_controller.update(move)
 
     cursor.execute("call chess.update_game_state({0}, {1})".format(clients[request.sid],
-                                                                     psycopg2.Binary(pickle.dumps(cur_game_controller))))
+                                                                   cur_game_controller.serialize_to_str()))
 
     con_sync.commit()
     cursor.close()

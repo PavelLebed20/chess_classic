@@ -13,7 +13,7 @@ DECLARE
   v_game_id integer;
   v_user1_data varchar;
   v_user2_data varchar;
-  v_game_board bytea;
+  v_game_board varchar(64);
 BEGIN
   SELECT chess.game.game_id into v_game_id FROM chess.game WHERE chess.game.user_id1 = p_user_id and
                                                                  chess.game.is_playing = 1::bit LIMIT 1;
@@ -70,9 +70,7 @@ BEGIN
       WHERE user_id = (SELECT chess.game.user_id2 FROM chess.game WHERE chess.game.game_id=v_game_id);
   end if;
 
-  SELECT CONCAT('update_game?board=', (select cast(chess.game.board as varchar)
-                                                 FROM chess.game WHERE
-                                                 chess.game.game_id=v_game_id LIMIT 1),
+  SELECT CONCAT('update_game?board=', p_board,
                 '&opponent_login=', (select cast(chess.players.login as varchar) FROM chess.players WHERE
                                                  chess.players.user_id=v_user2_id LIMIT 1) ,
              '&opponent_rate=' , (select cast(chess.players.rate as varchar)
@@ -92,9 +90,7 @@ BEGIN
              '&next_move=', (select cast(chess.game.next_move_player as varchar) FROM chess.game WHERE
                                          chess.game.game_id=v_game_id LIMIT 1)) INTO v_user1_data;
 
-  SELECT CONCAT('update_game?board=', (select cast(chess.game.board as varchar)
-                                                 FROM chess.game WHERE
-                                                 chess.game.game_id=v_game_id LIMIT 1),
+  SELECT CONCAT('update_game?board=', p_board,
                 '&opponent_login=', (select cast(chess.players.login as varchar) FROM chess.players WHERE
                                                  chess.players.user_id=v_user1_id LIMIT 1) ,
              '&opponent_rate=' , (select cast(chess.players.rate as varchar)

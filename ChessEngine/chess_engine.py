@@ -135,7 +135,7 @@ class Engine:
         render_obtain_funcs.find_player_fun(self.render)
 
     def on_update_game(self, text_dict):
-        if text_dict['game_controller_bytea'] is None:
+        if text_dict['board'] is None:
             self.chess_board = Board()
             self.game_controller = GameController(self.chess_board)
             if text_dict['side'] == '0':
@@ -144,7 +144,7 @@ class Engine:
                 self.local_player = LocalPlayer(Side.BLACK)
             self.current_move = int(text_dict['next_move'])
         else:
-            self.game_controller = pickle.loads(text_dict['game_controller_bytea'])
+            self.game_controller = pickle.loads(text_dict['board'])
             self.current_move = int(text_dict['next_move'])
         render_obtain_funcs.game_fun(self.render)
         self.render_update_board(self.local_player)

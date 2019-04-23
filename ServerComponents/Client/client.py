@@ -26,34 +26,23 @@ class Client:
     def send_message(self, event, data):
         self.sio.emit(event, data)
 
-    def on_login(self, data):
-        paramsMap = data
-        print('Recieved message: ' + str(data) + ' ' +paramsMap['request_id'])
+    def on_login(self, params_data):
+        paramsMap = supp.getParamsValMap(params_data)
+        print('Recieved message: ' + str(params_data) + ' ' +paramsMap['request_id'])
 
         self.sio.emit('verify_message', "request_id={}".format(paramsMap['request_id']))
         #####
         if self.on_login_call is not None:
             self.on_login_call(paramsMap)
 
-    def int_to_bytes(self, value, len):
-        res = []
-
-        for i in len:
-            res.append(value >> (i * 8) & 0xff)
-
-        res.reverse()
-        return res
 
     def on_update_board(self, params_data):
-        paramsMap = params_data
+        paramsMap = supp.getParamsValMap(params_data)
         print('Recieved message: ' + str(params_data) + paramsMap['request_id'])
 
         self.sio.emit('verify_message', "request_id={}".format(paramsMap['request_id']))
         #####
         if self.on_update_call is not None:
-            if paramsMap['game_controller_bytea'] is not None:
-                paramsMap['game_controller_bytea'] = self.int_to_bytes(paramsMap['game_controller_bytea'],
-                                                                       paramsMap['len'])
             self.on_update_call(paramsMap)
 
     def on_message(self, data):
