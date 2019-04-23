@@ -28,7 +28,7 @@ class Client:
 
     def on_login(self, params_data):
         paramsMap = supp.getParamsValMap(params_data)
-        print('Recieved message: ' + str(params_data) + ' ' +paramsMap['request_id'])
+        print('Recieved message: ' + str(params_data) + ' ' + paramsMap['request_id'])
 
         self.sio.emit('verify_message', "request_id={}".format(paramsMap['request_id']))
         #####
@@ -38,7 +38,7 @@ class Client:
 
     def on_update_board(self, params_data):
         paramsMap = supp.getParamsValMap(params_data)
-        print('Recieved message: ' + str(params_data) + paramsMap['request_id'])
+        print('Recieved message: ' + str(params_data) + ' ' +  paramsMap['request_id'])
 
         self.sio.emit('verify_message', "request_id={}".format(paramsMap['request_id']))
         #####

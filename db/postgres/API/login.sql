@@ -12,7 +12,6 @@ DECLARE
     v_login_data varchar;
     v_user1_data varchar;
     v_user2_data varchar;
-    v_game_board bytea;
 BEGIN
   SELECT chess.players.user_id into v_user_id FROM chess.players WHERE chess.players.login = p_user_login_or_mail or
                                                        chess.players.email = p_user_login_or_mail and
@@ -81,8 +80,6 @@ BEGIN
              '&side=1',
              '&next_move=', (select cast(chess.game.next_move_player as varchar) FROM chess.game WHERE
                                          chess.game.game_id=v_game_id LIMIT 1)) INTO v_user2_data;
-
-  select chess.game.board into v_game_board FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
 
   begin
 	call chess.add_message(p_data := v_user1_data, p_user_id := v_user1_id, p_action_name := 'update_game');
