@@ -12,7 +12,7 @@ DECLARE
     v_login_data varchar;
     v_user1_data varchar;
     v_user2_data varchar;
-    v_game_board bytea;
+    v_game_board varchar(64);
 BEGIN
   SELECT chess.players.user_id into v_user_id FROM chess.players WHERE chess.players.login = p_user_login_or_mail or
                                                        chess.players.email = p_user_login_or_mail and
@@ -100,4 +100,4 @@ BEGIN
   return -1;
 END;
 
-$$ LANGUAGE plpgsql;;
+$$ LANGUAGE plpgsql;

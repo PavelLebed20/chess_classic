@@ -113,12 +113,10 @@ BEGIN
   select chess.game.board into v_game_board FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
 
   begin
-	call chess.add_message(p_data := v_user1_data, p_user_id := v_user1_id, p_action_name := 'update_game',
-	    p_byte_data := v_game_board);
+	call chess.add_message(p_data := v_user1_data, p_user_id := v_user1_id, p_action_name := 'update_game');
   end;
   begin
-	call chess.add_message(p_data := v_user2_data, p_user_id := v_user2_id, p_action_name := 'update_game',
-	    p_byte_data := v_game_board);
+	call chess.add_message(p_data := v_user2_data, p_user_id := v_user2_id, p_action_name := 'update_game');
   end;
 
 END;
