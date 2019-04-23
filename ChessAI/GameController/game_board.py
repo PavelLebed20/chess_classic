@@ -75,6 +75,52 @@ class GameBoard:
                 else:
                     continue
 
+    def serialize_to_str(self):
+        str_board = ['.' for j in range(0, Board.ROW_SIZE)
+                        for i in range(0, Board.COLUMN_SIZE)]
+
+        for i in range(0, Board.COLUMN_SIZE):
+            for j in range(0, Board.ROW_SIZE):
+                if self.board[j][i] is None:
+                    continue
+                str_board[i * Board.ROW_SIZE + j] = self.board[j][i].serialized_letter()
+        return str_board
+
+    def deserialize_from_str(self, str_board):
+        self.board = [[None for j in range(0, Board.ROW_SIZE)]
+                      for i in range(0, Board.COLUMN_SIZE)]
+
+        for i in range(0, Board.COLUMN_SIZE):
+            for j in range(0, Board.ROW_SIZE):
+                letter = str_board[i * Board.ROW_SIZE + j]
+                if letter.isupper():
+                    side = Side.WHITE
+                else:
+                    side = Side.BLACK
+                letter = letter.lower()
+                cur_pos = Vector2d(j, i)
+
+                if letter == 'k':
+                    self.board[j][i] = Figures.King(side, cur_pos, False)
+                elif letter == 'i':
+                    self.board[j][i] = Figures.King(side, cur_pos, True)
+                elif letter == 'b':
+                    self.board[j][i] = Figures.Bishop(side, cur_pos)
+                elif letter == 'r':
+                    self.board[j][i] = Figures.Rook(side, cur_pos, False)
+                elif letter == 'o':
+                    self.board[j][i] = Figures.Rook(side, cur_pos, True)
+                elif letter == 'n':
+                    self.board[j][i] = Figures.Knight(side, cur_pos)
+                elif letter == 'q':
+                    self.board[j][i] = Figures.Queen(side, cur_pos)
+                elif letter == 'p':
+                    self.board[j][i] = Figures.Pawn(side, cur_pos)
+                elif letter == 'a':
+                    self.board[j][i] = Figures.Pawn(side, cur_pos, True)
+                elif letter == 'w':
+                    self.board[j][i] = Figures.Pawn(side, cur_pos, False, True)
+
     def export_chess_board(self):
         export_board = ['.' for j in range(0, Board.ROW_SIZE)
                         for i in range(0, Board.COLUMN_SIZE)]

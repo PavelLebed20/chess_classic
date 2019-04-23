@@ -33,6 +33,12 @@ class GameController:
     def serialize(self):
         return pickle.dumps(self.game_board)
 
+    def serialize_to_str(self):
+        return self.game_board.serialize_to_str()
+
+    def deserialize_from_str(self, str_board):
+        self.game_board.deserialize_from_str(str_board)
+
     def export_to_chess_board_str(self):
         return self.game_board.export_chess_board()
 
