@@ -57,12 +57,15 @@ class Server:
 
                 # fill none messages
                 if (user_sid is None):
-                    none_messages[user_id] = emit_params
+                    none_messages[user_id][0] = action
+                    none_messages[user_id][1] = params
                 else:
                     print("user id is: " + str(user_id))
                     print("user SID is: " + str(user_sid))
-                    print("emit params " + str(emit_params))
-                    socketio.emit(emit_params, room=user_sid)
+                    print("action is" + str(action))
+                    print("params is " + str(params))
+
+                    socketio.emit(action, params, room=user_sid)
 
             #send none messages to not NONE clients
             for user_id in none_messages:
@@ -71,7 +74,9 @@ class Server:
                     print("user id is: " + str(user_id))
                     print("user SID is: " + str(user_sid))
                     print("emit params " + str(none_messages[user_id]))
-                    socketio.emit(none_messages[user_id], room=user_sid)
+                    print("action is" + str(none_messages[user_id][0]))
+                    print("params is " + str(none_messages[user_id][1]))
+                    socketio.emit(none_messages[user_id][0], none_messages[user_id][1], room=user_sid)
                     del none_messages[user_id]
 
             con_async.commit()
