@@ -21,6 +21,7 @@ import ChessRender.UIPrimitives.object_manage as om
 import ChessRender.UIPrimitives.text_field as tf
 import ChessRender.UIPrimitives.button as bu
 import ChessRender.obtain_functions as of
+from ChessBoard.chess_figure import Side
 from ChessRender.UIPrimitives.room import room, RoomState
 
 WIDTH = 480
@@ -28,8 +29,8 @@ HEIGHT = 480
 
 CENTER_X = 3.5
 CENTER_Y = 3.5
-STEP_X = 3.7
-STEP_Y = -3.7
+STEP_X = 3.2
+STEP_Y = -3.2
 
 def trLiter(simbol):
     if (simbol.isupper()):
@@ -162,8 +163,8 @@ class Render(ShowBase):
 
     def get_position(self, x, y):
         ####  - calculate position
-        i = int((x + 15) * 8 / 30)
-        j = int((15 - y) * 8 / 30)
+        i = int(x/STEP_X + CENTER_X + 0.5)
+        j = int(y/STEP_Y + CENTER_Y + 0.5)
         return i,j
 
 
@@ -183,7 +184,8 @@ class Render(ShowBase):
             self.text_field_arr = tf.loadTextField(text_fields=text_fields, state=self.room.state)
 
     def set_game_state(self, chess_board_str=None, chess_board_obtainer_func=None,
-                       buttons=None, text_fields=None, text_fields_obtainer_func=None):
+                       buttons=None, text_fields=None, text_fields_obtainer_func=None,
+                       current_side=Side.WHITE, change_view = False):
         """
         Set render state to game mode
         :param chess_board: chess board class (see ChessBoard.Board)
@@ -191,18 +193,31 @@ class Render(ShowBase):
         :param buttons: array buttons (see. UIPrimitives.button)
         :param text_fields: text fields array (see. TO DO)
         :param text_fields_obtainer_func: text fields result obtainer
+        :param current_side: current side (see. ChessBoard.chess_figure.Side)
+        :param change_view: is it need to change wiew (True or False)
         :return: NONE.
         """
         self.need_init = False
 
         if self.chess_board is None:
-            self.chess_board = om.loadObject("ChessRender/data/chess_board.png",
+            self.chess_board = om.loadObject("ChessRender/data/chess_board_coord.png",
                                           scale_x=32, scale_z=32, depth=om.DEPTH+5, transparency=False)
         if self.figues_tag is None:
             self.figues_tag, self.figues_pos = self.initPosition(chess_board_str)
 
         self.updatePosition(chess_board_str)
         self.chess_run_func = chess_board_obtainer_func
+
+        ### - rote the board and figues
+        if change_view:
+            if current_side is Side.WHITE:
+                self.camera.setHpr(0,0,0)
+                for obj in self.figues_pos.values():
+                    obj.setHpr(0,0,0)
+            else:
+                self.camera.setHpr(0,0,180)
+                for obj in self.figues_pos.values():
+                    obj.setHpr(0,0,180)
 
 
     def init_ray(self):

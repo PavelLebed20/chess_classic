@@ -28,7 +28,7 @@ def loadTextField(text_fields, state):
                                   scale=om.TEXT_SCALE)
         textPrint = OnscreenText(text=b.text, pos=b.text_position / TEXT_FIELD_SCALE_X,
                                   scale=om.TEXT_SCALE)
-        obj = om.loadObject("ChessRender/data/text_field.png", b.real_position,
+        obj = om.loadObject("ChessRender/data/text_field_light.png", b.real_position,
                          scale_x=b.size.x, scale_z=b.size.y)
         text_field_arr.append([obj, b, textObject, state, textPrint])
         text_field_arr[key][OBJECT_I].setTag("text_field_tag", str(key))

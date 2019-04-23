@@ -14,7 +14,7 @@ DEPTH = 55
 def loadObject(text=None, pos=LPoint3(0, 0), depth=DEPTH, scale_x=FIGUE_SCALE,
                scale_z=FIGUE_SCALE, transparency=True):
     obj = loader.loadModel("ChessRender/data/chess_figues/plane")
-    obj.reparentTo(camera)
+    obj.reparentTo(render)
 
     texture = loader.loadTexture(text)
     obj.set_texture(texture)
