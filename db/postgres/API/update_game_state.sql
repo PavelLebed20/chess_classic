@@ -34,8 +34,8 @@ BEGIN
                             where chess.game.game_id=v_game_id;
 
 
-      select chess.game.user_id2 into v_user1_id FROM chess.game where chess.game.game_id=v_game_id LIMIT 1;
-      select chess.game.user_id1 into v_user2_id FROM chess.game where chess.game.game_id=v_game_id LIMIT 1;
+      select chess.game.user_id1 into v_user1_id FROM chess.game where chess.game.game_id=v_game_id LIMIT 1;
+      select chess.game.user_id2 into v_user2_id FROM chess.game where chess.game.game_id=v_game_id LIMIT 1;
   end if;
 
   -- obtain rate

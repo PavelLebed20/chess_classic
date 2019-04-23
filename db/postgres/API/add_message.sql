@@ -22,13 +22,17 @@ BEGIN
         return;
     end if;
     -- otherwise add new
-    INSERT INTO chess.messages(data, user_id, message_type_id, priority) VALUES (p_data,
+    INSERT INTO chess.messages(data, user_id, message_type_id, priority, resend_time) VALUES (p_data,
                                                                                  p_user_id,
                                                                                  v_message_type_id,
                                                                                  (SELECT chess.message_types.priority
                                                                                   from chess.message_types where
                                                                                   chess.message_types.action_name =
-                                                                                  p_action_name));
+                                                                                  p_action_name),
+                                                                                  (SELECT chess.message_types.resend_time
+                                                                                  from chess.message_types where
+                                                                                  chess.message_types.action_name =
+                                                                                  p_action_name)            );
   END;
 END;
 

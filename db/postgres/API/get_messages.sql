@@ -1,11 +1,10 @@
 CREATE OR REPLACE FUNCTION chess.get_messages(
   p_request_id bigint,
-	p_max_count integer default 1000,
-	p_delta_over_time TIME default TIME '00:00:02') RETURNS table(user_id int, data varchar) AS $$
+	p_max_count integer default 1000) RETURNS table(user_id int, data varchar) AS $$
 DECLARE
     v_over_time TIMESTAMP;
 BEGIN
-  SELECT NOW() - p_delta_over_time into v_over_time;
+  --SELECT NOW() - p_delta_over_time into v_over_time;
 
 begin
   LOCK TABLE ONLY chess.messages in share row exclusive mode;
@@ -19,7 +18,7 @@ begin
                                                                                    request_id < 0 or
                                                                              (chess.messages.send_time NOTNULL
                                                                               and chess.messages.send_time <
-                                                                              v_over_time) ORDER BY
+                                                                              NOW() - chess.messages.resend_time) ORDER BY
                                             chess.messages.user_id, chess.messages.priority DESC LIMIT p_max_count);
 end;
 

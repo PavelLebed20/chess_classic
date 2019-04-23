@@ -55,6 +55,7 @@ class Render(ShowBase):
         props = WindowProperties()
         props.clearSize()
         props.setSize(WIDTH, HEIGHT)
+        props.setTitle('Chess Classic')
         self.win.requestProperties(props)
 
         self.init_ray()
