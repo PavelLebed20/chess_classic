@@ -3,6 +3,8 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 10/04/2019     #
 ###############################
+import codecs
+import pickle
 import threading
 from enum import Enum
 import ChessRender.obtain_functions as render_obtain_funcs
@@ -16,6 +18,9 @@ from ChessRender.chess_render import Render
 from ChessRender.chess_render import RenderState
 #from ServerComponents.Client.client import Client
 from direct.task.Task import Task
+
+from ServerComponents.Client.client import Client
+
 
 class GameStates(Enum):
     OFFLINE_GAME = 0,
@@ -69,7 +74,7 @@ class Engine:
                         self.player_turn = (self.player_turn + 1) % 2
                     self.render_update_board(self.players[self.player_turn])
             else:
-                if self.current_move == int(self.local_player.side):
+                if Side(self.current_move) == self.local_player.side:
                     cur_player = self.local_player
                     move = cur_player.get_move()
                     if move is not None:
@@ -117,7 +122,7 @@ class Engine:
         password = text_dict[ChessRender.UIPrimitives.room.L_PAROL]
 
         # make client
-        #self.client = Client('http://localhost:8000', on_login_call=self.on_login, on_update_call=self.on_update_game)
+        self.client = Client('http://localhost:8000', on_login_call=self.on_login, on_update_call=self.on_update_game)
 
         # make request for connection
         self.client.send_message('login', 'login={0}&password={1}'.format(login, password))
@@ -130,7 +135,7 @@ class Engine:
         render_obtain_funcs.find_player_fun(self.render)
 
     def on_update_game(self, text_dict):
-        if text_dict['board'] == "":
+        if text_dict['game_controller_bytea'] is None:
             self.chess_board = Board()
             self.game_controller = GameController(self.chess_board)
             if text_dict['side'] == '0':
@@ -139,9 +144,12 @@ class Engine:
                 self.local_player = LocalPlayer(Side.BLACK)
             self.current_move = int(text_dict['next_move'])
         else:
-            self.game_controller = text_dict['board']
-            self.current_move = text_dict['next_move']
-            self.render_update_board(self.local_player)
+            self.game_controller = pickle.loads(text_dict['game_controller_bytea'])
+            self.current_move = int(text_dict['next_move'])
+        render_obtain_funcs.game_fun(self.render)
+        self.render_update_board(self.local_player)
+
+
 
     def render_update_board(self, player):
         board_str = self.game_controller.export_to_chess_board_str()

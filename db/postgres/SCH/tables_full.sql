@@ -13,6 +13,7 @@ CREATE TABLE  chess.players
 	rate INT NOT NULL DEFAULT 0 CONSTRAINT rate_value CHECK (rate >= 0 and rate <= 5000),
 	email varchar(50) NOT NULL UNIQUE,
 	verified bit NOT NULL DEFAULT 0::bit,
+	online bit NOT NULL DEFAULT 0::bit,
 	registration_time timestamp NOT NULL DEFAULT NOW(),
 	last_update timestamp NOT NULL DEFAULT NOW()
 );
@@ -105,7 +106,8 @@ CREATE TABLE chess.messages
     user_id INT NOT NULL references chess.players(user_id),
     message_type_id INT NOT NULL references chess.message_types(message_type_id),
     priority INT NOT NULL,
-    send_time timestamp DEFAULT NULL
+    send_time timestamp DEFAULT NULL,
+	byte_data bytea DEFAULT NULL
 );
 
 DROP sequence if exists requests_seq;
