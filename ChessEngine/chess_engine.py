@@ -135,17 +135,17 @@ class Engine:
         render_obtain_funcs.find_player_fun(self.render)
 
     def on_update_game(self, text_dict):
-        if text_dict['board'] is None:
+        if text_dict['board'] is "":
             self.chess_board = Board()
             self.game_controller = GameController(self.chess_board)
-            if text_dict['side'] == '0':
-                self.local_player = LocalPlayer(Side.WHITE)
-            else:
-                self.local_player = LocalPlayer(Side.BLACK)
-            self.current_move = int(text_dict['next_move'])
         else:
-            self.game_controller = pickle.loads(text_dict['board'])
-            self.current_move = int(text_dict['next_move'])
+            print("board is " + str(text_dict['board']))
+            self.game_controller =  GameController(None, str(text_dict['board']))
+        if text_dict['side'] == '0':
+            self.local_player = LocalPlayer(Side.WHITE)
+        else:
+            self.local_player = LocalPlayer(Side.BLACK)
+        self.current_move = int(text_dict['next_move'])
         render_obtain_funcs.game_fun(self.render)
         self.render_update_board(self.local_player)
 
@@ -180,6 +180,7 @@ class Engine:
                                  .format(min_rate, max_rate, game_time, move_time))
 
         # justchill render_obtain_funcs.game_online_fun(self.render)
+
 
 
 

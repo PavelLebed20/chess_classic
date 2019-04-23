@@ -62,7 +62,7 @@ class Server:
                 else:
                     print("user id is: " + str(user_id))
                     print("user SID is: " + str(user_sid))
-                    print("action is" + str(action))
+                    print("action is " + str(action))
                     print("params is " + str(params))
 
                     socketio.emit(action, params, room=user_sid)
@@ -74,7 +74,7 @@ class Server:
                     print("user id is: " + str(user_id))
                     print("user SID is: " + str(user_sid))
                     print("emit params " + str(none_messages[user_id]))
-                    print("action is" + str(none_messages[user_id][0]))
+                    print("action is " + str(none_messages[user_id][0]))
                     print("params is " + str(none_messages[user_id][1]))
                     socketio.emit(none_messages[user_id][0], none_messages[user_id][1], room=user_sid)
                     del none_messages[user_id]
@@ -150,8 +150,7 @@ def on_update_board(data):
     print("server_board is " + str(rec))
     # convert to game_controller
     if (rec is not None):
-        cur_game_controller = game_controller.GameController(
-            game_controller.GameController.deserialize_from_str(str(rec)))
+        cur_game_controller = game_controller.GameController(None, str(rec))
     else:
         cur_game_controller = game_controller.GameController(Board())
 
@@ -163,7 +162,7 @@ def on_update_board(data):
 
     cur_game_controller.update(move)
 
-    cursor.execute("call chess.update_game_state({0}, {1})".format(clients[request.sid],
+    cursor.execute("call chess.update_game_state({0}, '{1}')".format(clients[request.sid],
                                                                    cur_game_controller.serialize_to_str()))
 
     con_sync.commit()

@@ -84,11 +84,21 @@ class GameBoard:
                 if self.board[j][i] is None:
                     continue
                 str_board[i * Board.ROW_SIZE + j] = self.board[j][i].serialized_letter()
-        return str_board
 
-    def deserialize_from_str(self, str_board):
+        res = ""
+        for i in range(0, Board.COLUMN_SIZE * Board.ROW_SIZE):
+            res += str_board[i]
+        return res
+
+    def deserialize_from_str(self, board_as_str):
         self.board = [[None for j in range(0, Board.ROW_SIZE)]
                       for i in range(0, Board.COLUMN_SIZE)]
+        str_board = ['.' for j in range(0, Board.ROW_SIZE)
+                        for i in range(0, Board.COLUMN_SIZE)]
+
+        for i in range(0, Board.COLUMN_SIZE):
+            for j in range(0, Board.ROW_SIZE):
+                str_board[i * Board.ROW_SIZE + j] = str(board_as_str).__getitem__(i * Board.ROW_SIZE + j)
 
         for i in range(0, Board.COLUMN_SIZE):
             for j in range(0, Board.ROW_SIZE):
