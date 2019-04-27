@@ -4,42 +4,13 @@ from cmath import cos, sin, sqrt, acos, atan, pi
 from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import BitMask32, LPoint3
 
+from ChessRender.RenderFsmCommon.Camera.camera import Camera
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
 from ChessRender.RenderFsmCommon.screen_states import ScreenState
 from ChessRender.UIPrimitives.object_manage import ObjectMngr
 
 BLACK = (0, 0, 0, 1)
 WHITE = (1, 1, 1, 1)
-
-
-class SpherePosition:
-    def __init__(self, r=0, theta=0, phi=0):
-        self.r = r
-        self.theta = theta
-        self.phi = phi
-
-    def to_decart(self):
-        return DecartPosition(
-            abs(self.r * sin(self.theta) * cos(self.phi)),
-            abs(self.r * sin(self.theta) * sin(self.phi)),
-            abs(self.r * cos(self.theta))
-        )
-
-
-class DecartPosition:
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-
-    def to_sphere(self):
-        r = abs((sqrt(self.x ** 2 + self.y ** 2, self.z ** 2)))
-
-        return SpherePosition(
-            r,
-            atan(sqrt(self.x**2 + self.y**2) / z),
-            atan(self.y / self.x)
-        )
 
 
 class FsmStateGameState(ScreenState):
@@ -63,10 +34,7 @@ class FsmStateGameState(ScreenState):
         self.init_nodes_to_figures()
 
 
-        self.init_camera()
-        decart_camera_pos = self.camera_pos.to_decart()
-        base.camera.setPos(decart_camera_pos.x, decart_camera_pos.y, decart_camera_pos.z)
-        base.camera.lookAt(0, 0, 0)
+        self.camera_p = Camera(base.camera)
         base.disableMouse()
 
         # camera debug god mode
@@ -75,8 +43,9 @@ class FsmStateGameState(ScreenState):
         self.initialize_button_links()
 
     def clear_state(self):
-        #for figure in self.figures:
-        #    figure.removeNode()
+        for figure in self.figures:
+            if figure is not None:
+                figure.removeNode()
         for square in self.squares:
             square.removeNode()
 
@@ -84,42 +53,10 @@ class FsmStateGameState(ScreenState):
         self.screen_atributes.buttons["but:Exit"].add_command(self.clear_state)
         self.screen_atributes.buttons["but:Exit"].add_link("fsm:MainMenu")
 
-    def init_camera(self):
-        self.camera_radius = 20
-        self.camera_pos = SpherePosition(self.camera_radius, 0, 0)
-        self.new_mouse_x = 0
-        self.new_mouse_y = 0
-        self.prev_mouse_x = 0
-        self.prev_mouse_y = 0
-
     def mouse_task(self):
         mouse_watcher = base.mouseWatcherNode
         if mouse_watcher.hasMouse():
-            self.new_mouse_x = mouse_watcher.getMouseX()
-            self.new_mouse_y = mouse_watcher.getMouseY()
-
-            self.delta_mouse_x = self.new_mouse_x - self.prev_mouse_x
-            self.delta_mouse_y = self.new_mouse_y - self.prev_mouse_y
-
-
-            self.camera_pos.phi += self.delta_mouse_x* 5
-            self.camera_pos.phi = self.camera_pos.phi % pi
-
-            #if not (self.camera_pos.theta >= pi and self.delta_mouse_y > 0):
-            self.camera_pos.theta += self.delta_mouse_y * 5
-            #self.camera_pos.theta = self.camera_pos.theta % pi
-
-            decart_camera_pos = self.camera_pos.to_decart()
-            base.camera.setPos(decart_camera_pos.x, decart_camera_pos.y, decart_camera_pos.z)
-            base.camera.lookAt(0, 0, 0)
-            print("phi:")
-            print(self.camera_pos.phi)
-            print("theta:")
-            print(self.camera_pos.theta)
-
-            self.prev_mouse_x = mouse_watcher.getMouseX()
-            self.prev_mouse_y = mouse_watcher.getMouseY()
-
+            self.camera_p.update_pos(mouse_watcher.getMouseX(), mouse_watcher.getMouseY())
 
     def init_nodes_to_figures(self):
         """
@@ -133,9 +70,9 @@ class FsmStateGameState(ScreenState):
         for i in range(0, 8):
             for j in range(0, 8):
                 if self.str_board[i + j * 8] != ".":
-                    texture = loader.loadTexture("kek.png")
-                    self.figures[key] = loader.loadModel("ChessRender/data/chess_figures/plane.egg")
-                    self.figures[key].set_texture(texture)
+                    #texture = loader.loadTexture("kek.png")
+                    self.figures[key] = self.objMngr.load_figure_model(self.str_board[i + j * 8])
+                    #self.figures[key].set_texture(texture)
                     self.figures[key].reparentTo(self.render_fsm_ref.render)
                     self.figures[key].setPos(self.SquarePosFig(i + j * 8))
 

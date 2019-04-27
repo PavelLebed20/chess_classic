@@ -7,7 +7,7 @@ import copy
 
 from panda3d.core import LPoint3
 from panda3d.core import TransparencyAttrib
-from enum import Enum
+from enum import Enum, IntEnum
 from direct.gui.OnscreenText import OnscreenText
 
 from ChessRender.UIPrimitives.button import BUTTON_SCALE_X, BUTTON_SCALE_Y, OBJECT_I
@@ -30,7 +30,7 @@ class RenderModels(Enum):
     PLANE = 0
 
 
-class RenderObject(Enum):
+class RenderObject(IntEnum):
     BLACK_KING   = 0
     BLACK_QUEEN  = 1
     BLACK_BISHOP = 2
@@ -45,11 +45,11 @@ class RenderObject(Enum):
     WHITE_ROOK =  10
     WHITE_PAWN =  11
 
-    BOARD       = 12
+    BOARD       = 18
 
-    BUTTON      = 13
-    TEXT_FIELD  = 14
-    MENU        = 15
+    BUTTON      = 19
+    TEXT_FIELD  = 20
+    MENU        = 21
 
 def figure_as_render_object(figure_latter):
     res = 0
@@ -99,6 +99,20 @@ class ObjectMngr:
         })
 
         self.modeles = dict({
+            RenderObject.WHITE_KING: loader.loadModel("ChessRender/data/chess_figures/king.egg.pz"),
+            RenderObject.WHITE_QUEEN: loader.loadModel("ChessRender/data/chess_figures/queen.egg.pz"),
+            RenderObject.WHITE_BISHOP: loader.loadModel("ChessRender/data/chess_figures/bishop.egg.pz"),
+            RenderObject.WHITE_KNIGHT: loader.loadModel("ChessRender/data/chess_figures/knight.egg.pz"),
+            RenderObject.WHITE_ROOK: loader.loadModel("ChessRender/data/chess_figures/rook.egg.pz"),
+            RenderObject.WHITE_PAWN: loader.loadModel("ChessRender/data/chess_figures/pawn.egg.pz"),
+
+            RenderObject.BLACK_KING: loader.loadModel("ChessRender/data/chess_figures/king.egg.pz"),
+            RenderObject.BLACK_QUEEN: loader.loadModel("ChessRender/data/chess_figures/queen.egg.pz"),
+            RenderObject.BLACK_BISHOP: loader.loadModel("ChessRender/data/chess_figures/bishop.egg.pz"),
+            RenderObject.BLACK_KNIGHT: loader.loadModel("ChessRender/data/chess_figures/knight.egg.pz"),
+            RenderObject.BLACK_ROOK: loader.loadModel("ChessRender/data/chess_figures/rook.egg.pz"),
+            RenderObject.BLACK_PAWN: loader.loadModel("ChessRender/data/chess_figures/pawn.egg.pz"),
+
             RenderModels.PLANE : loader.loadModel("ChessRender/data/chess_figures/plane")
         })
 
@@ -124,11 +138,16 @@ class ObjectMngr:
             return
         self.textures[RenderObject.BOARD] = new_texture
 
-    def load_figure(self, figure_latter, figure_position):
-        obj =  self.loadObject(figure_as_render_object(figure_latter), figure_position)
-        obj.setTag("figure_latter", figure_latter)
+    def load_figure_model(self, figure_latter):
+        BLACK = (0, 0, 1, 1)
+        WHITE = (1, 0, 0, 1)
+        render_obj = figure_as_render_object(figure_latter)
+        obj =  copy.deepcopy(self.modeles[render_obj])
+        if RenderObject.BLACK_KING <= RenderObject(render_obj) <= RenderObject.BLACK_PAWN:
+            obj.setColor(BLACK)
+        else:
+            obj.setColor(WHITE)
         return obj
-
 
     def loadObject(self, render_object, pos=LPoint3(0, 0), depth=DEPTH, scale_x=FIGUE_SCALE,
                    scale_z=FIGUE_SCALE, transparency=True):
