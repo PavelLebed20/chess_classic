@@ -1,6 +1,7 @@
 import ChessRender.UIPrimitives.object_manage as om
 import ChessRender.UIPrimitives.text_field as tf
 import ChessRender.UIPrimitives.button as bu
+import ChessRender.UIPrimitives.room as rm
 import ChessRender.obtain_functions as of
 from Vector2d.Vector2d import Vector2d
 
@@ -17,6 +18,8 @@ def load_king(render):
         bu.Button(Vector2d(0, 0), render.room.process_data, title="OK"),
         bu.Button(Vector2d(0, -10), go_to_load_model_menu_fun, title="Back")
         ]
+
+    render.room.state = rm.RoomState.LOAD_TEXTURE_MENU
 
 
 def load_queen(render):

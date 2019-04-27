@@ -127,6 +127,7 @@ class ObjectMngr:
     def load_figure(self, figure_latter, figure_position):
         obj =  self.loadObject(figure_as_render_object(figure_latter), figure_position)
         obj.setTag("figure_latter", figure_latter)
+        obj.reparentTo(render)
         return obj
 
 
@@ -144,7 +145,7 @@ class ObjectMngr:
         obj.setBin("unsorted", 0)
         obj.setDepthTest(False)
 
-        obj.reparentTo(camera)
+        obj.reparentTo(render)
 
         if transparency:
             obj.setTransparency(TransparencyAttrib.MAlpha)
@@ -160,6 +161,7 @@ class ObjectMngr:
                                       scale= TEXT_SCALE)
             obj = self.loadObject(RenderObject.BUTTON, b.real_position,
                                 scale_x=BUTTON_SCALE_X, scale_z=BUTTON_SCALE_Y)
+            obj.reparentTo(camera)
             button_arr.append([obj, b, textObject, state])
             button_arr[key][OBJECT_I].setTag("button_tag", str(key))
             key += 1
@@ -178,6 +180,7 @@ class ObjectMngr:
                                      scale=TEXT_SCALE)
             obj = self.loadObject(RenderObject.TEXT_FIELD, b.real_position,
                                 scale_x=b.size.x, scale_z=b.size.y)
+            obj.reparentTo(camera)
             text_field_arr.append([obj, b, textObject, state, textPrint])
             text_field_arr[key][OBJECT_I].setTag("text_field_tag", str(key))
             key += 1

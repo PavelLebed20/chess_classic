@@ -18,6 +18,7 @@ from direct.task.Task import Task
 
 from Vector2d.Vector2d import Move, Vector2d
 
+from ChessBoard.chess_figure import Side
 import ChessRender.UIPrimitives.object_manage as om
 import ChessRender.UIPrimitives.text_field as tf
 import ChessRender.UIPrimitives.button as bu
@@ -28,14 +29,8 @@ from ChessRender.UIPrimitives.room import room
 WIDTH = 480
 HEIGHT = 480
 
-CENTER_X = 3.5
-CENTER_Y = 3.5
-STEP_X = 3.7
-STEP_Y = -3.7
 
 
-def posOfIndex(i, j):
-    return LPoint3((i-CENTER_X)*STEP_X, (j-CENTER_Y)*STEP_Y, 0)
 
 def PointAtZ(y, point, vec):
     if vec.getY() != 0:
@@ -82,6 +77,10 @@ class Render(ShowBase):
         self.figues_tag = None
         self.figues_pos = None
         self.current_figure = None
+        self.CENTER_X = 3.5
+        self.CENTER_Y = 3.5
+        self.STEP_X = 3
+        self.STEP_Y = -3
 
         #### - buttons objects
         self.button_arr = []
@@ -92,6 +91,9 @@ class Render(ShowBase):
         self.current_text_field = None
 
         self.objMngr = om.ObjectMngr()
+
+    def posOfIndex(self, i, j):
+        return LPoint3((i - self.CENTER_X) * self.STEP_X, (j - self.CENTER_Y) * self.STEP_Y, 0)
 
     def initPosition(self, str_board="rnbqkbnr" \
                                "pppppppp" \
@@ -114,12 +116,34 @@ class Render(ShowBase):
         for i in range(0, 8):
             for j in range(0, 8):
                 if str_board[i + j * 8] != ".":
-                    obj = self.objMngr.load_figure(str_board[i + j * 8], posOfIndex(i, j))
+                    obj = self.objMngr.load_figure(str_board[i + j * 8], self.posOfIndex(i, j))
                     f_tag.append(obj)
-                    f_pos[posOfIndex(i, j)] = obj
+                    f_pos[self.posOfIndex(i, j)] = obj
                     f_tag[key].setTag("figue_tag", str(key))
                     key += 1
         return f_tag, f_pos
+
+    def initLines(self):
+        lines_h = []
+        lines_v = []
+        for i in range(0, 8):
+            c1 = OnscreenText(text=chr(ord("A")+i), pos =LPoint3((i-3.5)/8, -0.58, 0), scale=0.09)
+            c2 = OnscreenText(text=chr(ord("1")+i), pos =LPoint3(-0.55, (i-3.5)/8, 0), scale=0.09)
+            c1.reparentTo(self.chess_board)
+            c2.reparentTo(self.chess_board)
+            lines_h.append(c1)
+            lines_v.append(c2)
+        for i in range(0, 8):
+            c1 = OnscreenText(text=chr(ord("A")+i), pos =LPoint3((i-3.5)/8, -0.58, 0), scale=0.09)
+            c2 = OnscreenText(text=chr(ord("1")+i), pos =LPoint3(-0.55, (i-3.5)/8, 0), scale=0.09)
+            c1.reparentTo(self.chess_board)
+            c2.reparentTo(self.chess_board)
+            c1.setHpr(0, 0, 180)
+            c2.setHpr(0, 0, 180)
+            lines_h.append(c1)
+            lines_v.append(c2)
+
+        return lines_v, lines_h
 
     def updatePosition(self, str_board):
         """
@@ -135,9 +159,9 @@ class Render(ShowBase):
             for j in range(0, 8):
                 if str_board[i + j * 8] != self.board_info[i + j * 8]:
                     if str_board[i + j * 8] != '.':
-                        after_figures[posOfIndex(i, j)] = str_board[i + j * 8]
+                        after_figures[self.posOfIndex(i, j)] = str_board[i + j * 8]
                     if self.board_info[i + j * 8] != '.':
-                        before_figures[posOfIndex(i, j)] = self.board_info[i + j * 8]
+                        before_figures[self.posOfIndex(i, j)] = self.board_info[i + j * 8]
 
         #### - change positions of figues
         for b in before_figures.keys():
@@ -153,6 +177,8 @@ class Render(ShowBase):
             if is_dead:
                 if self.picked_figue is fig:
                     self.picked_figue = None
+                ind = self.figues_tag.index(fig)
+                self.figues_tag[ind] = None
                 fig.removeNode()
 
         self.figues_pos.update(buffer)
@@ -160,9 +186,9 @@ class Render(ShowBase):
 
     def get_position(self, x, y):
         ####  - calculate position
-        i = int((x + 15) * 8 / 30)
-        j = int((15 - y) * 8 / 30)
-        return i,j
+        i = int(x / self.STEP_X + self.CENTER_X + 0.5)
+        j = int(y / self.STEP_Y + self.CENTER_Y + 0.5)
+        return i, j
 
 
     def set_menu_state(self, buttons=None, text_fields=None, text_fields_obtainer_func=None):
@@ -181,7 +207,7 @@ class Render(ShowBase):
             self.text_field_arr = self.objMngr.loadTextField(text_fields=text_fields, state=self.state)
 
     def set_game_state(self, chess_board_str=None, chess_board_obtainer_func=None,
-                       buttons=None, text_fields=None, text_fields_obtainer_func=None):
+                       buttons=None, text_fields=None, text_fields_obtainer_func=None, side=Side.WHITE):
         """
         Set render state to game mode
         :param chess_board: chess board class (see ChessBoard.Board)
@@ -195,12 +221,25 @@ class Render(ShowBase):
 
         if self.chess_board is None:
             self.chess_board = self.objMngr.loadObject(om.RenderObject.BOARD,
-                                                       scale_x=32, scale_z=32, depth=om.DEPTH+5, transparency=False)
+                                                       scale_x=abs(self.STEP_X*8.65), scale_z=abs(self.STEP_Y*8.65), depth=om.DEPTH+5, transparency=False)
+            self.lines_v, self.lines_h = self.initLines()
+
         if self.figues_tag is None:
             self.figues_tag, self.figues_pos = self.initPosition(chess_board_str)
 
         self.updatePosition(chess_board_str)
         self.chess_run_func = chess_board_obtainer_func
+
+        if side is Side.WHITE:
+            self.camera.setHpr(0, 0, 0)
+            for fgr in self.figues_tag:
+                if fgr is not None:
+                    fgr.setHpr(0, 0, 0)
+        else:
+            self.camera.setHpr(0, 0, 180)
+            for fgr in self.figues_tag:
+                if fgr is not None:
+                    fgr.setHpr(0, 0, 180)
 
     def init_ray(self):
         self.myTraverser = CollisionTraverser()
@@ -254,7 +293,7 @@ class Render(ShowBase):
         if self.picked_figue is not None:
             pos = self.picked_figue.getPos()
             i, j = self.get_position(pos.getX(), pos.getZ())
-            pos = posOfIndex(i, j)
+            pos = self.posOfIndex(i, j)
 
             # run engine function
             if self.picked_figure_last_pos is not None:
