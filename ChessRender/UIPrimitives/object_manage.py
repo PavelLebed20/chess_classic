@@ -78,19 +78,19 @@ class ObjectMngr:
 
     def __init__(self):
         self.textures = dict({
-            RenderObject.BLACK_KING   : loader.loadTexture("ChessRender/data/chess_figues/bK.png"),
-            RenderObject.BLACK_QUEEN  : loader.loadTexture("ChessRender/data/chess_figues/bQ.png"),
-            RenderObject.BLACK_BISHOP : loader.loadTexture("ChessRender/data/chess_figues/bB.png"),
-            RenderObject.BLACK_KNIGHT : loader.loadTexture("ChessRender/data/chess_figues/bN.png"),
-            RenderObject.BLACK_ROOK   : loader.loadTexture("ChessRender/data/chess_figues/bR.png"),
-            RenderObject.BLACK_PAWN   : loader.loadTexture("ChessRender/data/chess_figues/bP.png"),
+            RenderObject.BLACK_KING   : loader.loadTexture("ChessRender/data/chess_figures/bK.png"),
+            RenderObject.BLACK_QUEEN  : loader.loadTexture("ChessRender/data/chess_figures/bQ.png"),
+            RenderObject.BLACK_BISHOP : loader.loadTexture("ChessRender/data/chess_figures/bB.png"),
+            RenderObject.BLACK_KNIGHT : loader.loadTexture("ChessRender/data/chess_figures/bN.png"),
+            RenderObject.BLACK_ROOK   : loader.loadTexture("ChessRender/data/chess_figures/bR.png"),
+            RenderObject.BLACK_PAWN   : loader.loadTexture("ChessRender/data/chess_figures/bP.png"),
 
-            RenderObject.WHITE_KING   : loader.loadTexture("ChessRender/data/chess_figues/wK.png"),
-            RenderObject.WHITE_QUEEN  : loader.loadTexture("ChessRender/data/chess_figues/wQ.png"),
-            RenderObject.WHITE_BISHOP : loader.loadTexture("ChessRender/data/chess_figues/wB.png"),
-            RenderObject.WHITE_KNIGHT : loader.loadTexture("ChessRender/data/chess_figues/wN.png"),
-            RenderObject.WHITE_ROOK   : loader.loadTexture("ChessRender/data/chess_figues/wR.png"),
-            RenderObject.WHITE_PAWN   : loader.loadTexture("ChessRender/data/chess_figues/wP.png"),
+            RenderObject.WHITE_KING   : loader.loadTexture("ChessRender/data/chess_figures/wK.png"),
+            RenderObject.WHITE_QUEEN  : loader.loadTexture("ChessRender/data/chess_figures/wQ.png"),
+            RenderObject.WHITE_BISHOP : loader.loadTexture("ChessRender/data/chess_figures/wB.png"),
+            RenderObject.WHITE_KNIGHT : loader.loadTexture("ChessRender/data/chess_figures/wN.png"),
+            RenderObject.WHITE_ROOK   : loader.loadTexture("ChessRender/data/chess_figures/wR.png"),
+            RenderObject.WHITE_PAWN   : loader.loadTexture("ChessRender/data/chess_figures/wP.png"),
 
             RenderObject.BOARD        : loader.loadTexture("ChessRender/data/chess_board.png"),
 
@@ -99,7 +99,7 @@ class ObjectMngr:
         })
 
         self.modeles = dict({
-            RenderModels.PLANE : loader.loadModel("ChessRender/data/chess_figues/plane")
+            RenderModels.PLANE : loader.loadModel("ChessRender/data/chess_figures/plane")
         })
 
     def change_skin(self, filepath, figure_latter):

@@ -3,9 +3,7 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 10/04/2019     #
 ###############################
-import codecs
-import pickle
-import threading
+
 from enum import Enum
 import ChessRender.obtain_functions as render_obtain_funcs
 import ChessRender.UIPrimitives.room
@@ -14,6 +12,7 @@ from ChessAI.ChessPlayer.LocalPlayer.local_player import LocalPlayer
 from ChessAI.GameController.game_controller import GameController, MoveResult
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
+from ChessRender.RenderFsmCommon.render_fsm import RenderFsm
 from ChessRender.chess_render import Render
 from ChessRender.chess_render import RenderState
 #from ServerComponents.Client.client import Client
@@ -32,13 +31,13 @@ class Engine:
         """
         Initialize Engine class function
         """
-        self.render = Render()
+        self.render = RenderFsm()
+
         #### - functions to process data from users
-        self.render.room.process_login = self.process_login
-        self.render.room.process_find_player = self.process_find_player
+        self.render.process_login = self.process_login
+        self.render.process_find_player = self.process_find_player
         self.render.process_offline_game = self.process_offline_game
-        self.render.room.process_load_model = self.process_load_model
-        #self.render.room.process_update_game = self.process_update_game
+        self.render.process_load_model = self.process_load_model
 
         self.rate = 0
         self.client = None
@@ -48,9 +47,6 @@ class Engine:
         self.current_move = 0
         self.players = None
 
-        #### - init main menu
-        render_obtain_funcs.main_menu(self.render)
-
         self.render.taskMgr.add(self.step, "step")
         self.render.run()
 
@@ -58,7 +54,6 @@ class Engine:
         """
         Main loop function
         :return: NONE.
-        """
         if self.render.state == RenderState.GAME:
             if self.game_state == GameStates.OFFLINE_GAME:
                 if self.render.need_init:
@@ -89,7 +84,7 @@ class Engine:
 
         if self.render.state == RenderState.MENU:
             self.render.set_menu_state(buttons=self.render.room.buttons_prim,
-                                       text_fields=self.render.room.text_fields_prim)
+                                       text_fields=self.render.room.text_fields_prim)"""
         return Task.cont
 
 
@@ -118,8 +113,8 @@ class Engine:
         values are strings (print by user)
         """
 
-        login = text_dict[ChessRender.UIPrimitives.room.L_LOGIN]
-        password = text_dict[ChessRender.UIPrimitives.room.L_PAROL]
+        login = text_dict["Login"]
+        password = text_dict["Password"]
 
         # make client
         self.client = Client('http://localhost:8000', on_login_call=self.on_login, on_update_call=self.on_update_game)
@@ -129,10 +124,10 @@ class Engine:
 
     def on_login(self, text_dict):
         self.game_state = GameStates.ONLINE_GAME
-
         self.rate = int(text_dict['self_rate'])
 
-        render_obtain_funcs.find_player_fun(self.render)
+        self.render.change_state(self.render, "fsm:Matchmaking")
+        #render_obtain_funcs.find_player_fun(self.render)
 
     def on_update_game(self, text_dict):
         if text_dict['board'] is "":
@@ -141,11 +136,13 @@ class Engine:
         else:
             print("board is " + str(text_dict['board']))
             self.game_controller =  GameController(None, str(text_dict['board']))
+
         if text_dict['side'] == '0':
             self.local_player = LocalPlayer(Side.WHITE)
         else:
             self.local_player = LocalPlayer(Side.BLACK)
         self.current_move = int(text_dict['next_move'])
+
         render_obtain_funcs.game_fun(self.render)
         self.render_update_board(self.local_player)
 
@@ -166,10 +163,10 @@ class Engine:
         """
         print(text_dict)
         try:
-            game_time = int(text_dict[ChessRender.UIPrimitives.room.L_GAME_TIME])
-            move_time = int(text_dict[ChessRender.UIPrimitives.room.L_MOVE_TIME])
-            min_rate = int(text_dict[ChessRender.UIPrimitives.room.L_MIN_RATE])
-            max_rate = int(text_dict[ChessRender.UIPrimitives.room.L_MAX_RATE])
+            game_time = int(text_dict["MatchTime"])
+            move_time = int(text_dict["AddTime"])
+            min_rate = int(text_dict["MinRate"])
+            max_rate = int(text_dict["MaxRate"])
         except ValueError:
             # TO DO ADD ALERT
             return
