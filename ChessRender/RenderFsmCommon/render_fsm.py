@@ -23,23 +23,24 @@ class RenderFsm(ShowBase):
         props.setSize(self.WIDTH, self.HEIGHT)
         self.win.requestProperties(props)
 
-        self.init_ray()
+        #self.init_ray()
         self.taskMgr.add(self.mouse_task, 'mouseTask')
         self.accept("mouse1", self.mouse_press)
         self.accept("mouse1-up", self.mouse_release)
 
         self.cur_state = None
 
-        self.change_state(self, "fsm:MainMenu")
-
         # user data obtain fucntins
         self.process_login = None
         self.process_find_player = None
         self.process_load_model = None
 
+        self.process_offline_game = None
+        self.process_set_move_player = None
+
     def init_state_by_key(self, key):
         if key == "fsm:MainMenu":
-            return FsmStateMainMenu()
+            return FsmStateMainMenu(self.process_offline_game)
         elif key == "fsm:GameState":
             return FsmStateGameState(self)
         elif key == "fsm:Multiplayer":
@@ -63,17 +64,6 @@ class RenderFsm(ShowBase):
         render_fsm.cur_state.render(render_fsm)
 
     # Mouse functions
-    def init_ray(self):
-        self.myTraverser = CollisionTraverser()
-        self.myHandler = CollisionHandlerQueue()
-        self.pickerNode = CollisionNode('mouseRay')
-        self.pickerNP = self.camera.attachNewNode(self.pickerNode)
-
-        self.pickerNode.setFromCollideMask(GeomNode.getDefaultCollideMask())
-        self.pickerRay = CollisionRay()
-        self.pickerNode.addSolid(self.pickerRay)
-        self.myTraverser.addCollider(self.pickerNP, self.myHandler)
-
     def mouse_task(self, task):
         self.cur_state.mouse_task()
         return Task.cont

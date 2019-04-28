@@ -38,10 +38,11 @@ class Engine:
         self.render.process_find_player = self.process_find_player
         self.render.process_offline_game = self.process_offline_game
         self.render.process_load_model = self.process_load_model
+        self.render.change_state(self.render, "fsm:MainMenu")
 
         self.rate = 0
         self.client = None
-        self.game_state = GameStates.OFFLINE_GAME
+        self.game_state = None
 
         self.local_player = None
         self.current_move = 0
@@ -54,47 +55,42 @@ class Engine:
         """
         Main loop function
         :return: NONE.
-        if self.render.state == RenderState.GAME:
-            if self.game_state == GameStates.OFFLINE_GAME:
-                if self.render.need_init:
-                    # set current state
-                    self.render.set_game_state(Board.DEFAULT_BOARD_POSITION,
-                                               self.players[self.player_turn].set_move, None, None, None)
-
-                cur_player = self.players[self.player_turn]
+        """
+        if self.game_state == GameStates.OFFLINE_GAME:
+            cur_player = self.players[self.player_turn]
+            move = cur_player.get_move()
+            if move is not None:
+                if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
+                    self.game_controller.update(move)
+                    self.player_turn = (self.player_turn + 1) % 2
+                self.render_update_board(self.players[self.player_turn])
+        elif self.game_state == GameStates.ONLINE_GAME:
+            if Side(self.current_move) == self.local_player.side:
+                cur_player = self.local_player
                 move = cur_player.get_move()
                 if move is not None:
                     if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
                         self.game_controller.update(move)
-                        self.player_turn = (self.player_turn + 1) % 2
-                    self.render_update_board(self.players[self.player_turn])
-            else:
-                if Side(self.current_move) == self.local_player.side:
-                    cur_player = self.local_player
-                    move = cur_player.get_move()
-                    if move is not None:
-                        if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
-                            self.game_controller.update(move)
-                            self.current_move = (self.current_move + 1) % 2
-                            self.client.send_message('update_board', "p1={}&p2={}&p3={}&p4={}".format(move.point_from.x,
-                                                                                                  move.point_from.y,
-                                                                                                  move.point_to.x,
-                                                                                                  move.point_to.y))
-                        self.render_update_board(self.local_player)
+                        self.current_move = (self.current_move + 1) % 2
+                        self.client.send_message('update_board', "p1={}&p2={}&p3={}&p4={}".format(move.point_from.x,
+                                                                                              move.point_from.y,
+                                                                                              move.point_to.x,
+                                                                                              move.point_to.y))
+                    self.render_update_board(self.local_player)
+        else:
+            pass
 
-        if self.render.state == RenderState.MENU:
-            self.render.set_menu_state(buttons=self.render.room.buttons_prim,
-                                       text_fields=self.render.room.text_fields_prim)"""
         return Task.cont
 
 
-    def process_offline_game(self, render):
+    def process_offline_game(self):
         self.player_turn = 0
         self.chess_board = Board()
         self.game_controller = GameController(self.chess_board)
         self.players = [LocalPlayer(Side.WHITE), MinmaxBot(Side.BLACK, self.game_controller)]
         self.players[0].make_move()
-        render_obtain_funcs.game_fun(self.render)
+        self.render.process_set_move_player = self.players[0].set_move
+        self.game_state = GameStates.OFFLINE_GAME
 
     def process_load_model(self, text_dict, side=None, figure=None):
         if side is not None and figure is not None:
@@ -143,7 +139,7 @@ class Engine:
             self.local_player = LocalPlayer(Side.BLACK)
         self.current_move = int(text_dict['next_move'])
 
-        render_obtain_funcs.game_fun(self.render)
+        #render_obtain_funcs.game_fun(self.render)
         self.render_update_board(self.local_player)
 
 
@@ -151,8 +147,10 @@ class Engine:
     def render_update_board(self, player):
         board_str = self.game_controller.export_to_chess_board_str()
         self.chess_board = Board(board_str)
-        self.render.set_game_state(board_str, player.set_move,
-                                   None, None, None)
+        self.render.process_set_move_player = player.set_move
+        self.render.cur_state.update_board(board_str)
+        #self.render.set_game_state(board_str, player.set_move,
+        #                           None, None, None)
 
     def process_find_player(self, text_dict):
         """

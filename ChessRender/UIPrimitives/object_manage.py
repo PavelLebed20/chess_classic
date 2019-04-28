@@ -139,8 +139,8 @@ class ObjectMngr:
         self.textures[RenderObject.BOARD] = new_texture
 
     def load_figure_model(self, figure_latter):
-        BLACK = (0, 0, 1, 1)
-        WHITE = (1, 0, 0, 1)
+        BLACK = (0.8, 0.3, 0.5, 1)
+        WHITE = (1, 1, 1, 1)
         render_obj = figure_as_render_object(figure_latter)
         obj =  copy.deepcopy(self.modeles[render_obj])
         if RenderObject.BLACK_KING <= RenderObject(render_obj) <= RenderObject.BLACK_PAWN:
