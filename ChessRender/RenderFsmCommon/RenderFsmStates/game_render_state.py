@@ -5,8 +5,6 @@ from direct.gui.OnscreenText import OnscreenText, CollisionTraverser, CollisionH
     CollisionRay, AmbientLight, DirectionalLight, LVector3
 from direct.task import Task
 from panda3d.core import BitMask32, LPoint3
-from vectormath import Vector2
-
 from ChessRender.RenderFsmCommon.Camera.camera import Camera
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
 from ChessRender.RenderFsmCommon.screen_states import ScreenState
@@ -41,14 +39,12 @@ class FsmStateGameState(ScreenState):
 
         self.camera_p = Camera(base.camera, base.camLens)
         base.disableMouse()
-        self.setup_lights()
-
-        #base.camera.setPos(0, 20, 20)
-        #base.camera.lookAt(0, 0, 0)
-
         # camera debug god mode
         # base.oobe()
-        self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-1, 0, 0))
+
+        self.setup_lights()
+
+        self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-0.8, 0, 0.8))
         self.initialize_button_links()
 
         self.init_ray()
@@ -56,13 +52,13 @@ class FsmStateGameState(ScreenState):
         render_fsm.accept("mouse1", self.grab_piece)  # left-click grabs a piece
         render_fsm.accept("mouse1-up", self.release_piece)  # releasing places it
 
-        render_fsm.accept("mouse2", self.middle_click)  # right-click grabs a piece
+        render_fsm.accept("mouse2", self.middle_click)
 
         self.need_camera_update = False
-        render_fsm.accept("mouse3", self.right_click)  # right-click grabs a piece
+        render_fsm.accept("mouse3", self.right_click)
         render_fsm.accept("mouse3-up", self.right_release)
 
-        render_fsm.accept("wheel_up", self.wheel_up)  # right-click grabs a piece
+        render_fsm.accept("wheel_up", self.wheel_up)
         render_fsm.accept("wheel_down", self.wheel_down)
 
         self.dragging = False
@@ -234,10 +230,10 @@ class FsmStateGameState(ScreenState):
             return (0.98, 0.82, 0.01, 1)
 
     def SquarePos(self, i):
-        return LPoint3((i % 8) - 3.5, int(i // 8) - 3.5, 0)
+        return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0)
 
     def SquarePosFig(self, i):
-        return LPoint3((i % 8) - 3.5, int(i // 8) - 3.5, 0.5)
+        return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0.5)
 
     def PointAtZ(self, z, point, vec):
         return point + vec * ((z - point.getZ()) / vec.getZ())

@@ -32,11 +32,11 @@ class ScreenState:
             pos = button.position
 
             if button.command is not None and button.link_key is not None:
-                commad_and_link = lambda render_fsm_, link_key_: (button.command(), render_fsm.change_state(render_fsm_, link_key_))
+                commad_and_link = lambda render_fsm_, link_key_, button_: (button_.command(), render_fsm.change_state(render_fsm_, link_key_))
 
                 gui_button = DirectButton(text=button.title, scale=0.2,
                                           command=commad_and_link,
-                                          extraArgs=[render_fsm, button.link_key],
+                                          extraArgs=[render_fsm, button.link_key, button],
                                           pos=(pos[0], pos[1], pos[2]))
                 self.screen_atributes.scene_nodes.append(gui_button)
 
@@ -72,7 +72,7 @@ class ScreenState:
             screen_text = self.screen_atributes.screen_texts[screen_text_key]
             pos = screen_text.position
 
-            gui_screen_text = OnscreenText(text=screen_text.text, pos=(pos[0], pos[1], pos[2]))
+            gui_screen_text = OnscreenText(text=screen_text.text, pos=(pos[0], pos[1]))
 
             self.screen_atributes.scene_nodes.append(gui_screen_text)
 

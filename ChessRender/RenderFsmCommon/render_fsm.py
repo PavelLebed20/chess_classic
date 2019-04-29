@@ -34,6 +34,7 @@ class RenderFsm(ShowBase):
         self.process_login = None
         self.process_find_player = None
         self.process_load_model = None
+        self.process_registration = None
 
         self.process_offline_game = None
         self.process_set_move_player = None
@@ -48,7 +49,7 @@ class RenderFsm(ShowBase):
         elif key == "fsm:Login":
             return FsmStateLogin(self.process_login)
         elif key == "fsm:Registration":
-            return FsmStateRegistration()
+            return FsmStateRegistration(self.process_registration)
         elif key == "fsm:Load":
             return FsmStateLoad()
         elif key == "fsm:Matchmaking":
