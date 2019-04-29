@@ -2,7 +2,7 @@ from cmath import cos, sin, sqrt, acos, atan, pi
 
 # import numpy
 from direct.gui.OnscreenText import OnscreenText, CollisionTraverser, CollisionHandlerQueue, CollisionNode, GeomNode, \
-    CollisionRay, AmbientLight, DirectionalLight, LVector3, Spotlight, VBase4, PerspectiveLens, PointLight
+    CollisionRay, AmbientLight, DirectionalLight, LVector3, Spotlight, VBase4, PerspectiveLens, PointLight, Fog
 from direct.task import Task
 from panda3d.core import BitMask32, LPoint3
 from ChessRender.RenderFsmCommon.Camera.camera import Camera
@@ -21,6 +21,13 @@ class FsmStateGameState(ScreenState):
         ScreenState.__init__(self)
         self.render_fsm_ref = render_fsm
         self.objMngr = ObjectMngr()
+
+        self.skysphere = loader.loadModel("SkySphere.bam")
+        self.skysphere.setBin('background', 1)
+        self.skysphere.setDepthWrite(0)
+        self.skysphere.reparentTo(render)
+        self.skysphere.setPos(0, 0, 0)
+        self.skysphere.setScale(20)
 
         self.squares = [None for i in range(64)]
         self.init_nodes_to_chsess_board()
