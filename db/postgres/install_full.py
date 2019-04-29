@@ -13,18 +13,6 @@ class DatabaseInstaller:
 
     def __init__(self, dbname, user_name, host, password, port):
         try:
-            self.con = psycopg2.connect(dbname='postgres',
-                                        user=user_name, host=host,
-                                        password=password, port=port)
-            self.con.autocommit = True
-            cursor = self.con.cursor()
-            cursor.execute('DROP DATABASE IF EXISTS {}'.format(dbname))
-            cursor.execute('CREATE DATABASE {}'.format(dbname))
-            cursor.close()
-            self.con.close()
-
-            self.con = None
-
             self.con = psycopg2.connect(password=password, user=user_name,
                                         host=host, database=dbname, port=port)
             self.con.autocommit = True

@@ -28,7 +28,7 @@ BEGIN
   end if;
 
   SELECT chess.players.user_id into v_user_id FROM chess.players WHERE chess.players.login = p_login or
-                                                       chess.players.email = p_mail LIMIT 1;
+                                                       chess.players.email = p_email LIMIT 1;
   if v_user_id notnull then
     RETURN NULL;
   end if;
