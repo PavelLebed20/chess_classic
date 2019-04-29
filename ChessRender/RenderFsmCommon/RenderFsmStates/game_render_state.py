@@ -2,7 +2,7 @@ from cmath import cos, sin, sqrt, acos, atan, pi
 
 # import numpy
 from direct.gui.OnscreenText import OnscreenText, CollisionTraverser, CollisionHandlerQueue, CollisionNode, GeomNode, \
-    CollisionRay, AmbientLight, DirectionalLight, LVector3
+    CollisionRay, AmbientLight, DirectionalLight, LVector3, Spotlight, VBase4, PerspectiveLens, PointLight
 from direct.task import Task
 from panda3d.core import BitMask32, LPoint3
 from ChessRender.RenderFsmCommon.Camera.camera import Camera
@@ -42,6 +42,9 @@ class FsmStateGameState(ScreenState):
         # camera debug god mode
         # base.oobe()
 
+        self.direct_light = []
+        self.spot_light_node = []
+        self.point_light = []
         self.setup_lights()
 
         self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-0.8, 0, 0.8))
@@ -251,13 +254,47 @@ class FsmStateGameState(ScreenState):
         self.myTraverser.addCollider(self.pickerNP, self.myHandler)
 
     def setup_lights(self):  # This function sets up some default lighting
+        self.setup_ambient_light()
+        #self.setup_point_light(3.5, -3.5, 2)
+        #self.setup_point_light(3.5, 3.5, 2)
+        #self.setup_point_light(0, 0, 5)
+        #self.setup_point_light(0, -5, -5)
+        #self.setup_point_light(-3.5, -3.5, 2)
+        self.setup_direct_light(0, 0, -1)
+
+    def setup_ambient_light(self):
         ambientLight = AmbientLight("ambientLight")
-        ambientLight.setColor((.8, .8, .8, 1))
-        directionalLight = DirectionalLight("directionalLight")
-        directionalLight.setDirection(LVector3(0, 45, -45))
-        directionalLight.setColor((0.2, 0.2, 0.2, 1))
-        base.render.setLight(base.render.attachNewNode(directionalLight))
+        ambientLight.setColor((.7, .7, .7, 1))
+        base.render.attachNewNode(ambientLight)
         base.render.setLight(base.render.attachNewNode(ambientLight))
+
+    def setup_direct_light(self, angle_1, angle_2, angle_3):
+        directionalLight = DirectionalLight("directionalLight")
+        directionalLight.setDirection(LVector3(angle_1, angle_2, angle_3))
+        directionalLight.setColor((0.7, 0.7, 0.7, 1))
+        directionalLight.setShadowCaster(True, self.render_fsm_ref.WIDTH, self.render_fsm_ref.HEIGHT)
+        light = base.render.attachNewNode(directionalLight)
+        self.direct_light.append(light)
+        base.render.setLight(light)
+
+    def setup_spot_light(self, x, y, z):
+        slight = Spotlight('slight')
+        slight.setColor(VBase4(1, 1, 1, 1))
+        lens = base.camLens
+        slight.setLens(lens)
+        light = base.render.attachNewNode(slight)
+        light.setPos(x, y, z)
+        light.lookAt(0, 0, 0)
+        self.direct_light.append(light)
+        base.render.setLight(light)
+
+    def setup_point_light(self, x, y, z):
+        plight = PointLight('plight')
+        plight.setColor(VBase4(0.9, 0.9, 0.9, 1))
+        light = base.render.attachNewNode(plight)
+        light.setPos(x, y, z)
+        self.point_light.append(light)
+        base.render.setLight(light)
 
     def update_board(self, board_str):
         for figure in self.figures:
