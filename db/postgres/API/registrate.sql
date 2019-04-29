@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-create or replace function registrate(
+create or replace function chess.registrate(
 p_login varchar(50),
 p_password varchar(64),
 p_rate int,
