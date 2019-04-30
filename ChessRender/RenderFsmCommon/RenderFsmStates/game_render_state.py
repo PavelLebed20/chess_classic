@@ -1,20 +1,20 @@
-from cmath import cos, sin, sqrt, acos, atan, pi
+from enum import Enum
 
-# import numpy
-from direct.gui.OnscreenText import OnscreenText, CollisionTraverser, CollisionHandlerQueue, CollisionNode, GeomNode, \
-    CollisionRay, AmbientLight, DirectionalLight, LVector3, Spotlight, VBase4, PerspectiveLens, PointLight, Fog
+from direct.gui.OnscreenText import CollisionTraverser, CollisionHandlerQueue, CollisionNode, \
+    CollisionRay, AmbientLight, DirectionalLight, LVector3, Spotlight, VBase4, PointLight
 from direct.task import Task
 from panda3d.core import BitMask32, LPoint3
-from ChessRender.RenderFsmCommon.Camera.camera import Camera
+from ChessRender.RenderFsmCommon.Camera.camera import Camera, Camera2D
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
 from ChessRender.RenderFsmCommon.screen_states import ScreenState
 from ChessRender.UIPrimitives.object_manage import ObjectMngr
 from Vector2d.Vector2d import Vector2d, Move
 
-BLACK = (0, 0, 0, 1)
-WHITE = (1, 1, 1, 1)
 HIGHLIGHT = (0, 1, 1, 1)
 
+class Dimension(Enum):
+    _2D = 1
+    _3D = 2
 
 class FsmStateGameState(ScreenState):
     def __init__(self, render_fsm):
@@ -22,13 +22,10 @@ class FsmStateGameState(ScreenState):
         self.render_fsm_ref = render_fsm
         self.objMngr = ObjectMngr()
 
-        self.skysphere = loader.loadModel("SkySphere.bam")
-        self.skysphere.setBin('background', 1)
-        self.skysphere.setDepthWrite(0)
-        self.skysphere.reparentTo(render)
-        self.skysphere.setPos(0, 0, 0)
-        self.skysphere.setScale(20)
 
+        self.dimension = Dimension._3D
+
+        self.init_sky_sphere()
         self.squares = [None for i in range(64)]
         self.init_nodes_to_chsess_board()
 
@@ -47,7 +44,7 @@ class FsmStateGameState(ScreenState):
         self.camera_p = Camera(base.camera, base.camLens)
         base.disableMouse()
         # camera debug god mode
-        # base.oobe()
+        #base.oobe()
 
         self.direct_light = []
         self.spot_light_node = []
@@ -55,6 +52,7 @@ class FsmStateGameState(ScreenState):
         self.setup_lights()
 
         self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-0.8, 0, 0.8))
+        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (0.8, 0, 0.8))
         self.initialize_button_links()
 
         self.init_ray()
@@ -75,6 +73,24 @@ class FsmStateGameState(ScreenState):
         self.dragging_figure_position = None
         self.hiSq = False
 
+
+    def change_dimention(self):
+        if self.dimension == Dimension._3D:
+            self.dimension = Dimension._2D
+            self.camera_p = Camera2D(base.camera, base.camLens)
+        else:
+            self.dimension = Dimension._3D
+            self.camera_p = Camera(base.camera, base.camLens)
+        self.update_board(self.str_board)
+
+    def init_sky_sphere(self):
+        self.skysphere = loader.loadModel("SkySphere.bam")
+        self.skysphere.setBin('background', 1)
+        self.skysphere.setDepthWrite(0)
+        self.skysphere.reparentTo(render)
+        self.skysphere.setPos(0, 0, 0)
+        self.skysphere.setScale(20)
+
     def process_set_move_player(self):
         pass
 
@@ -84,10 +100,13 @@ class FsmStateGameState(ScreenState):
                 figure.removeNode()
         for square in self.squares:
             square.removeNode()
+        self.skysphere.removeNode()
 
     def initialize_button_links(self):
         self.screen_atributes.buttons["but:Exit"].add_command(self.clear_state)
         self.screen_atributes.buttons["but:Exit"].add_link("fsm:MainMenu")
+        self.screen_atributes.buttons["but:2D/3D"].add_command(self.change_dimention)
+
 
     def wheel_up(self):
         self.camera_p.update_on_mouse_wheel(3)
@@ -121,7 +140,7 @@ class FsmStateGameState(ScreenState):
         if self.dragging is not False:
             # We have let go of the piece, but we are not on a square
             if self.hiSq is False:
-                self.figures[self.dragging].obj.setPos(
+                self.figures[self.dragging].setPos(
                     self.SquarePos(self.dragging))
             else:
                 # Otherwise, swap the pieces
@@ -183,27 +202,37 @@ class FsmStateGameState(ScreenState):
 
         return Task.cont
 
-    def init_nodes_to_figures(self):
+    def init_nodes_to_figures(self, need_to_add_dragging_figure=True, dragging_pos=None):
         """
         Creation of figues on the board (visual interpretation)
         :param str_board: chess board in string format
         :return: figues: array of objects.
         """
-        key = 0
-        self.board_info = self.str_board
-
-        for j in range(0, 8):
-            for i in range(0, 8):
-                if self.str_board[i + j * 8] != ".":
-                    self.figures[key] = self.objMngr.load_figure_model(self.str_board[i + j * 8])
-                    self.figures[key].reparentTo(self.render_fsm_ref.render)
-                    self.figures[key].setPos(self.SquarePos(i + j * 8))
-
-                    self.figures[key].setTag("figue_tag", str(key))
+        for key in range(64):
+            if self.str_board[key] != ".":
+                # skip adding dragging figure
+                if dragging_pos is not None and key == dragging_pos and need_to_add_dragging_figure is False:
                     key += 1
+                    continue
+
+                if self.dimension is Dimension._3D:
+                    self.figures[key] = self.objMngr.load_figure_model(self.str_board[key])
+                    self.figures[key].setPos(self.SquarePos(key))
                 else:
-                    self.figures[key] = None
-                    key += 1
+                    self.figures[key] = self.objMngr.load_figure_model_2D(self.str_board[key])
+                    self.figures[key].setHpr(180, -90, 0)
+                    self.figures[key].setPos(self.FigurePos2D(key))
+
+                self.figures[key].reparentTo(self.render_fsm_ref.render)
+                self.figures[key].setTag("figue_tag", str(key))
+
+                # rotate white figures
+                if self.dimension is Dimension._3D:
+                    if self.str_board[key].isupper():
+                        self.figures[key].setH(180)
+            else:
+                self.figures[key] = None
+            key += 1
 
     def init_nodes_to_chsess_board(self):
         self.squareRoot = self.render_fsm_ref.render.attachNewNode("squareRoot")
@@ -217,6 +246,7 @@ class FsmStateGameState(ScreenState):
             self.squares[i].reparentTo(self.squareRoot)
             self.squares[i].setPos(self.SquarePos(i))
             #self.squares[i].setColor(self.SquareColor(i))
+
             # Set the model itself to be collideable with the ray. If this model was
             # any more complex than a single polygon, you should set up a collision
             # sphere around it instead. But for single polygons this works
@@ -241,6 +271,9 @@ class FsmStateGameState(ScreenState):
 
     def SquarePos(self, i):
         return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0)
+
+    def FigurePos2D(self, i):
+        return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0.3)
 
     def SquarePosFig(self, i):
         return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0.5)
@@ -278,7 +311,7 @@ class FsmStateGameState(ScreenState):
     def setup_direct_light(self, angle_1, angle_2, angle_3):
         directionalLight = DirectionalLight("directionalLight")
         directionalLight.setDirection(LVector3(angle_1, angle_2, angle_3))
-        directionalLight.setColor((0.7, 0.7, 0.7, 1))
+        directionalLight.setColor((0.6, 0.6, 0.6, 1))
         directionalLight.setShadowCaster(True, self.render_fsm_ref.WIDTH, self.render_fsm_ref.HEIGHT)
         light = base.render.attachNewNode(directionalLight)
         self.direct_light.append(light)
@@ -304,8 +337,20 @@ class FsmStateGameState(ScreenState):
         base.render.setLight(light)
 
     def update_board(self, board_str):
-        for figure in self.figures:
-            if figure is not None:
-                figure.removeNode()
+        need_add_dragging_figure = None
+        if self.dragging is not False:
+            if self.str_board[self.dragging] == board_str[self.dragging]:
+                need_add_dragging_figure = False
+            else:
+                need_add_dragging_figure = True
+                self.dragging = False
+        for i in range(len(self.figures)):
+            if self.figures[i] is not None:
+                if self.dragging is False or i != self.dragging:
+                    self.figures[i].removeNode()
+                else:
+                    if need_add_dragging_figure is True:
+                        self.figures[i].removeNode()
+
         self.str_board = board_str
-        self.init_nodes_to_figures()
+        self.init_nodes_to_figures(need_add_dragging_figure, self.dragging)

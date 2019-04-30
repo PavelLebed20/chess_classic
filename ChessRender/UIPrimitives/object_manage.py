@@ -5,14 +5,14 @@
 ###############################
 import copy
 
-from panda3d.core import LPoint3
-from panda3d.core import TransparencyAttrib
 from enum import Enum, IntEnum
-from direct.gui.OnscreenText import OnscreenText
+from direct.gui.OnscreenText import OnscreenText, TransparencyAttrib
 
 from ChessRender.UIPrimitives.button import BUTTON_SCALE_X, BUTTON_SCALE_Y, OBJECT_I
 from ChessRender.UIPrimitives.text_field import TEXT_FIELD_SCALE_X
 
+BLACK = (0.8, 0.3, 0.5, 1)
+WHITE = (1, 1, 1, 1)
 
 class RenderState(Enum):
     DEFAULT = -1
@@ -127,8 +127,6 @@ class ObjectMngr:
             return
         self.textures[render_obj] = new_texture
 
-
-
     def change_board(self, filepath):
         try:
             new_texture = loader.loadTexture(filepath)
@@ -139,8 +137,6 @@ class ObjectMngr:
         self.textures[RenderObject.BOARD] = new_texture
 
     def load_figure_model(self, figure_latter):
-        BLACK = (0.8, 0.3, 0.5, 1)
-        WHITE = (1, 1, 1, 1)
         render_obj = figure_as_render_object(figure_latter)
         obj =  copy.deepcopy(self.modeles[render_obj])
         if RenderObject.BLACK_KING <= RenderObject(render_obj) <= RenderObject.BLACK_PAWN:
@@ -149,24 +145,18 @@ class ObjectMngr:
             obj.setColor(WHITE)
         return obj
 
-    def loadObject(self, render_object, pos=LPoint3(0, 0), depth=DEPTH, scale_x=FIGUE_SCALE,
-                   scale_z=FIGUE_SCALE, transparency=True):
+    def load_figure_model_2D(self, figure_latter):
+        render_obj = figure_as_render_object(figure_latter)
+        return self.load_plane_object(render_obj)
+
+    def load_plane_object(self, render_object):
         obj = copy.deepcopy(self.modeles[RenderModels.PLANE])
 
         texture = copy.deepcopy(self.textures[render_object])
         obj.set_texture(texture)
 
-        obj.setPos(pos.getX(), depth, pos.getY())
-        obj.setSx(scale_x)
-        obj.setSz(scale_z)
+        obj.setTransparency(TransparencyAttrib.MAlpha)
 
-        obj.setBin("unsorted", 0)
-        obj.setDepthTest(False)
-
-        obj.reparentTo(camera)
-
-        if transparency:
-            obj.setTransparency(TransparencyAttrib.MAlpha)
         return obj
 
     def loadButtons(self, buttons, state):
