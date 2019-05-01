@@ -73,3 +73,39 @@ class Camera:
     def start_rotating(self, new_x, new_y):
         self.old_x = new_x
         self.old_y = new_y
+
+
+
+class Camera2D:
+    MAX_FOV = 45
+    MIN_FOV = 20
+
+    def __init__(self, camera, lens):
+        self.lens = lens
+        self.camera = camera
+        self.z = 25
+        self.x = 0
+        self.y = 0
+
+        self.fov_angle = (self.MAX_FOV + self.MIN_FOV) / 2
+
+        self.lens.setFov(self.fov_angle)
+        self._set_pos()
+        self.camera.setH(180)
+
+    def set_default(self):
+        pass
+
+    def update_pos(self, new_x, new_y):
+        pass
+
+    def update_on_mouse_wheel(self, mouse_wheel):
+        pass
+
+    def _set_pos(self):
+        self.camera.setPos(self.x, self.y, self.z)
+        self.camera.lookAt(0, 0, 0)
+        self.lens.setFov(self.fov_angle)
+
+    def start_rotating(self, new_x, new_y):
+        pass

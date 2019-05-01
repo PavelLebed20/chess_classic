@@ -1,5 +1,4 @@
-from direct.showbase.ShowBase import ShowBase, WindowProperties, CollisionTraverser, CollisionHandlerQueue, \
-    CollisionNode, GeomNode, CollisionRay
+from direct.showbase.ShowBase import ShowBase, WindowProperties
 from direct.task import Task
 
 from ChessRender.RenderFsmCommon.RenderFsmStates.game_render_state import FsmStateGameState
@@ -9,6 +8,7 @@ from ChessRender.RenderFsmCommon.RenderFsmStates.main_menu_render_state import F
 from ChessRender.RenderFsmCommon.RenderFsmStates.match_making_state import FsmStateMatchmaking
 from ChessRender.RenderFsmCommon.RenderFsmStates.multiplayer_menu_render_state import FsmStateMultiplayer
 from ChessRender.RenderFsmCommon.RenderFsmStates.registration_render_state import FsmStateRegistration
+from ChessRender.RenderFsmCommon.RenderFsmStates.skin_select_render_state import FsmStateSkinSelect
 
 
 class RenderFsm(ShowBase):
@@ -23,7 +23,6 @@ class RenderFsm(ShowBase):
         props.setSize(self.WIDTH, self.HEIGHT)
         self.win.requestProperties(props)
 
-        #self.init_ray()
         self.taskMgr.add(self.mouse_task, 'mouseTask')
         self.accept("mouse1", self.mouse_press)
         self.accept("mouse1-up", self.mouse_release)
@@ -33,17 +32,20 @@ class RenderFsm(ShowBase):
         # user data obtain fucntins
         self.process_login = None
         self.process_find_player = None
-        self.process_load_model = None
         self.process_registration = None
+        self.process_skin_select = None
 
         self.process_offline_game = None
         self.process_set_move_player = None
+
+        self.whiteside_pack_name = None
+        self.blackside_pack_name = None
 
     def init_state_by_key(self, key):
         if key == "fsm:MainMenu":
             return FsmStateMainMenu(self.process_offline_game)
         elif key == "fsm:GameState":
-            return FsmStateGameState(self)
+            return FsmStateGameState(self, self.whiteside_pack_name, self.blackside_pack_name)
         elif key == "fsm:Multiplayer":
             return FsmStateMultiplayer()
         elif key == "fsm:Login":
@@ -54,6 +56,8 @@ class RenderFsm(ShowBase):
             return FsmStateLoad()
         elif key == "fsm:Matchmaking":
             return FsmStateMatchmaking(self.process_find_player)
+        elif key == "fsm:SkinSelect":
+            return FsmStateSkinSelect(self, self.process_skin_select)
 
     def render(self):
         self.cur_state.render(self)
