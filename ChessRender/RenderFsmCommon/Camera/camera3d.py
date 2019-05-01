@@ -6,7 +6,7 @@
 from math import cos, sin, pi
 
 
-class Camera:
+class Camera3D:
     WHITE_ANGLE = pi / 2
     BLACK_ANGLE = -pi / 2
 
@@ -80,7 +80,10 @@ class Camera2D:
     MAX_FOV = 45
     MIN_FOV = 20
 
-    def __init__(self, camera, lens):
+    WHITE_ANGLE = 180
+    BLACK_ANGLE = 0
+
+    def __init__(self, camera, lens, angle=WHITE_ANGLE):
         self.lens = lens
         self.camera = camera
         self.z = 25
@@ -91,7 +94,7 @@ class Camera2D:
 
         self.lens.setFov(self.fov_angle)
         self._set_pos()
-        self.camera.setH(180)
+        self.camera.setH(angle)
 
     def set_default(self):
         pass

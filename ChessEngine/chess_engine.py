@@ -81,7 +81,7 @@ class Engine:
                                                                                               move.point_from.y,
                                                                                               move.point_to.x,
                                                                                               move.point_to.y))
-                    self.render_update_board()
+                        self.render_update_board()
         else:
             pass
 
@@ -174,6 +174,7 @@ class Engine:
             self.render.process_set_move_player = self.local_player.set_move
             print("kek2")
             self.render.change_state(self.render, "fsm:GameState")
+            self.render.cur_state.update_camera(self.local_player.side)
 
         self.render_update_board()
         self.on_update_now = False

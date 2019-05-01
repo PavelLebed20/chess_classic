@@ -4,7 +4,9 @@ from direct.gui.OnscreenText import CollisionTraverser, CollisionHandlerQueue, C
     CollisionRay
 from direct.task import Task
 from panda3d.core import BitMask32, LPoint3
-from ChessRender.RenderFsmCommon.Camera.camera import Camera, Camera2D
+
+from ChessBoard.chess_figure import Side
+from ChessRender.RenderFsmCommon.Camera.camera3d import Camera3D, Camera2D
 from ChessRender.RenderFsmCommon.Lights.lights import Lights
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
 from ChessRender.RenderFsmCommon.screen_states import ScreenState
@@ -24,6 +26,7 @@ class FsmStateGameState(ScreenState):
         self.objMngr = FigureMngr(blackside_pack_name, whiteside_pack_name)
 
         self.dimension = Dimension._3D
+        self.side = Side.WHITE
 
         self.init_sky_sphere()
         self.squares = [None for i in range(64)]
@@ -41,7 +44,8 @@ class FsmStateGameState(ScreenState):
         self.figures = [None for i in range(64)]
         self.init_nodes_to_figures()
 
-        self.camera_p = Camera(base.camera, base.camLens)
+        self._camera_set()
+        #self.camera_p = Camera(base.camera, base.camLens)
         base.disableMouse()
         # camera debug god mode
         #base.oobe()
@@ -74,11 +78,22 @@ class FsmStateGameState(ScreenState):
     def change_dimension(self):
         if self.dimension == Dimension._3D:
             self.dimension = Dimension._2D
-            self.camera_p = Camera2D(base.camera, base.camLens)
         else:
             self.dimension = Dimension._3D
-            self.camera_p = Camera(base.camera, base.camLens)
         self.update_board(self.str_board)
+        self._camera_set()
+
+    def _camera_set(self):
+        if self.dimension == Dimension._3D:
+            angle = Camera3D.WHITE_ANGLE if self.side is Side.WHITE else Camera3D.BLACK_ANGLE
+            self.camera_p = Camera3D(base.camera, base.camLens, angle)
+        else:
+            angle = Camera2D.WHITE_ANGLE if self.side is Side.WHITE else Camera2D.BLACK_ANGLE
+            self.camera_p = Camera2D(base.camera, base.camLens, angle)
+            # rotate figures
+            for i in range(0, len(self.figures)):
+                if self.figures[i] is not None:
+                    self.figures[i].setHpr(angle, -90, 0)
 
     def init_sky_sphere(self):
         self.skysphere = loader.loadModel("SkySphere.bam")
@@ -308,3 +323,7 @@ class FsmStateGameState(ScreenState):
 
         self.str_board = board_str
         self.init_nodes_to_figures(need_add_dragging_figure, self.dragging)
+
+    def update_camera(self, side):
+        self.side = side
+        self._camera_set()

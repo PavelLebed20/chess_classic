@@ -1,6 +1,6 @@
 from direct.task import Task
 
-from ChessRender.RenderFsmCommon.Camera.camera import Camera, Camera2D
+from ChessRender.RenderFsmCommon.Camera.camera3d import Camera3D, Camera2D
 from ChessRender.RenderFsmCommon.Lights.lights import Lights
 from ChessRender.RenderFsmCommon.RenderFsmStates.game_render_state import Dimension
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
@@ -14,7 +14,7 @@ class FsmStateSkinSelect(ScreenState):
         ScreenState.__init__(self)
         self.render_fsm_ref = render_fsm
         self.lights = Lights(base, self.render_fsm_ref.WIDTH, self.render_fsm_ref.HEIGHT)
-        self.camera_p = Camera(base.camera, base.camLens)
+        self.camera_p = Camera3D(base.camera, base.camLens)
         base.disableMouse()
 
         self.need_camera_update = False
@@ -64,7 +64,7 @@ class FsmStateSkinSelect(ScreenState):
             self.camera_p = Camera2D(base.camera, base.camLens)
         else:
             self.dimension = Dimension._3D
-            self.camera_p = Camera(base.camera, base.camLens)
+            self.camera_p = Camera3D(base.camera, base.camLens)
 
         self.load_model_to_screen()
 

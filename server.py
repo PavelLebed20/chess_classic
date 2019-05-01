@@ -124,6 +124,7 @@ def on_auth(data):
 
     cursor.execute("select chess.auth('{0}', '{1}', '{2}')".format(paramsDict['login'], paramsDict['email'],
                                                                    paramsDict['password']))
+    res = cursor.fetchone()
 
 @socketio.on('login')
 def on_login(data):
