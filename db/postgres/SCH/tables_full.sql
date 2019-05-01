@@ -89,6 +89,7 @@ CREATE TABLE chess.message_types
     message_type_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	priority INT NOT NULL,
 	resend_time TIME NOT NULL,
+	resend_stop_time TIME NOT NULL,
 	description varchar(300) NOT NULL
 );
 
@@ -108,7 +109,9 @@ CREATE TABLE chess.messages
     message_type_id INT NOT NULL references chess.message_types(message_type_id),
     priority INT NOT NULL,
     send_time timestamp DEFAULT NULL,
-    resend_time TIME NOT NULL
+    resend_time TIME NOT NULL,
+    resend_stop_time TIME NOT NULL,
+    add_time timestamp DEFAULT NOW()
 );
 
 DROP sequence if exists requests_seq;
@@ -118,5 +121,6 @@ create sequence requests_seq maxvalue 9223372036854775807;
 create index messages_send_time_idx ON chess.messages(send_time);
 create index messages_user_id_idx ON chess.messages(user_id);
 create index messages_priority_idx ON chess.messages(priority);
+create index messages_add_time ON chess.messages(add_time);
 -- End of Message table create
 
