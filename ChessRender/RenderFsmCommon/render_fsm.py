@@ -63,7 +63,9 @@ class RenderFsm(ShowBase):
         self.cur_state.render(self)
 
     def change_state(self, render_fsm, link_key):
+        print("create " + link_key)
         if render_fsm.cur_state is not None:
+            print("clear " + str(render_fsm.cur_state))
             render_fsm.cur_state.clear()
         render_fsm.cur_state = render_fsm.init_state_by_key(link_key)
         render_fsm.cur_state.render(render_fsm)
