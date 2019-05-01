@@ -86,6 +86,18 @@ class King(FigureBase):
         super().__init__(FigureType.KING, side, position)
         self.was_moved = was_moved
 
+    def serialized_letter(self):
+        if self.was_moved:
+            letter = 'I'
+        else:
+            letter = 'K'
+
+        if self.side is Side.BLACK:
+            letter = letter.lower()
+        return letter
+
+
+
     def roque_right(self, chess_board, correct_cells):
 
         # self does not move
@@ -204,7 +216,8 @@ class King(FigureBase):
                     rook_pos = gb.GameBoard.default_black_rook_left_pos
                     delta_rook = Vector2d(1, 0)
 
-            chess_board.make_move(Move(Vector2d(rook_pos.x, rook_pos.y), Vector2d((point_to + delta_rook).x, (point_to + delta_rook).y)))
+            self.position = copy.deepcopy(point_to)
+            chess_board.make_move(Move(rook_pos, point_to + delta_rook))
             return
         super().make_move(chess_board, point_to)
 
@@ -224,6 +237,13 @@ class King(FigureBase):
 class Queen(FigureBase):
     def __init__(self, side, position):
         super().__init__(FigureType.QUEEN, side, position)
+
+    def serialized_letter(self):
+        letter = 'Q'
+
+        if self.side is Side.BLACK:
+            letter = letter.lower()
+        return letter
 
     def generate_moves(self, chess_board):
         correct_cells = []
@@ -251,6 +271,13 @@ class Bishop(FigureBase):
     def __init__(self, side, position):
         super().__init__(FigureType.BISHOP, side, position)
 
+    def serialized_letter(self):
+        letter = 'B'
+
+        if self.side is Side.BLACK:
+            letter = letter.lower()
+        return letter
+
     def generate_moves(self, chess_board):
         correct_cells = []
         _add_correct_cells_by_line(self.position, correct_cells, chess_board, self.side, LineType.LIKE_Y_EQUALS_X)
@@ -274,6 +301,13 @@ class Bishop(FigureBase):
 class Knight(FigureBase):
     def __init__(self, side, position):
         super().__init__(FigureType.KNIGHT, side, position)
+
+    def serialized_letter(self):
+        letter = 'N'
+
+        if self.side is Side.BLACK:
+            letter = letter.lower()
+        return letter
 
     def generate_moves(self, chess_board):
         maybe_moves = [Vector2d(1, 2), Vector2d(-1, 2), Vector2d(2, 1), Vector2d(-2, 1), Vector2d(1, -2),
@@ -312,6 +346,16 @@ class Rook(FigureBase):
         super().__init__(FigureType.ROOK, side, position)
         self.was_moved = was_moved
 
+    def serialized_letter(self):
+        if self.was_moved:
+            letter = 'O'
+        else:
+            letter = 'R'
+
+        if self.side is Side.BLACK:
+            letter = letter.lower()
+        return letter
+
     def generate_moves(self, chess_board):
         correct_cells = []
         _add_correct_cells_by_line(self.position, correct_cells, chess_board, self.side, LineType.VERTICAL)
@@ -320,7 +364,7 @@ class Rook(FigureBase):
         return correct_cells
 
     def make_move(self, chess_board, point_to):
-        self.was_moved = False
+        self.was_moved = True
         super().make_move(chess_board, point_to)
 
     def print(self):
@@ -337,15 +381,28 @@ class Rook(FigureBase):
 
 
 class Pawn(FigureBase):
-    def __init__(self, side, position, was_moved):
+    def __init__(self, side, position, was_moved=False, double_move=False):
         super().__init__(FigureType.PAWN, side, position)
-        self.prev_move = None
+        self.double_move = double_move
+        self.was_moved = was_moved
+
+    def serialized_letter(self):
+        if self.was_moved is False:
+            letter = 'P'
+        elif self.double_move:
+            letter = 'W'
+        else:
+            letter = 'A'
+
+        if self.side is Side.BLACK:
+            letter = letter.lower()
+        return letter
 
     def en_passant(self, chess_board, correct_cells, dx, dy):
         enemy_pawn = chess_board.get(self.position + Vector2d(dx, 0))
         if enemy_pawn is not None:
             if isinstance(enemy_pawn, Pawn) and enemy_pawn.side != self.side:
-                if enemy_pawn.prev_move is not None and abs(enemy_pawn.prev_move.y - enemy_pawn.position.y) > 1:
+                if enemy_pawn.double_move is True:
                     correct_cells.append(self.position + Vector2d(dx, dy))
 
     def generate_moves(self, chess_board, is_attack=False):
@@ -381,7 +438,7 @@ class Pawn(FigureBase):
                 correct_cells.append(Vector2d(x, y))
 
         # pawn go forward
-        if self.prev_move is None and not is_attack:
+        if self.was_moved is False and not is_attack:
             _add_correct_cells_by_ray(self.position, correct_cells, chess_board, self.side, 0, delta_y, 2, False)
         else:
             _add_correct_cells_by_ray(self.position, correct_cells, chess_board, self.side, 0, delta_y, 1, False)
@@ -389,7 +446,6 @@ class Pawn(FigureBase):
         return correct_cells
 
     def make_move(self, chess_board, point_to):
-        self.prev_move = self.position
         passent_cells = []
 
         if self.side == Side.WHITE:
@@ -402,11 +458,17 @@ class Pawn(FigureBase):
         if self.position.x > 0:
             self.en_passant(chess_board, passent_cells, -1, delta_y)
 
+        if self.position.y - point_to.y > 1:
+            self.double_move = True
+        else:
+            self.double_move = False
+
         if point_to in passent_cells:
             chess_board.set(point_to - Vector2d(0, delta_y), None)
             super().make_move(chess_board, point_to)
         else:
             super().make_move(chess_board, point_to)
+        self.was_moved = True
 
     def print(self):
         if self.side == Side.WHITE:

@@ -10,7 +10,6 @@ LANGUAGE 'plpgsql'
 AS $BODY$
 DECLARE
   v_pairing_id bigint;
-  v_total_rows integer;
   v_opponent_id integer;
   v_opponent_side bit;
 BEGIN
@@ -20,16 +19,9 @@ IF EXISTS (SELECT 1 FROM chess.game WHERE
            RETURN;
 END IF;
 
-
-----LOCK TABLE ONLY chess.pairing;
-
-UPDATE chess.pairing SET low_rate = p_low_rate, high_rate = p_high_rate WHERE
-chess.pairing.user_id = p_user_id and chess.pairing.game_time = p_game_time and
-chess.pairing.adding_time = p_adding_time;
-GET DIAGNOSTICS v_total_rows := ROW_COUNT;
-IF v_total_rows > 0 THEN
-    RETURN;
-END IF;
+DELETE FROM chess.pairing WHERE chess.pairing.user_id = p_user_id;
+begin
+LOCK TABLE ONLY chess.pairing;
 
 SELECT chess.pairing.pairing_id INTO v_pairing_id FROM chess.pairing
                                 JOIN chess.players ON chess.pairing.user_id = chess.players.user_id
@@ -60,6 +52,6 @@ ELSE
    INSERT INTO chess.pairing (user_id, low_rate, high_rate, adding_time, game_time) VALUES
    (p_user_id, p_low_rate, p_high_rate, p_adding_time, p_game_time);
 END IF;
-
+end;
 END;
 $BODY$;

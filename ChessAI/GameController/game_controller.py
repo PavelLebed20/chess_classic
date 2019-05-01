@@ -9,8 +9,10 @@ from enum import Enum
 
 from ChessAI.GameController.game_board import GameBoard
 from ChessAI.GameController.game_figures import Pawn, King, Rook
+from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
 import pickle
+from Vector2d.Vector2d import Vector2d, Move
 
 
 class MoveResult(Enum):
@@ -27,10 +29,17 @@ class GameController:
         if chess_board is not None:
             self.game_board = GameBoard(chess_board)
         else:
-            self.game_board = pickle.loads(data)
+            self.game_board = GameBoard(Board())
+            self.deserialize_from_str(data)
 
     def serialize(self):
         return pickle.dumps(self.game_board)
+
+    def serialize_to_str(self):
+        return self.game_board.serialize_to_str()
+
+    def deserialize_from_str(self, str_board):
+        self.game_board.deserialize_from_str(str_board)
 
     def export_to_chess_board_str(self):
         return self.game_board.export_chess_board()
@@ -89,6 +98,27 @@ class GameController:
                 result = MoveResult.STALEMATE
 
         return result
+
+    def get_correct_move_for_cell(self, cell):
+        """
+        Return correct cells, that figure in cell make move to
+        :param cell: coordinates of cell on chess board(Vector2d)
+        :return: list of correct moves (Move[])
+        """
+        figure = self.game_board.get(cell)
+        if figure is None:
+            return None
+
+        attacked_cells = []
+        attacked_cells = attacked_cells + figure.generate_moves(self.game_board)
+        res_cells = []
+        for i in range(len(attacked_cells)):
+            move = Move(cell, attacked_cells[i])
+            if self.check_move(Move(cell, attacked_cells[i]), figure.side) is not MoveResult.INCORRECT:
+                res_cells.append(attacked_cells[i])
+
+        return res_cells
+
 
 ### USAGE EXAMPLE ###
 # chess_board = Board()
