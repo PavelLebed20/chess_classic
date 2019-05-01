@@ -12,7 +12,7 @@ from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
 from ChessRender.RenderFsmCommon.render_fsm import RenderFsm
 
-from ServerComponents.Client.client import Client
+#from ServerComponents.Client.client import Client
 from direct.task.Task import Task
 
 
@@ -39,7 +39,7 @@ class Engine:
         # maybe to replace on player?
         self.whiteside_pack_name = "pack0"
         self.blackside_pack_name = "pack0"
-        self.render.whitesie_pack_name = self.whiteside_pack_name
+        self.render.whiteside_pack_name = self.whiteside_pack_name
         self.render.blackside_pack_name = self.blackside_pack_name
 
         self.rate = 0
