@@ -155,10 +155,8 @@ class FsmStateGameState(ScreenState):
             if self.hiSq is False:
                 self.figures[self.dragging].setPos(
                     self.SquarePos(self.dragging))
-            else:
-                # Otherwise, swap the pieces
-                self.swap_figures(self.dragging, self.hiSq)
-            self.render_fsm_ref.process_set_move_player(Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8))
+            if self.render_fsm_ref.process_set_move_player is not None:
+                self.render_fsm_ref.process_set_move_player(Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8))
 )
 
         # We are no longer dragging anything
