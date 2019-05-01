@@ -7,7 +7,7 @@ from panda3d.core import BitMask32, LPoint3
 from ChessRender.RenderFsmCommon.Camera.camera import Camera, Camera2D
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
 from ChessRender.RenderFsmCommon.screen_states import ScreenState
-from ChessRender.UIPrimitives.object_manage import ObjectMngr
+from ChessRender.RenderFsmCommon.figure_manage import FigureMngr
 from Vector2d.Vector2d import Vector2d, Move
 
 HIGHLIGHT = (0, 1, 1, 1)
@@ -20,8 +20,7 @@ class FsmStateGameState(ScreenState):
     def __init__(self, render_fsm):
         ScreenState.__init__(self)
         self.render_fsm_ref = render_fsm
-        self.objMngr = ObjectMngr()
-
+        self.objMngr = FigureMngr("pack0", "pack0")
 
         self.dimension = Dimension._3D
 
