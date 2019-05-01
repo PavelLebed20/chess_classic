@@ -5,37 +5,49 @@
 #########################################
 import os
 
-password = 'postgres'
-user = 'postgres'
-host = 'localhost'
-database = 'Chess'
-port = '5432'
-
-path = os.path.abspath(__file__)
-dir_path = os.path.dirname(path)
+import psycopg2
 
 
-def get_execution_command(file_rel_path):
-    return ' && psql -h {0} -d {1} -U {2} -p {3} -a -w -f {4}\\{5}' \
-           ''.format(host, database, user, port, dir_path, file_rel_path)
+class DatabaseInstaller:
+    con = None
+
+    def __init__(self, dbname, user_name, host, password, port):
+        try:
+            self.con = psycopg2.connect(password=password, user=user_name,
+                                        host=host, database=dbname, port=port)
+            self.con.autocommit = True
+
+        except (Exception, psycopg2.Error) as error:
+            print("Error while connecting to PostgreSQL", error)
 
 
-#commands_str = 'set PGPASSWORD={0}'.format(password)
-commands_str = 'setx PGPASSWORD {0}'.format(password)
+db = DatabaseInstaller(dbname='chess', user_name='postgres',
+                       host='localhost', password='postgres', port='5432')
 
-commands_str += get_execution_command('SCH\\tables_full.sql')
+dir_path = os.path.dirname(os.path.abspath(__file__))
 
-commands_str += get_execution_command('SCH\\tables_data.sql')
 
-# add api scripts
+def execute_file(script_file_name):
+    if db.con is None:
+        return
+    db.con.autocommit = True
+    cursor = db.con.cursor()
+    with open(dir_path + '/' + script_file_name, 'r') as query_file:
+        query = query_file.read()
+        cursor.execute(query)
+    cursor.close()
+
+
+execute_file('SCH/tables_full.sql')
+
+execute_file('SCH/tables_data.sql')
+
 api_files = []
-# r=root, d=directories, f = files
-for r, d, f in os.walk(dir_path + '\\API\\'):
+for r, d, f in os.walk(dir_path + '/API/'):
     for file in f:
         api_files.append(os.path.join(file))
 
 for file in api_files:
-    commands_str += get_execution_command('API\\{0}'.format(file))
+    execute_file('API/{0}'.format(file))
 
-os.system(commands_str)
 

@@ -15,7 +15,12 @@ class Client:
         self.on_update_call = on_update_call
         self.on_login_call = on_login_call
 
-        self.sio.connect(adress)
+        try:
+            self.sio.connect(adress)
+        except:
+            print ("can't connect to server")
+            return
+
         threading.Thread(target=self.listen, daemon=True).start()
 
         self.sio.emit('message', "I'm here)))")
