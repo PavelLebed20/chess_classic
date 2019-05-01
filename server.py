@@ -67,6 +67,7 @@ class Server:
 
             #send none messages to not NONE clients
             for user_id in none_messages:
+                print(none_messages)
                 user_sid = supp.getkeyByVal(clients, user_id)
                 if (user_sid is not None):
                     print("user id is: " + str(user_id))

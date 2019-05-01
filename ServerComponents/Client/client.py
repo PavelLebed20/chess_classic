@@ -23,8 +23,6 @@ class Client:
 
         threading.Thread(target=self.listen, daemon=True).start()
 
-        self.sio.emit('message', "I'm here)))")
-
     def listen(self):
         self.sio.wait()
 

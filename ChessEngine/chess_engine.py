@@ -44,6 +44,7 @@ class Engine:
 
         self.rate = 0
         self.client = None
+        self.on_update_now = False
         self.game_state = None
 
         self.local_player = None
@@ -75,7 +76,6 @@ class Engine:
                 if move is not None:
                     if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
                         self.game_controller.update(move)
-                        self.render.process_set_move_player = None
                         self.current_move = (self.current_move + 1) % 2
                         self.client.send_message('update_board', "p1={}&p2={}&p3={}&p4={}".format(move.point_from.x,
                                                                                               move.point_from.y,
@@ -152,6 +152,9 @@ class Engine:
         self.render.change_state(self.render, "fsm:Matchmaking")
 
     def on_update_game(self, text_dict):
+        if (self.on_update_now == True):
+            return
+        self.on_update_now = True
         if text_dict['board'] is "":
             self.chess_board = Board()
             self.game_controller = GameController(self.chess_board)
@@ -166,12 +169,14 @@ class Engine:
         self.current_move = int(text_dict['next_move'])
 
         if (self.online_game_was_started == False):
+            self.online_game_was_started = True
             self.game_state = GameStates.ONLINE_GAME
             self.render.process_set_move_player = self.local_player.set_move
+            print("kek2")
             self.render.change_state(self.render, "fsm:GameState")
-            self.online_game_was_started = True
 
         self.render_update_board()
+        self.on_update_now = False
 
     def render_update_board(self):
         board_str = self.game_controller.export_to_chess_board_str()
