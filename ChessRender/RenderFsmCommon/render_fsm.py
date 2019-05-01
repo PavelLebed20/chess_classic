@@ -38,11 +38,14 @@ class RenderFsm(ShowBase):
         self.process_offline_game = None
         self.process_set_move_player = None
 
+        self.whiteside_pack_name = None
+        self.blackside_pack_name = None
+
     def init_state_by_key(self, key):
         if key == "fsm:MainMenu":
             return FsmStateMainMenu(self.process_offline_game)
         elif key == "fsm:GameState":
-            return FsmStateGameState(self)
+            return FsmStateGameState(self, self.whiteside_pack_name, self.blackside_pack_name)
         elif key == "fsm:Multiplayer":
             return FsmStateMultiplayer()
         elif key == "fsm:Login":
@@ -54,7 +57,7 @@ class RenderFsm(ShowBase):
         elif key == "fsm:Matchmaking":
             return FsmStateMatchmaking(self.process_find_player)
         elif key == "fsm:SkinSelect":
-            return FsmStateSkinSelect(self.process_skin_select)
+            return FsmStateSkinSelect(self, self.process_skin_select)
 
     def render(self):
         self.cur_state.render(self)

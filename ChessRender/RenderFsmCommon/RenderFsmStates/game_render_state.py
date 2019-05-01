@@ -1,10 +1,11 @@
 from enum import Enum
 
 from direct.gui.OnscreenText import CollisionTraverser, CollisionHandlerQueue, CollisionNode, \
-    CollisionRay, AmbientLight, DirectionalLight, LVector3, Spotlight, VBase4, PointLight
+    CollisionRay
 from direct.task import Task
 from panda3d.core import BitMask32, LPoint3
 from ChessRender.RenderFsmCommon.Camera.camera import Camera, Camera2D
+from ChessRender.RenderFsmCommon.Lights.lights import Lights
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
 from ChessRender.RenderFsmCommon.screen_states import ScreenState
 from ChessRender.RenderFsmCommon.figure_manage import FigureMngr
@@ -17,10 +18,10 @@ class Dimension(Enum):
     _3D = 2
 
 class FsmStateGameState(ScreenState):
-    def __init__(self, render_fsm):
+    def __init__(self, render_fsm, whiteside_pack_name, blackside_pack_name):
         ScreenState.__init__(self)
         self.render_fsm_ref = render_fsm
-        self.objMngr = FigureMngr("pack0", "pack0")
+        self.objMngr = FigureMngr(blackside_pack_name, whiteside_pack_name)
 
         self.dimension = Dimension._3D
 
@@ -45,11 +46,7 @@ class FsmStateGameState(ScreenState):
         # camera debug god mode
         #base.oobe()
 
-        self.direct_light = []
-        self.spot_light_node = []
-        self.point_light = []
-        self.ambient_light = None
-        self.setup_lights()
+        self.lights = Lights(base, self.render_fsm_ref.WIDTH, self.render_fsm_ref.HEIGHT)
 
         self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-0.8, 0, 0.8))
         self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (0.8, 0, 0.8))
@@ -74,7 +71,7 @@ class FsmStateGameState(ScreenState):
         self.hiSq = False
 
 
-    def change_dimention(self):
+    def change_dimension(self):
         if self.dimension == Dimension._3D:
             self.dimension = Dimension._2D
             self.camera_p = Camera2D(base.camera, base.camLens)
@@ -102,23 +99,12 @@ class FsmStateGameState(ScreenState):
             square.removeNode()
         self.skysphere.removeNode()
 
-        # turn off lights
-        base.render.clearLight()
-        for light in self.direct_light:
-            light.removeNode()
-
-        for light in self.spot_light_node:
-            light.removeNode()
-
-        for light in self.point_light:
-            light.removeNode()
-
-        self.ambient_light.removeNode()
+        self.lights.unset()
 
     def initialize_button_links(self):
         self.screen_atributes.buttons["but:Exit"].add_command(self.clear_state)
         self.screen_atributes.buttons["but:Exit"].add_link("fsm:MainMenu")
-        self.screen_atributes.buttons["but:2D/3D"].add_command(self.change_dimention)
+        self.screen_atributes.buttons["but:2D/3D"].add_command(self.change_dimension)
 
 
     def wheel_up(self):
@@ -303,49 +289,6 @@ class FsmStateGameState(ScreenState):
 
         self.pickerNode.addSolid(self.pickerRay)
         self.myTraverser.addCollider(self.pickerNP, self.myHandler)
-
-    def setup_lights(self):  # This function sets up some default lighting
-        self.setup_ambient_light()
-        #self.setup_point_light(3.5, -3.5, 2)
-        #self.setup_point_light(3.5, 3.5, 2)
-        #self.setup_point_light(0, 0, 5)
-        #self.setup_point_light(0, -5, -5)
-        #self.setup_point_light(-3.5, -3.5, 2)
-        self.setup_direct_light(0, 0, -1)
-
-    def setup_ambient_light(self):
-        ambientLight = AmbientLight("ambientLight")
-        ambientLight.setColor((.7, .7, .7, 1))
-        self.ambient_light = base.render.attachNewNode(ambientLight)
-        base.render.setLight(base.render.attachNewNode(ambientLight))
-
-    def setup_direct_light(self, angle_1, angle_2, angle_3):
-        directionalLight = DirectionalLight("directionalLight")
-        directionalLight.setDirection(LVector3(angle_1, angle_2, angle_3))
-        directionalLight.setColor((0.6, 0.6, 0.6, 1))
-        directionalLight.setShadowCaster(True, self.render_fsm_ref.WIDTH, self.render_fsm_ref.HEIGHT)
-        light = base.render.attachNewNode(directionalLight)
-        self.direct_light.append(light)
-        base.render.setLight(light)
-
-    def setup_spot_light(self, x, y, z):
-        slight = Spotlight('slight')
-        slight.setColor(VBase4(1, 1, 1, 1))
-        lens = base.camLens
-        slight.setLens(lens)
-        light = base.render.attachNewNode(slight)
-        light.setPos(x, y, z)
-        light.lookAt(0, 0, 0)
-        self.direct_light.append(light)
-        base.render.setLight(light)
-
-    def setup_point_light(self, x, y, z):
-        plight = PointLight('plight')
-        plight.setColor(VBase4(0.9, 0.9, 0.9, 1))
-        light = base.render.attachNewNode(plight)
-        light.setPos(x, y, z)
-        self.point_light.append(light)
-        base.render.setLight(light)
 
     def update_board(self, board_str):
         need_add_dragging_figure = None

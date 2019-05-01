@@ -3,7 +3,7 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 10/04/2019     #
 ###############################
-
+import copy
 from enum import Enum
 from ChessAI.ChessPlayer.BotPlayer.minmax_bot import MinmaxBot
 from ChessAI.ChessPlayer.LocalPlayer.local_player import LocalPlayer
@@ -12,10 +12,8 @@ from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
 from ChessRender.RenderFsmCommon.render_fsm import RenderFsm
 
-#from ServerComponents.Client.client import Client
-from direct.task.Task import Task
-
 from ServerComponents.Client.client import Client
+from direct.task.Task import Task
 
 
 class GameStates(Enum):
@@ -34,9 +32,15 @@ class Engine:
         self.render.process_login = self.process_login
         self.render.process_find_player = self.process_find_player
         self.render.process_offline_game = self.process_offline_game
-        self.render.process_load_model = self.process_load_model
         self.render.change_state(self.render, "fsm:MainMenu")
+        self.render.process_skin_select = self.process_skin_select
         self.online_game_was_started = False
+
+        # maybe to replace on player?
+        self.whiteside_pack_name = "pack0"
+        self.blackside_pack_name = "pack0"
+        self.render.whitesie_pack_name = self.whiteside_pack_name
+        self.render.blackside_pack_name = self.blackside_pack_name
 
         self.rate = 0
         self.client = None
@@ -91,14 +95,9 @@ class Engine:
         self.render.process_set_move_player = self.players[0].set_move
         self.game_state = GameStates.OFFLINE_GAME
 
-    def process_load_model(self, text_dict, side=None, figure=None):
-        if side is not None and figure is not None:
-            if side == "white":
-                self.render.objMngr.change_skin(text_dict["Path to .png"], figure.upper())
-            else:
-                self.render.objMngr.change_skin(text_dict["Path to .png"], figure.lower())
-        else:
-            self.render.objMngr.change_board(text_dict["Path to .png"])
+    def process_skin_select(self, pack_name):
+        self.whiteside_pack_name = copy.deepcopy(pack_name)
+        self.render.whiteside_pack_name = copy.deepcopy(pack_name)
 
     def process_login(self, text_dict):
         """
