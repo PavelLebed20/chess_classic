@@ -36,6 +36,12 @@ class Engine:
         self.render.change_state(self.render, "fsm:MainMenu")
         self.online_game_was_started = False
 
+        # maybe to replace on player?
+        self.whiteside_pack_name = "pack0"
+        self.blackside_pack_name = "pack0"
+        self.render.whiteside_pack_name = self.whiteside_pack_name
+        self.render.blackside_pack_name = self.blackside_pack_name
+
         self.rate = 0
         self.client = None
         self.game_state = None
