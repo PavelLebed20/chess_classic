@@ -3,7 +3,7 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 10/04/2019     #
 ###############################
-import copy
+
 from enum import Enum
 from ChessAI.ChessPlayer.BotPlayer.minmax_bot import MinmaxBot
 from ChessAI.ChessPlayer.LocalPlayer.local_player import LocalPlayer
@@ -11,9 +11,8 @@ from ChessAI.GameController.game_controller import GameController, MoveResult
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
 from ChessRender.RenderFsmCommon.render_fsm import RenderFsm
-
-#from ServerComponents.Client.client import Client
 from direct.task.Task import Task
+from ServerComponents.Client.client import Client
 
 
 class GameStates(Enum):
@@ -27,13 +26,14 @@ class Engine:
         Initialize Engine class function
         """
         self.render = RenderFsm()
+        self.server_address = 'http://localhost:8000'
 
         #### - functions to process data from users
         self.render.process_login = self.process_login
         self.render.process_find_player = self.process_find_player
         self.render.process_offline_game = self.process_offline_game
+        self.render.process_load_model = self.process_load_model
         self.render.change_state(self.render, "fsm:MainMenu")
-        self.render.process_skin_select = self.process_skin_select
         self.online_game_was_started = False
 
         # maybe to replace on player?
@@ -74,6 +74,7 @@ class Engine:
                 if move is not None:
                     if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
                         self.game_controller.update(move)
+                        self.render.process_set_move_player = None
                         self.current_move = (self.current_move + 1) % 2
                         self.client.send_message('update_board', "p1={}&p2={}&p3={}&p4={}".format(move.point_from.x,
                                                                                               move.point_from.y,
@@ -95,9 +96,14 @@ class Engine:
         self.render.process_set_move_player = self.players[0].set_move
         self.game_state = GameStates.OFFLINE_GAME
 
-    def process_skin_select(self, pack_name):
-        self.whiteside_pack_name = copy.deepcopy(pack_name)
-        self.render.whiteside_pack_name = copy.deepcopy(pack_name)
+    def process_load_model(self, text_dict, side=None, figure=None):
+        if side is not None and figure is not None:
+            if side == "white":
+                self.render.objMngr.change_skin(text_dict["Path to .png"], figure.upper())
+            else:
+                self.render.objMngr.change_skin(text_dict["Path to .png"], figure.lower())
+        else:
+            self.render.objMngr.change_board(text_dict["Path to .png"])
 
     def process_login(self, text_dict):
         """
@@ -111,10 +117,32 @@ class Engine:
         password = text_dict["Password"]
 
         # make client
-        self.client = Client('http://localhost:8000', on_login_call=self.on_login, on_update_call=self.on_update_game)
+        self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
 
         # make request for connection
         self.client.send_message('login', 'login={0}&password={1}'.format(login, password))
+
+    def process_auth(self, text_dict):
+        login = text_dict["Login"]
+        email = text_dict["Email"]
+        password = text_dict["Password"]
+
+        # make client
+        self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
+
+        # make request for connection
+        self.client.send_message('auth', 'login={0}&email{2}=&password={3}'.format(login, email, password))
+
+    def process_confirm_auth(self, text_dict):
+        email = text_dict["Email"]
+        auth_code = text_dict["Auth_code"]
+
+        # make client
+        self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
+
+        # make request for connection
+        self.client.send_message('confirm_auth', 'email={0}&auth_code{2}'.format(email, auth_code))
+
 
     def on_login(self, text_dict):
         self.rate = int(text_dict['self_rate'])
@@ -140,7 +168,6 @@ class Engine:
             self.render.change_state(self.render, "fsm:GameState")
             self.online_game_was_started = True
 
-        #render_obtain_funcs.game_fun(self.render)
         self.render_update_board(self.local_player)
 
 
@@ -150,8 +177,6 @@ class Engine:
         self.chess_board = Board(board_str)
         self.render.process_set_move_player = player.set_move
         self.render.cur_state.update_board(board_str)
-        #self.render.set_game_state(board_str, player.set_move,
-        #                           None, None, None)
 
     def process_find_player(self, text_dict):
         """
