@@ -47,13 +47,11 @@ class Server:
             cursor.execute("select * from chess.get_messages({})".format(rec_id))
             records = cursor.fetchall()
             for rec in records:
-                print("rec is " + str(rec))
                 user_id = int(rec[0])
                 actionToParams = str(rec[1]).split('?')
                 action = actionToParams[0]
                 params = actionToParams[1]
                 user_sid = supp.getkeyByVal(clients, user_id)
-                emit_params = (action, params)
 
                 # fill none messages
                 if (user_sid is None):
@@ -73,7 +71,6 @@ class Server:
                 if (user_sid is not None):
                     print("user id is: " + str(user_id))
                     print("user SID is: " + str(user_sid))
-                    print("emit params " + str(none_messages[user_id]))
                     print("action is " + str(none_messages[user_id][0]))
                     print("params is " + str(none_messages[user_id][1]))
                     socketio.emit(none_messages[user_id][0], none_messages[user_id][1], room=user_sid)
@@ -107,6 +104,25 @@ def on_verify_message(data):
         cursor.execute("call chess.verify_message({0}, {1})".format(paramsDict['request_id'], clients[request.sid]))
     con_sync.commit()
     cursor.close()
+
+@socketio.on('confirm_auth')
+def on_confirm_auth(data):
+    print("Message recieved: " + str(data))
+
+    paramsDict = supp.getParamsValMap(data)
+    cursor = con_sync.cursor()
+
+    cursor.execute("select chess.confirm_auth('{0}', '{1}')".format(paramsDict['email'],
+                                                                    paramsDict['auth_code']))
+
+@socketio.on('auth')
+def on_auth(data):
+    print("Message recieved: " + str(data))
+    paramsDict = supp.getParamsValMap(data)
+    cursor = con_sync.cursor()
+
+    cursor.execute("select chess.auth('{0}', '{1}', '{2}')".format(paramsDict['login'], paramsDict['email'],
+                                                                   paramsDict['password']))
 
 @socketio.on('login')
 def on_login(data):
@@ -147,7 +163,7 @@ def on_update_board(data):
     if (clients[request.sid] is not None):
         cursor.execute("select chess.get_current_game_board({0})".format(clients[request.sid]))
     rec = cursor.fetchone()[0]
-    print("server_board is " + str(rec))
+    #print("server_board is " + str(rec))
     # convert to game_controller
     if (rec is not None):
         cur_game_controller = game_controller.GameController(None, str(rec))
