@@ -5,16 +5,13 @@
 ###############################
 
 from enum import Enum
-import ChessRender.obtain_functions as render_obtain_funcs
-import ChessRender.UIPrimitives.room
 from ChessAI.ChessPlayer.BotPlayer.minmax_bot import MinmaxBot
 from ChessAI.ChessPlayer.LocalPlayer.local_player import LocalPlayer
 from ChessAI.GameController.game_controller import GameController, MoveResult
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
 from ChessRender.RenderFsmCommon.render_fsm import RenderFsm
-from ChessRender.chess_render import Render
-from ChessRender.chess_render import RenderState
+
 #from ServerComponents.Client.client import Client
 from direct.task.Task import Task
 
@@ -39,6 +36,7 @@ class Engine:
         self.render.process_offline_game = self.process_offline_game
         self.render.process_load_model = self.process_load_model
         self.render.change_state(self.render, "fsm:MainMenu")
+        self.online_game_was_started = False
 
         self.rate = 0
         self.client = None
@@ -64,6 +62,7 @@ class Engine:
                     self.game_controller.update(move)
                     self.player_turn = (self.player_turn + 1) % 2
                 self.render_update_board(self.players[self.player_turn])
+
         elif self.game_state == GameStates.ONLINE_GAME:
             if Side(self.current_move) == self.local_player.side:
                 cur_player = self.local_player
@@ -76,7 +75,7 @@ class Engine:
                                                                                               move.point_from.y,
                                                                                               move.point_to.x,
                                                                                               move.point_to.y))
-                    self.render_update_board(self.local_player)
+                        self.render_update_board(self.local_player)
         else:
             pass
 
@@ -119,11 +118,9 @@ class Engine:
         self.client.send_message('login', 'login={0}&password={1}'.format(login, password))
 
     def on_login(self, text_dict):
-        self.game_state = GameStates.ONLINE_GAME
         self.rate = int(text_dict['self_rate'])
 
         self.render.change_state(self.render, "fsm:Matchmaking")
-        #render_obtain_funcs.find_player_fun(self.render)
 
     def on_update_game(self, text_dict):
         if text_dict['board'] is "":
@@ -138,6 +135,11 @@ class Engine:
         else:
             self.local_player = LocalPlayer(Side.BLACK)
         self.current_move = int(text_dict['next_move'])
+
+        if (self.online_game_was_started == False):
+            self.game_state = GameStates.ONLINE_GAME
+            self.render.change_state(self.render, "fsm:GameState")
+            self.online_game_was_started = True
 
         #render_obtain_funcs.game_fun(self.render)
         self.render_update_board(self.local_player)
@@ -173,8 +175,6 @@ class Engine:
         self.client.send_message('find_pair',
                                  'low_rate={0}&hight_rate={1}&game_time={2}&move_time={3}'
                                  .format(min_rate, max_rate, game_time, move_time))
-
-        # justchill render_obtain_funcs.game_online_fun(self.render)
 
 
 
