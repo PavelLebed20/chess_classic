@@ -65,7 +65,8 @@ class Engine:
                 if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
                     self.game_controller.update(move)
                     self.player_turn = (self.player_turn + 1) % 2
-                self.render_update_board(self.players[self.player_turn])
+                self.render.process_set_move_player = self.players[self.player_turn].set_move
+                self.render_update_board()
 
         elif self.game_state == GameStates.ONLINE_GAME:
             if Side(self.current_move) == self.local_player.side:
@@ -80,12 +81,11 @@ class Engine:
                                                                                               move.point_from.y,
                                                                                               move.point_to.x,
                                                                                               move.point_to.y))
-                        self.render_update_board(self.local_player)
+                    self.render_update_board()
         else:
             pass
 
         return Task.cont
-
 
     def process_offline_game(self):
         self.player_turn = 0
@@ -115,6 +115,8 @@ class Engine:
 
         login = text_dict["Login"]
         password = text_dict["Password"]
+
+        self.online_game_was_started = False
 
         # make client
         self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
@@ -165,17 +167,15 @@ class Engine:
 
         if (self.online_game_was_started == False):
             self.game_state = GameStates.ONLINE_GAME
+            self.render.process_set_move_player = self.local_player.set_move
             self.render.change_state(self.render, "fsm:GameState")
             self.online_game_was_started = True
 
-        self.render_update_board(self.local_player)
+        self.render_update_board()
 
-
-
-    def render_update_board(self, player):
+    def render_update_board(self):
         board_str = self.game_controller.export_to_chess_board_str()
         self.chess_board = Board(board_str)
-        self.render.process_set_move_player = player.set_move
         self.render.cur_state.update_board(board_str)
 
     def process_find_player(self, text_dict):
@@ -194,6 +194,8 @@ class Engine:
         except ValueError:
             # TO DO ADD ALERT
             return
+
+        self.online_game_was_started = False
 
         # make request
         self.client.send_message('find_pair',
