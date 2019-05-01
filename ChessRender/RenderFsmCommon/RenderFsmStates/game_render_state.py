@@ -48,6 +48,7 @@ class FsmStateGameState(ScreenState):
         self.direct_light = []
         self.spot_light_node = []
         self.point_light = []
+        self.ambient_light = None
         self.setup_lights()
 
         self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-0.8, 0, 0.8))
@@ -100,6 +101,19 @@ class FsmStateGameState(ScreenState):
         for square in self.squares:
             square.removeNode()
         self.skysphere.removeNode()
+
+        # turn off lights
+        base.render.clearLight()
+        for light in self.direct_light:
+            light.removeNode()
+
+        for light in self.spot_light_node:
+            light.removeNode()
+
+        for light in self.point_light:
+            light.removeNode()
+
+        self.ambient_light.removeNode()
 
     def initialize_button_links(self):
         self.screen_atributes.buttons["but:Exit"].add_command(self.clear_state)
@@ -304,7 +318,7 @@ class FsmStateGameState(ScreenState):
     def setup_ambient_light(self):
         ambientLight = AmbientLight("ambientLight")
         ambientLight.setColor((.7, .7, .7, 1))
-        base.render.attachNewNode(ambientLight)
+        self.ambient_light = base.render.attachNewNode(ambientLight)
         base.render.setLight(base.render.attachNewNode(ambientLight))
 
     def setup_direct_light(self, angle_1, angle_2, angle_3):
