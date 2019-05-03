@@ -14,16 +14,6 @@ begin
                                                           and chess.messages.add_time <
                                                           NOW() - chess.messages.resend_stop_time);
 end;
-begin
-  -- disable messages for offline players
-  UPDATE chess.messages set request_id = 0, send_time = NULL WHERE message_id in
-                                                                  (SELECT chess.messages.message_id from chess.messages
-                                                                   JOIN chess.players on
-                                                                   chess.players.user_id = chess.messages.user_id
-                                                                   WHERE request_id <> 0 and
-                                                                         chess.messages.send_time NOTNULL and
-                                                                         chess.players.online = 0::bit);
-end;
 
 begin
   UPDATE chess.messages set request_id = p_request_id, send_time = NOW() WHERE message_id in
@@ -31,7 +21,6 @@ begin
                                                                              chess.messages.message_id from chess.messages
                                                                              JOIN chess.players on
                                                                           chess.players.user_id = chess.messages.user_id
-                                                                          --AND chess.players.online = 1::bit
                                                                              WHERE
                                                                                    request_id < 0 or
                                                                              (chess.messages.send_time NOTNULL

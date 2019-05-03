@@ -13,7 +13,6 @@ CREATE TABLE  chess.players
 	rate INT NOT NULL DEFAULT 0 CONSTRAINT rate_value CHECK (rate >= 0 and rate <= 5000),
 	email varchar(50) NOT NULL UNIQUE,
 	verified bit NOT NULL DEFAULT 0::bit,
-	online bit NOT NULL DEFAULT 0::bit,
 	registration_time timestamp NOT NULL DEFAULT NOW(),
 	last_update timestamp NOT NULL DEFAULT NOW()
 );

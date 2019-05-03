@@ -1,3 +1,5 @@
+from time import sleep
+
 from direct.showbase.ShowBase import ShowBase, WindowProperties
 from direct.task import Task
 
@@ -44,6 +46,8 @@ class RenderFsm(ShowBase):
         self.whiteside_pack_name = None
         self.blackside_pack_name = None
 
+        self.on_update_now = False
+
     def init_state_by_key(self, key):
         if key == "fsm:MainMenu":
             return FsmStateMainMenu(self.process_offline_game)
@@ -68,12 +72,16 @@ class RenderFsm(ShowBase):
         self.cur_state.render(self)
 
     def change_state(self, render_fsm, link_key):
+        while self.on_update_now == True:
+            sleep(1)
+        self.on_update_now = True
         print("create " + link_key)
         if render_fsm.cur_state is not None:
             print("clear " + str(render_fsm.cur_state))
             render_fsm.cur_state.clear()
         render_fsm.cur_state = render_fsm.init_state_by_key(link_key)
         render_fsm.cur_state.render(render_fsm)
+        self.on_update_now = False
 
     # Mouse functions
     def mouse_task(self, task):

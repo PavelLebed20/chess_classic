@@ -14,9 +14,6 @@ BEGIN
                                                                                      chess.players.password_salt)
                                                       ;-- and chess.players.online = 0::bit;
   if v_user notnull then
-    begin
-        UPDATE chess.players SET online = 1::bit WHERE user_id = v_user.user_id;
-    end;
     if v_user.verified = 0::bit then
         begin
 	        call chess.add_message(p_data := 'login?not_verified=1',

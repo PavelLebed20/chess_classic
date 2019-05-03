@@ -5,6 +5,8 @@
 ###############################
 
 from enum import Enum
+from time import sleep
+
 from ChessAI.ChessPlayer.BotPlayer.minmax_bot import MinmaxBot
 from ChessAI.ChessPlayer.LocalPlayer.local_player import LocalPlayer
 from ChessAI.GameController.game_controller import GameController, MoveResult
@@ -158,9 +160,6 @@ class Engine:
             self.render.change_state(self.render, "fsm:Matchmaking")
 
     def on_update_game(self, text_dict):
-        if (self.on_update_now == True):
-            return
-        self.on_update_now = True
         if text_dict['board'] is "":
             self.chess_board = Board()
             self.game_controller = GameController(self.chess_board)
@@ -183,7 +182,6 @@ class Engine:
             self.render.cur_state.update_camera(self.local_player.side)
 
         self.render_update_board()
-        self.on_update_now = False
 
     def render_update_board(self):
         board_str = self.game_controller.export_to_chess_board_str()

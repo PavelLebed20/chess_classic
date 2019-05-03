@@ -14,6 +14,7 @@ import Vector2d.Vector2d as vec
 import eventlet
 
 from ChessBoard.chess_board import Board
+from ChessBoard.chess_figure import Side
 
 eventlet.monkey_patch()
 from flask import Flask, request
@@ -190,24 +191,33 @@ def on_update_board(data):
 
     # get board from database
     if clients[request.sid] is not None:
-        cursor.execute("select chess.login('{0}', '{1}')".format(paramsDict['login'], paramsDict['password']))
-        cursor.execute("select chess.get_current_game_board({0})".format(clients[request.sid]))
+        cursor.execute("select * from chess.get_current_game_board_state({0})".format(clients[request.sid]))
     else:
         return
-    rec = cursor.fetchone()[0]
+    try:
+       rec = cursor.fetchone()
+       print("Game state is " + str(rec))
+       board = rec[0]
+       side = int(rec[1])
+    except:
+        cursor.close()
+        print("Game doesn't exists")
+        return
     #print("server_board is " + str(rec))
     # convert to game_controller
-    if rec is not None:
-        cur_game_controller = game_controller.GameController(None, str(rec))
+    print("Board is " + str(board))
+    print("Side is " + str(side))
+    if board is not None:
+        cur_game_controller = game_controller.GameController(None, str(board))
     else:
         cur_game_controller = game_controller.GameController(Board())
 
     move = vec.Move(vec.Vector2d(int(paramsDict['p1']), int(paramsDict['p2'])),
                     vec.Vector2d(int(paramsDict['p3']), int(paramsDict['p4'])))
 
-    res = cur_game_controller.check_move(move, )
+    res = cur_game_controller.check_move(move, Side(side))
     if res == game_controller.MoveResult.INCORRECT:
-
+        print("Wrong move send")
         cursor.close()
         return
 
