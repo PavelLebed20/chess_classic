@@ -3,8 +3,8 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 create or replace function chess.registrate(
 p_login varchar(50),
 p_password varchar(64),
-p_rate int,
 p_email varchar(50),
+p_rate int default 100,
 p_auth_length integer default 64) returns varchar as
 $$
 declare
@@ -15,7 +15,7 @@ BEGIN
     RETURN NULL;
   end if;
 
-  IF p_password THEN
+  IF p_password IS NULL THEN
     RETURN NULL;
   end if;
 
@@ -40,7 +40,7 @@ BEGIN
 
     INSERT into chess.players (login, password_salt, rate, email) VALUES
     (p_login, crypt(p_password, gen_salt('bf')), p_rate, p_email)
-    RETURNING chess.user_id INTO v_user_id;
+    RETURNING chess.players.user_id INTO v_user_id;
 
     INSERT INTO chess.auth_codes (user_id, code_salt) VALUES
     (v_user_id, crypt(v_auth_code, gen_salt('bf')));

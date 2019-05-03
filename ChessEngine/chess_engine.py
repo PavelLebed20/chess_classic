@@ -30,9 +30,11 @@ class Engine:
 
         #### - functions to process data from users
         self.render.process_login = self.process_login
+        self.render.process_registration = self.process_auth
         self.render.process_find_player = self.process_find_player
         self.render.process_offline_game = self.process_offline_game
         self.render.process_load_model = self.process_load_model
+        self.render.process_confirm_auth = self.process_confirm_auth
         self.render.change_state(self.render, "fsm:MainMenu")
         self.online_game_was_started = False
 
@@ -53,6 +55,11 @@ class Engine:
 
         self.render.taskMgr.add(self.step, "step")
         self.render.run()
+
+    def _make_client(self):
+        # make client
+        if self.client is None:
+            self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
 
     def step(self, task):
         """
@@ -81,7 +88,7 @@ class Engine:
                                                                                               move.point_from.y,
                                                                                               move.point_to.x,
                                                                                               move.point_to.y))
-                        self.render_update_board()
+                    self.render_update_board()
         else:
             pass
 
@@ -119,7 +126,7 @@ class Engine:
         self.online_game_was_started = False
 
         # make client
-        self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
+        self._make_client()
 
         # make request for connection
         self.client.send_message('login', 'login={0}&password={1}'.format(login, password))
@@ -130,26 +137,25 @@ class Engine:
         password = text_dict["Password"]
 
         # make client
-        self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
-
+        self._make_client()
         # make request for connection
-        self.client.send_message('auth', 'login={0}&email{2}=&password={3}'.format(login, email, password))
+        self.client.send_message('auth', 'login={0}&email={1}=&password={2}'.format(login, email, password))
 
     def process_confirm_auth(self, text_dict):
         email = text_dict["Email"]
-        auth_code = text_dict["Auth_code"]
+        auth_code = text_dict["AuthCode"]
 
         # make client
-        self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
-
+        self._make_client()
         # make request for connection
-        self.client.send_message('confirm_auth', 'email={0}&auth_code{2}'.format(email, auth_code))
-
+        self.client.send_message('confirm_auth', 'email={0}&auth_code={1}'.format(email, auth_code))
 
     def on_login(self, text_dict):
-        self.rate = int(text_dict['self_rate'])
-
-        self.render.change_state(self.render, "fsm:Matchmaking")
+        if 'not_verified' in text_dict:
+            self.render.change_state(self.render, "fsm:AuthConfirm")
+        else:
+            self.rate = int(text_dict['self_rate'])
+            self.render.change_state(self.render, "fsm:Matchmaking")
 
     def on_update_game(self, text_dict):
         if (self.on_update_now == True):

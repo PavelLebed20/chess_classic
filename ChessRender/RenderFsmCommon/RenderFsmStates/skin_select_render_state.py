@@ -105,10 +105,10 @@ class FsmStateSkinSelect(ScreenState):
         self.cur_model_node.reparentTo(self.render_fsm_ref.render)
 
     def wheel_up(self):
-        self.camera_p.update_on_mouse_wheel(3)
+        self.camera_p.update_on_mouse_wheel(1)
 
     def wheel_down(self):
-        self.camera_p.update_on_mouse_wheel(-3)
+        self.camera_p.update_on_mouse_wheel(-1)
 
     def middle_click(self):
         self.camera_p.set_default()
