@@ -28,6 +28,11 @@ none_messages = {}
 con_sync = supp.db().con
 con_async = supp.db().con
 
+# email data
+#server.starttls()
+#server.login("chess.classic.official@gmail.com", "ChhessClassicc1488")
+
+
 class Server:
 
     def __init__(self, port):
@@ -130,19 +135,22 @@ def on_auth(data):
     cursor.execute("select chess.registrate('{0}', '{1}', '{2}')".format(paramsDict['login'],
                                                                          paramsDict['password'],
                                                                          paramsDict['email']))
-    res = cursor.fetchone()[0][0]
+    res = cursor.fetchone()[0]
+    print(str(res))
 
     print("Auth code is " + str(res))
     if res is not None:
-        # email data
-        server = smtplib.SMTP('smtp.gmail.com', 465)
-        server.ehlo()
-        server.login("chess.classic.official@gmail.com", "ChhessClassicc1488")
-        msg = "{0}, thank your for authorization on chess classic club.".format(paramsDict['login'])
-        msg += "Your authentication code is {0}.".format(res)
+        try:
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            server.ehlo()
+            server.login("chess.classic.official@gmail.com", "ChhessClassicc1488")
+            msg = "{0}, thank your for authorization on chess classic club.".format(paramsDict['login'])
+            msg += "Your authentication code is {0}.".format(res)
 
-        server.sendmail("chess.classic.official@gmail.com", paramsDict['email'], msg)
-        server.close()
+            server.sendmail("chess.classic.official@gmail.com", [paramsDict['email']], msg)
+            server.quit()
+        except:
+            print('Failed to send email to {}'.format(paramsDict['email']))
 
 
 @socketio.on('login')
