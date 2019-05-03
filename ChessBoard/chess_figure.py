@@ -4,12 +4,12 @@
 # LAST UPDATE: 03/03/2019     #
 ###############################
 import copy
-from enum import Enum
+from enum import Enum, IntEnum
 
 from Vector2d.Vector2d import Vector2d
 
 
-class FigureType(Enum):
+class FigureType(IntEnum):
     KING = 0
     QUEEN = 1
     BISHOP = 2
@@ -18,7 +18,7 @@ class FigureType(Enum):
     PAWN = 5
 
 
-class Side(Enum):
+class Side(IntEnum):
     WHITE = 0
     BLACK = 1
 

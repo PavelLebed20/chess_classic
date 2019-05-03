@@ -71,26 +71,28 @@ class Engine:
         if self.game_state == GameStates.OFFLINE_GAME:
             cur_player = self.players[self.player_turn]
             move = cur_player.get_move()
+            other_move = self.players[(self.player_turn + 1) % 2].get_move()
             if move is not None:
                 if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
                     self.game_controller.update(move)
                     self.player_turn = (self.player_turn + 1) % 2
                 self.render.process_set_move_player = self.players[self.player_turn].set_move
+            if move is not None or other_move is not None:
                 self.render_update_board()
 
         elif self.game_state == GameStates.ONLINE_GAME:
-            if Side(self.current_move) == self.local_player.side:
-                cur_player = self.local_player
-                move = cur_player.get_move()
-                if move is not None:
-                    if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
+            move = self.local_player.get_move()
+            if move is not None:
+                if Side(self.current_move) == self.local_player.side:
+                    if self.game_controller.check_move(move, self.local_player.side) != MoveResult.INCORRECT:
                         self.game_controller.update(move)
-                        self.current_move = (self.current_move + 1) % 2
+                        self.current_move = (int(self.current_move) + 1) % 2
                         self.client.send_message('update_board', "p1={}&p2={}&p3={}&p4={}".format(move.point_from.x,
                                                                                               move.point_from.y,
                                                                                               move.point_to.x,
                                                                                               move.point_to.y))
-                    self.render_update_board()
+                self.render.process_set_move_player = self.local_player.set_move
+                self.render_update_board()
         else:
             pass
 
@@ -153,6 +155,8 @@ class Engine:
         self.client.send_message('confirm_auth', 'email={0}&auth_code={1}'.format(email, auth_code))
 
     def on_login(self, text_dict):
+        if self.render.cur_state_key == "fsm:GameState":
+            return
         if 'not_verified' in text_dict:
             self.render.change_state(self.render, "fsm:AuthConfirm")
         else:
@@ -173,14 +177,14 @@ class Engine:
             self.local_player = LocalPlayer(Side.BLACK)
         self.current_move = int(text_dict['next_move'])
 
-        if (self.online_game_was_started == False):
+        if self.online_game_was_started is False:
             self.online_game_was_started = True
-            self.game_state = GameStates.ONLINE_GAME
-            self.render.process_set_move_player = self.local_player.set_move
             print("kek2")
             self.render.change_state(self.render, "fsm:GameState")
             self.render.cur_state.update_camera(self.local_player.side)
+            self.game_state = GameStates.ONLINE_GAME
 
+        self.render.process_set_move_player = self.local_player.set_move
         self.render_update_board()
 
     def render_update_board(self):

@@ -47,8 +47,11 @@ class RenderFsm(ShowBase):
         self.blackside_pack_name = None
 
         self.on_update_now = False
+        self.state_priority = -1
+        self.cur_state_key = ""
 
     def init_state_by_key(self, key):
+        self.cur_state_key = key
         if key == "fsm:MainMenu":
             return FsmStateMainMenu(self.process_offline_game)
         elif key == "fsm:GameState":
@@ -72,7 +75,7 @@ class RenderFsm(ShowBase):
         self.cur_state.render(self)
 
     def change_state(self, render_fsm, link_key):
-        while self.on_update_now == True:
+        while self.on_update_now is True:
             sleep(1)
         self.on_update_now = True
         print("create " + link_key)
