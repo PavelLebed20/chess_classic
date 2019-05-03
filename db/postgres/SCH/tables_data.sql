@@ -6,6 +6,6 @@ INSERT INTO chess.message_types (action_name, priority, description, resend_time
                                 ('login', 2, 'User info about message', TIME '00:00:05', TIME '00:01:00');
 
 TRUNCATE chess.players cascade;
-INSERT INTO chess.players (login, password_salt, rate, email) VALUES
-                          ('a', crypt('a', gen_salt('bf')), 1, 'amin1@mail.com'),
-                          ('b', crypt('b', gen_salt('bf')), 1, 'amin2@mail.com');
+INSERT INTO chess.players (login, password_salt, rate, email, verified) VALUES
+                          ('a', crypt('a', gen_salt('bf')), 1, 'amin1@mail.com', 1::bit),
+                          ('b', crypt('b', gen_salt('bf')), 1, 'amin2@mail.com', 1::bit);
