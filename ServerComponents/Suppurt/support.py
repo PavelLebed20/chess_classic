@@ -10,6 +10,7 @@ class db:
                                           host = "127.0.0.1",
                                           port = "5432",
                                           database = "chess")
+            self.con.autocommit = True
         except (Exception, psycopg2.Error) as error :
             print ("Error while connecting to PostgreSQL", error)
 

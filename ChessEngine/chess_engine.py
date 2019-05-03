@@ -5,6 +5,8 @@
 ###############################
 
 from enum import Enum
+from time import sleep
+
 from ChessAI.ChessPlayer.BotPlayer.minmax_bot import MinmaxBot
 from ChessAI.ChessPlayer.LocalPlayer.local_player import LocalPlayer
 from ChessAI.GameController.game_controller import GameController, MoveResult
@@ -30,9 +32,11 @@ class Engine:
 
         #### - functions to process data from users
         self.render.process_login = self.process_login
+        self.render.process_registration = self.process_auth
         self.render.process_find_player = self.process_find_player
         self.render.process_offline_game = self.process_offline_game
         self.render.process_load_model = self.process_load_model
+        self.render.process_confirm_auth = self.process_confirm_auth
         self.render.change_state(self.render, "fsm:MainMenu")
         self.online_game_was_started = False
 
@@ -44,6 +48,7 @@ class Engine:
 
         self.rate = 0
         self.client = None
+        self.on_update_now = False
         self.game_state = None
 
         self.local_player = None
@@ -53,6 +58,11 @@ class Engine:
         self.render.taskMgr.add(self.step, "step")
         self.render.run()
 
+    def _make_client(self):
+        # make client
+        if self.client is None:
+            self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
+
     def step(self, task):
         """
         Main loop function
@@ -61,31 +71,32 @@ class Engine:
         if self.game_state == GameStates.OFFLINE_GAME:
             cur_player = self.players[self.player_turn]
             move = cur_player.get_move()
+            other_move = self.players[(self.player_turn + 1) % 2].get_move()
             if move is not None:
                 if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
                     self.game_controller.update(move)
                     self.player_turn = (self.player_turn + 1) % 2
-                self.render_update_board(self.players[self.player_turn])
+                self.render.process_set_move_player = self.players[self.player_turn].set_move
+            if move is not None or other_move is not None:
+                self.render_update_board()
 
         elif self.game_state == GameStates.ONLINE_GAME:
-            if Side(self.current_move) == self.local_player.side:
-                cur_player = self.local_player
-                move = cur_player.get_move()
-                if move is not None:
-                    if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
+            move = self.local_player.get_move()
+            if move is not None:
+                if Side(self.current_move) == self.local_player.side:
+                    if self.game_controller.check_move(move, self.local_player.side) != MoveResult.INCORRECT:
                         self.game_controller.update(move)
-                        self.render.process_set_move_player = None
-                        self.current_move = (self.current_move + 1) % 2
+                        self.current_move = (int(self.current_move) + 1) % 2
                         self.client.send_message('update_board', "p1={}&p2={}&p3={}&p4={}".format(move.point_from.x,
                                                                                               move.point_from.y,
                                                                                               move.point_to.x,
                                                                                               move.point_to.y))
-                        self.render_update_board(self.local_player)
+                self.render.process_set_move_player = self.local_player.set_move
+                self.render_update_board()
         else:
             pass
 
         return Task.cont
-
 
     def process_offline_game(self):
         self.player_turn = 0
@@ -116,8 +127,10 @@ class Engine:
         login = text_dict["Login"]
         password = text_dict["Password"]
 
+        self.online_game_was_started = False
+
         # make client
-        self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
+        self._make_client()
 
         # make request for connection
         self.client.send_message('login', 'login={0}&password={1}'.format(login, password))
@@ -128,26 +141,27 @@ class Engine:
         password = text_dict["Password"]
 
         # make client
-        self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
-
+        self._make_client()
         # make request for connection
-        self.client.send_message('auth', 'login={0}&email{2}=&password={3}'.format(login, email, password))
+        self.client.send_message('auth', 'login={0}&email={1}=&password={2}'.format(login, email, password))
 
     def process_confirm_auth(self, text_dict):
         email = text_dict["Email"]
-        auth_code = text_dict["Auth_code"]
+        auth_code = text_dict["AuthCode"]
 
         # make client
-        self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
-
+        self._make_client()
         # make request for connection
-        self.client.send_message('confirm_auth', 'email={0}&auth_code{2}'.format(email, auth_code))
-
+        self.client.send_message('confirm_auth', 'email={0}&auth_code={1}'.format(email, auth_code))
 
     def on_login(self, text_dict):
-        self.rate = int(text_dict['self_rate'])
-
-        self.render.change_state(self.render, "fsm:Matchmaking")
+        if self.render.cur_state_key == "fsm:GameState":
+            return
+        if 'not_verified' in text_dict:
+            self.render.change_state(self.render, "fsm:AuthConfirm")
+        else:
+            self.rate = int(text_dict['self_rate'])
+            self.render.change_state(self.render, "fsm:Matchmaking")
 
     def on_update_game(self, text_dict):
         if text_dict['board'] is "":
@@ -163,19 +177,19 @@ class Engine:
             self.local_player = LocalPlayer(Side.BLACK)
         self.current_move = int(text_dict['next_move'])
 
-        if (self.online_game_was_started == False):
-            self.game_state = GameStates.ONLINE_GAME
-            self.render.change_state(self.render, "fsm:GameState")
+        if self.online_game_was_started is False:
             self.online_game_was_started = True
+            print("kek2")
+            self.render.change_state(self.render, "fsm:GameState")
+            self.render.cur_state.update_camera(self.local_player.side)
+            self.game_state = GameStates.ONLINE_GAME
 
-        self.render_update_board(self.local_player)
+        self.render.process_set_move_player = self.local_player.set_move
+        self.render_update_board()
 
-
-
-    def render_update_board(self, player):
+    def render_update_board(self):
         board_str = self.game_controller.export_to_chess_board_str()
         self.chess_board = Board(board_str)
-        self.render.process_set_move_player = player.set_move
         self.render.cur_state.update_board(board_str)
 
     def process_find_player(self, text_dict):
@@ -194,6 +208,8 @@ class Engine:
         except ValueError:
             # TO DO ADD ALERT
             return
+
+        self.online_game_was_started = False
 
         # make request
         self.client.send_message('find_pair',

@@ -1,5 +1,6 @@
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
 from ChessRender.RenderFsmCommon.screen_states import ScreenState
+from ChessRender.RenderFsmCommon.screen_text_fsm import ScreenTextFsm
 from ChessRender.RenderFsmCommon.text_field_fsm import TextFieldFsm
 
 
@@ -14,6 +15,11 @@ class FsmStateMatchmaking(ScreenState):
         self.screen_atributes.text_fields["text_field:Addition time"] = TextFieldFsm("text_field_add_time", (-0.5, 0, 0.3), "")
         self.screen_atributes.text_fields["text_field:Min rate"] = TextFieldFsm("text_field_min_rate", (-0.5, 0, 0.1), "")
         self.screen_atributes.text_fields["text_field:Max rate"] = TextFieldFsm("text_field_max_rate", (-0.5, 0, -0.1), "")
+
+        self.screen_atributes.screen_texts["scrtext:Match time"] = ScreenTextFsm("Match time:          ", (-0.85, 0.5))
+        self.screen_atributes.screen_texts["scrtext:Addition time"] = ScreenTextFsm("Addition time:    ", (-0.85, 0.3))
+        self.screen_atributes.screen_texts["scrtext:Min rate"] = ScreenTextFsm("Min rate:              ", (-0.85, 0.1))
+        self.screen_atributes.screen_texts["scrtext:Max rate"] = ScreenTextFsm("Max rate:              ", (-0.85, -0.1))
 
         self.initialize_button_links()
 

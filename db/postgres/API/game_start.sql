@@ -13,8 +13,7 @@ DECLARE
   v_user_id2_by_side integer;
   v_users_swap_flag bit;
   v_rate_coef float;
-  v_user1_data varchar;
-  v_user2_data varchar;
+  v_game_id bigint;
 BEGIN
 ----LOCK TABLE ONLY chess.game;
 
@@ -49,29 +48,10 @@ INSERT INTO chess.game (user_id1, user_id2, win_cost, draw_cost,
                         player2_time_left) VALUES
                         (v_user_id1_by_side, v_user_id2_by_side, CAST(v_rate_coef AS integer),
                          CAST(v_rate_coef / 2 AS integer), p_adding_time,
-                         p_game_time, p_game_time);
-
-SELECT CONCAT('update_game?board=', '&opponent_login=',
-	    (select cast(chess.players.login as varchar) FROM chess.players WHERE
-                                                         chess.players.user_id=v_user_id2_by_side LIMIT 1) ,
-             '&opponent_rate=' , (select cast(chess.players.rate as varchar)
-                            FROM chess.players WHERE chess.players.user_id=v_user_id2_by_side LIMIT 1) ,
-             '&self_time=' , cast(p_game_time as varchar) , '&opponent_time=' , cast(p_game_time as varchar) ,
-             '&is_over=0' , '&self_rate=&result=&side=0&next_move=0') INTO v_user1_data;
-
-SELECT  CONCAT('update_game?board=', '&opponent_login=',
-	    (select cast(chess.players.login as varchar) FROM chess.players WHERE
-                                                         chess.players.user_id=v_user_id1_by_side LIMIT 1) ,
-             '&opponent_rate=' , (select cast(chess.players.rate as varchar)
-                            FROM chess.players WHERE chess.players.user_id=v_user_id1_by_side LIMIT 1) ,
-             '&self_time=' , cast(p_game_time as varchar) , '&opponent_time=' , cast(p_game_time as varchar) ,
-             '&is_over=0' , '&self_rate==&result=&side=1&next_move=0') INTO v_user2_data;
+                         p_game_time, p_game_time) RETURNING game_id into v_game_id;
 
 begin
-	call chess.add_message(p_data := v_user1_data, p_user_id := v_user_id1_by_side, p_action_name := 'update_game');
-end;
-begin
-	call chess.add_message(p_data := v_user2_data, p_user_id := v_user_id2_by_side, p_action_name := 'update_game');
+    call chess.add_game_message(p_game_id := v_game_id, p_add_user1 :=  1::bit, p_add_user2 := 1::bit);
 end;
 END;
 

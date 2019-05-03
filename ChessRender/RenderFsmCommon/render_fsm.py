@@ -1,6 +1,9 @@
+from time import sleep
+
 from direct.showbase.ShowBase import ShowBase, WindowProperties
 from direct.task import Task
 
+from ChessRender.RenderFsmCommon.RenderFsmStates.auth_confirm_state import FsmStateAuthConfirm
 from ChessRender.RenderFsmCommon.RenderFsmStates.game_render_state import FsmStateGameState
 from ChessRender.RenderFsmCommon.RenderFsmStates.load_render_state import FsmStateLoad
 from ChessRender.RenderFsmCommon.RenderFsmStates.login_render_state import FsmStateLogin
@@ -20,6 +23,7 @@ class RenderFsm(ShowBase):
 
         props = WindowProperties()
         props.clearSize()
+        props.setTitle('Chess Classic')
         props.setSize(self.WIDTH, self.HEIGHT)
         self.win.requestProperties(props)
 
@@ -34,6 +38,7 @@ class RenderFsm(ShowBase):
         self.process_find_player = None
         self.process_registration = None
         self.process_skin_select = None
+        self.process_confirm_auth = None
 
         self.process_offline_game = None
         self.process_set_move_player = None
@@ -41,7 +46,12 @@ class RenderFsm(ShowBase):
         self.whiteside_pack_name = None
         self.blackside_pack_name = None
 
+        self.on_update_now = False
+        self.state_priority = -1
+        self.cur_state_key = ""
+
     def init_state_by_key(self, key):
+        self.cur_state_key = key
         if key == "fsm:MainMenu":
             return FsmStateMainMenu(self.process_offline_game)
         elif key == "fsm:GameState":
@@ -58,15 +68,23 @@ class RenderFsm(ShowBase):
             return FsmStateMatchmaking(self.process_find_player)
         elif key == "fsm:SkinSelect":
             return FsmStateSkinSelect(self, self.process_skin_select)
+        elif key == "fsm:AuthConfirm":
+            return FsmStateAuthConfirm(self.process_confirm_auth)
 
     def render(self):
         self.cur_state.render(self)
 
     def change_state(self, render_fsm, link_key):
+        while self.on_update_now is True:
+            sleep(1)
+        self.on_update_now = True
+        print("create " + link_key)
         if render_fsm.cur_state is not None:
+            print("clear " + str(render_fsm.cur_state))
             render_fsm.cur_state.clear()
         render_fsm.cur_state = render_fsm.init_state_by_key(link_key)
         render_fsm.cur_state.render(render_fsm)
+        self.on_update_now = False
 
     # Mouse functions
     def mouse_task(self, task):
