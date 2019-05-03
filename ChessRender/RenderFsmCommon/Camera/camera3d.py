@@ -13,7 +13,6 @@ class Camera3D:
     MAX_FOV = 45
     MIN_FOV = 20
 
-
     def __init__(self, camera, lens, default_angle=WHITE_ANGLE):
         self.default_angle = default_angle
         self.lens = lens
@@ -45,7 +44,6 @@ class Camera3D:
         self.lens.setFov(self.fov_angle)
         self._set_pos()
 
-
     def update_pos(self, new_x, new_y):
         self.angle += (new_x - self.old_x) * 2
 
@@ -58,11 +56,15 @@ class Camera3D:
         self._set_pos()
 
     def update_on_mouse_wheel(self, mouse_wheel):
-        #self.x += mouse_wheel
-        if (self.fov_angle < self.MIN_FOV and mouse_wheel > 0 or
-            self.fov_angle > self.MAX_FOV and mouse_wheel < 0):
+        if self.fov_angle <= self.MIN_FOV and mouse_wheel > 0 or \
+           self.fov_angle >= self.MAX_FOV and mouse_wheel < 0:
             return
-        self.fov_angle -= mouse_wheel
+        self.fov_angle -= mouse_wheel * 3 * pow(self.fov_angle / self.MAX_FOV, 4)
+        # check angle right
+        if self.fov_angle < self.MIN_FOV:
+            self.fov_angle = self.MIN_FOV
+        elif self.fov_angle > self.MAX_FOV:
+            self.fov_angle = self.MAX_FOV
         self._set_pos()
 
     def _set_pos(self):
@@ -73,7 +75,6 @@ class Camera3D:
     def start_rotating(self, new_x, new_y):
         self.old_x = new_x
         self.old_y = new_y
-
 
 
 class Camera2D:
