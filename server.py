@@ -164,7 +164,9 @@ def on_login(data):
     cursor.execute("select chess.login('{0}', '{1}')".format(paramsDict['login'], paramsDict['password']))
     # set user_id for session
     print("login SID is " + str(request.sid))
-    clients[request.sid] = cursor.fetchone()[0]
+    user_id = cursor.fetchone()[0]
+    supp.deleteKeyByVal(clients, user_id)
+    clients[request.sid] = user_id
     print("login ID is " + str(clients[request.sid]))
 
     cursor.close()
