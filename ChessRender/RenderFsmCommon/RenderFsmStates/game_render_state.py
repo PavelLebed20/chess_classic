@@ -1,7 +1,7 @@
 from enum import Enum
 
 from direct.gui.OnscreenText import CollisionTraverser, CollisionHandlerQueue, CollisionNode, \
-    CollisionRay
+    CollisionRay, OnscreenText
 from direct.task import Task
 from panda3d.core import BitMask32, LPoint3
 
@@ -74,6 +74,8 @@ class FsmStateGameState(ScreenState):
         self.dragging_figure_position = None
         self.hiSq = False
 
+        self.text_info = {}
+
 
     def change_dimension(self):
         if self.dimension == Dimension._3D:
@@ -115,6 +117,8 @@ class FsmStateGameState(ScreenState):
         self.skysphere.removeNode()
 
         self.lights.unset()
+        for key in self.text_info:
+            self.text_info[key].destroy()
 
     def initialize_button_links(self):
         self.screen_atributes.buttons["but:Exit"].add_command(self.clear_state)
@@ -327,3 +331,32 @@ class FsmStateGameState(ScreenState):
     def update_camera(self, side):
         self.side = side
         self._camera_set()
+
+    def update_game_info(self, white_login, white_time, white_rate,
+                         black_login, black_time, black_rate):
+        scale = 0.07
+
+        if 'white_login' in self.text_info:
+            self.text_info['white_login'].destroy()
+        self.text_info['white_login'] = OnscreenText(text=white_login + " (" + str(white_rate) + ")",
+                                                     pos=(-0.4, 0.9), scale=scale)
+
+        if 'white_time' in self.text_info:
+            self.text_info['white_time'].destroy()
+        self.text_info['white_time'] = OnscreenText(text=white_time,
+                                                    pos=(-0.4, 0.8), scale=scale)
+
+        if 'slash' in self.text_info:
+            self.text_info['slash'].destroy()
+        self.text_info['slash'] = OnscreenText("-", pos=(-0.15, 0.9), scale=scale)
+
+        if 'black_login' in self.text_info:
+            self.text_info['black_login'].destroy()
+        self.text_info['white_login'] = OnscreenText(text=black_login + " (" + str(black_rate) + ")",
+                                                     pos=(0.2, 0.9), scale=scale)
+
+        if 'black_time' in self.text_info:
+            self.text_info['black_time'].destroy()
+        self.text_info['black_time'] = OnscreenText(text=black_time, pos=(0.2, 0.8), scale=scale)
+
+
