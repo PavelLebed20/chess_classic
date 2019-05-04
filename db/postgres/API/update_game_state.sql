@@ -14,6 +14,7 @@ DECLARE
   v_left_time TIME;
   v_last_update timestamp;
   v_add_time int;
+  v_delta_time interval;
 BEGIN
   SELECT chess.game.game_id into v_game_id FROM chess.game WHERE chess.game.user_id1 = p_user_id and
                                                                  chess.game.is_playing = 1::bit LIMIT 1;
@@ -21,10 +22,22 @@ BEGIN
       SELECT chess.game.last_update INTO v_last_update from chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
       SELECT chess.date_time_diff_seconds(CAST(NOW() AS timestamp), v_last_update) INTO v_date_diff;
       SELECT chess.game.player1_time_left INTO v_left_time FROM chess.game WHERE chess.game.game_id=v_game_id;
-      SELECT v_left_time - make_interval(secs := CAST(v_date_diff AS double precision)) INTO v_left_time;
-      if v_left_time > TIME '00:00:00' then
-          SELECT chess.game.adding_time INTO v_add_time FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
-          SELECT v_left_time + make_interval(secs := CAST(v_add_time AS double precision)) INTO v_left_time;
+      SELECT make_interval(secs := CAST(v_date_diff AS double precision)) INTO v_delta_time;
+      IF CAST(v_delta_time AS TIME) <= v_left_time then
+          begin
+              SELECT v_left_time - make_interval(secs := CAST(v_date_diff AS double precision)) INTO v_left_time;
+              if v_left_time > TIME '00:00:00' then
+                  SELECT chess.game.adding_time INTO v_add_time FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
+                  SELECT v_left_time + make_interval(secs := CAST(v_add_time AS double precision)) INTO v_left_time;
+              end if;
+          end;
+      else
+          SELECT TIME '00:00:00' into v_left_time;
+      end if;
+
+      if v_left_time = TIME '00:00:00' then
+          SELECT 0::bit into p_is_playing;
+          SELECT 1::bit into p_game_result; -- black win
       end if;
 
       LOCK TABLE ONLY chess.game in share row exclusive mode;
@@ -43,11 +56,24 @@ BEGIN
       SELECT chess.game.last_update INTO v_last_update from chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
       SELECT chess.date_time_diff_seconds(CAST(NOW() AS timestamp), v_last_update) INTO v_date_diff;
       SELECT chess.game.player2_time_left INTO v_left_time FROM chess.game WHERE chess.game.game_id=v_game_id;
-      SELECT v_left_time - make_interval(secs := CAST(v_date_diff AS double precision)) INTO v_left_time;
-      if v_left_time > TIME '00:00:00' then
-          SELECT chess.game.adding_time INTO v_add_time FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
-          SELECT v_left_time + make_interval(secs := CAST(v_add_time AS double precision)) INTO v_left_time;
+      SELECT make_interval(secs := CAST(v_date_diff AS double precision)) INTO v_delta_time;
+      IF CAST(v_delta_time AS TIME) <= v_left_time then
+          begin
+              SELECT v_left_time - v_delta_time INTO v_left_time;
+              if v_left_time > TIME '00:00:00' then
+                  SELECT chess.game.adding_time INTO v_add_time FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
+                  SELECT v_left_time + make_interval(secs := CAST(v_add_time AS double precision)) INTO v_left_time;
+              end if;
+          end;
+      else
+          SELECT TIME '00:00:00' into v_left_time;
       end if;
+
+      if v_left_time = TIME '00:00:00' then
+          SELECT 0::bit into p_is_playing;
+          SELECT 0::bit into p_game_result; -- white win
+      end if;
+
 
       LOCK TABLE ONLY chess.game in share row exclusive mode;
       update chess.game set player2_time_left = v_left_time, board = p_board, is_playing = p_is_playing,
