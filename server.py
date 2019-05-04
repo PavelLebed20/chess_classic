@@ -218,16 +218,31 @@ def on_update_board(data):
                     vec.Vector2d(int(paramsDict['p3']), int(paramsDict['p4'])))
 
     res = cur_game_controller.check_move(move, Side(side))
+    is_playing = 1
+    game_result = None
     if res == game_controller.MoveResult.INCORRECT:
         print("Wrong move send")
         cursor.close()
         return
-
+    elif res == game_controller.MoveResult.STALEMATE:
+        is_playing = 0
+    elif res == game_controller.MoveResult.MATE:
+        is_playing = 0
+        game_result = 0 if Side(side) is Side.WHITE else 1
 
     cur_game_controller.update(move)
 
-    cursor.execute("call chess.update_game_state({0}, '{1}')".format(clients[request.sid],
-                                                                   cur_game_controller.serialize_to_str()))
+    if game_result is None:
+        cursor.execute("call chess.update_game_state({0}, '{1}', "
+                       "{2}::bit, NULL)".format(clients[request.sid],
+                                          cur_game_controller.serialize_to_str(),
+                                          is_playing))
+    else:
+        cursor.execute("call chess.update_game_state({0}, '{1}', "
+                       "{2}::bit, {3}::bit)".format(clients[request.sid],
+                                                    cur_game_controller.serialize_to_str(),
+                                                    is_playing,
+                                                    game_result))
 
 
     cursor.close()
