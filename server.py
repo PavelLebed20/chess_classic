@@ -167,7 +167,6 @@ def on_login(data):
     user_id = cursor.fetchone()[0]
     supp.deleteKeyByVal(clients, user_id)
     clients[request.sid] = user_id
-    clients[request.sid] = user_id
     print("login ID is " + str(clients[request.sid]))
 
     cursor.close()

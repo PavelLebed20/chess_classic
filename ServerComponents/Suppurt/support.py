@@ -25,6 +25,11 @@ def getParamsValMap(data):
         res.update({paramToVal[0]: paramToVal[1]})
     return res
 
+def deleteKeyByVal(dict, find_val):
+    for key, val in dict.items():
+        if (val == find_val):
+            dict.pop(key)
+
 def getkeyByVal(dict, find_val):
     for key, val in dict.items():
         if (val == find_val):
