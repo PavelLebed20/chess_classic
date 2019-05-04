@@ -13,6 +13,7 @@ from ChessAI.ChessPlayer.chess_player import Player
 from ChessAI.GameController.game_controller import GameController, MoveResult
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
+from ChessRender.RenderFsmCommon.RenderFsmStates.game_render_state import FsmStateGameState
 from ChessRender.RenderFsmCommon.render_fsm import RenderFsm
 from direct.task.Task import Task
 from ServerComponents.Client.client import Client
@@ -71,6 +72,8 @@ class Engine:
         Main loop function
         :return: NONE.
         """
+        if self.render.on_update_now:
+            return Task.cont
         if self.game_state == GameStates.OFFLINE_GAME:
             cur_player = self.players[self.player_turn]
             # obtain time
