@@ -22,12 +22,13 @@ class MinmaxBot(Player):
         """
         Initialize bot class function
         """
+        super().__init__(side)
         self.side = Side(side)
         self.move = None
         self.game_controller = game_controller
         self.is_move_calculating = False
         self.value = None
-        self.depth = 2
+        self.depth = 3
 
     def get_move(self):
         """

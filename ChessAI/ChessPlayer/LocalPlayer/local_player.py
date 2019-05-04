@@ -15,6 +15,7 @@ class LocalPlayer(Player):
         """
         Initialize player class function
         """
+        super().__init__(side)
         self.side = Side(side)
         self.move = None
 
