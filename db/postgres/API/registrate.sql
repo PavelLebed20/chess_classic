@@ -35,8 +35,8 @@ BEGIN
   select chess.random_string(length := p_auth_length) into v_auth_code;
 
   begin
-    LOCK TABLE only chess.players;
-    LOCK TABLE only chess.auth_codes;
+    --LOCK TABLE only chess.players;
+    --LOCK TABLE only chess.auth_codes;
 
     INSERT into chess.players (login, password_salt, rate, email) VALUES
     (p_login, crypt(p_password, gen_salt('bf')), p_rate, p_email)

@@ -28,6 +28,7 @@ BEGIN
             call chess.add_game_message_if_exists(v_user.user_id);
         end;
     end if;
+    DELETE FROM chess.pairing WHERE chess.pairing.user_id = v_user.user_id;
     return v_user.user_id;
   end if;
   return -1;

@@ -38,9 +38,9 @@ ELSE
 END IF;
 
 SELECT 1 / (1 + power(10, CAST(ABS((SELECT chess.players.rate FROM chess.players
-                                    WHERE chess.players.user_id = p_user_id1) -
+                                    WHERE chess.players.user_id = v_user_id1_by_side) -
                                    (SELECT chess.players.rate FROM chess.players
-                                    WHERE chess.players.user_id = p_user_id2)) AS INTEGER) /
+                                    WHERE chess.players.user_id = v_user_id2_by_side)) AS INTEGER) /
                                    400.0)) INTO v_rate_coef;
 
 INSERT INTO chess.game (user_id1, user_id2, win_cost, draw_cost,

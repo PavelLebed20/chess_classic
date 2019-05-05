@@ -20,6 +20,7 @@ class Player:
         self.login = ''
         self.rate = -1
         self.side = side
+        self.is_stopped = False
 
     def make_move(self, game_controller=None):
         """
@@ -41,6 +42,7 @@ class Player:
         return time.time() * 1000  #+ datetime.datetime.now().microsecond // 1000
 
     def init_time(self, time_in_millisecs):
+        self.is_stopped = False
         self.time_left = time_in_millisecs
         self.time_of_update = Player.milli_seconds_time()
 
@@ -52,7 +54,12 @@ class Player:
     def restart_timer(self):
         self.time_of_update = Player.milli_seconds_time()
 
+    def stop_timer(self):
+        self.is_stopped = True
+
     def update_time(self):
+        if self.is_stopped is True:
+            return
         cur_time = Player.milli_seconds_time()
         if cur_time - self.time_of_update == 0:
             return

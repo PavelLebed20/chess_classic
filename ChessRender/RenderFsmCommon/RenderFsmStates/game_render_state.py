@@ -19,8 +19,9 @@ class Dimension(Enum):
     _2D = 1
     _3D = 2
 
+
 class FsmStateGameState(ScreenState):
-    def __init__(self, render_fsm, whiteside_pack_name, blackside_pack_name):
+    def __init__(self, render_fsm, whiteside_pack_name, blackside_pack_name, on_exit_func=None):
         ScreenState.__init__(self)
         self.render_fsm_ref = render_fsm
         self.objMngr = FigureMngr(blackside_pack_name, whiteside_pack_name)
@@ -75,7 +76,8 @@ class FsmStateGameState(ScreenState):
         self.hiSq = False
 
         self.text_info = {}
-
+        self.scale = 0.07
+        self.on_exit_func = on_exit_func
 
     def change_dimension(self):
         if self.dimension == Dimension._3D:
@@ -109,6 +111,7 @@ class FsmStateGameState(ScreenState):
         pass
 
     def clear_state(self):
+        self.render_fsm_ref.is_clearing = True
         for figure in self.figures:
             if figure is not None:
                 figure.removeNode()
@@ -120,8 +123,15 @@ class FsmStateGameState(ScreenState):
         for key in self.text_info:
             self.text_info[key].destroy()
 
+        self.render_fsm_ref.is_clearing = False
+
+    def on_exit(self):
+        if self.on_exit_func is not None:
+            self.on_exit_func()
+        self.clear_state()
+
     def initialize_button_links(self):
-        self.screen_atributes.buttons["but:Exit"].add_command(self.clear_state)
+        self.screen_atributes.buttons["but:Exit"].add_command(self.on_exit)
         self.screen_atributes.buttons["but:Exit"].add_link("fsm:MainMenu")
         self.screen_atributes.buttons["but:2D/3D"].add_command(self.change_dimension)
 
@@ -334,8 +344,7 @@ class FsmStateGameState(ScreenState):
 
     def update_game_info(self, white_login, white_time, white_rate,
                          black_login, black_time, black_rate):
-        scale = 0.07
-
+        scale = self.scale
         if 'white_login' in self.text_info:
             self.text_info['white_login'].destroy()
         self.text_info['white_login'] = OnscreenText(text=white_login + " (" + str(white_rate) + ")",
@@ -352,11 +361,25 @@ class FsmStateGameState(ScreenState):
 
         if 'black_login' in self.text_info:
             self.text_info['black_login'].destroy()
-        self.text_info['white_login'] = OnscreenText(text=black_login + " (" + str(black_rate) + ")",
+        self.text_info['black_login'] = OnscreenText(text=black_login + " (" + str(black_rate) + ")",
                                                      pos=(0.2, 0.9), scale=scale)
 
         if 'black_time' in self.text_info:
             self.text_info['black_time'].destroy()
         self.text_info['black_time'] = OnscreenText(text=black_time, pos=(0.2, 0.8), scale=scale)
+
+    def update_game_result_info(self, win_side, delta_rate):
+        scale = self.scale
+        if 'win_info' in self.text_info:
+            self.text_info['win_info'].destroy()
+        side_text = "Game over! "
+        if win_side in (Side.WHITE, Side.BLACK):
+            side_text += "Black won. " if win_side is Side.BLACK else "White won. "
+        else:
+            side_text += "It is draw. "
+        self.text_info['win_info'] = OnscreenText(text=side_text +
+                                                  "Delta rating is " + str(delta_rate),
+                                                  pos=(-0.15, 0.7), scale=scale,
+                                                  fg=(1.0, 0.0, 0.0, 1.0))
 
 

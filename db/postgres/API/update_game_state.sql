@@ -40,7 +40,7 @@ BEGIN
           SELECT 1::bit into p_game_result; -- black win
       end if;
 
-      LOCK TABLE ONLY chess.game in share row exclusive mode;
+      --LOCK TABLE ONLY chess.game in share row exclusive mode;
       update chess.game set player1_time_left = v_left_time, board = p_board, is_playing = p_is_playing,
                             game_result = p_game_result, next_move_player =
                                 case when next_move_player = 0::bit then 1::bit else 0::bit end,

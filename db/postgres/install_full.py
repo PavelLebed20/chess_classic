@@ -40,8 +40,6 @@ def execute_file(script_file_name):
 
 execute_file('SCH/tables_full.sql')
 
-execute_file('SCH/tables_data.sql')
-
 api_files = []
 for r, d, f in os.walk(dir_path + '/API/'):
     for file in f:
@@ -49,5 +47,7 @@ for r, d, f in os.walk(dir_path + '/API/'):
 
 for file in api_files:
     execute_file('API/{0}'.format(file))
+
+execute_file('SCH/tables_data.sql')
 
 

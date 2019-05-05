@@ -3,7 +3,7 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 10/04/2019     #
 ###############################
-
+import copy
 from enum import Enum
 from time import sleep
 
@@ -13,7 +13,6 @@ from ChessAI.ChessPlayer.chess_player import Player
 from ChessAI.GameController.game_controller import GameController, MoveResult
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
-from ChessRender.RenderFsmCommon.RenderFsmStates.game_render_state import FsmStateGameState
 from ChessRender.RenderFsmCommon.render_fsm import RenderFsm
 from direct.task.Task import Task
 from ServerComponents.Client.client import Client
@@ -21,7 +20,8 @@ from ServerComponents.Client.client import Client
 
 class GameStates(Enum):
     OFFLINE_GAME = 0,
-    ONLINE_GAME = 1
+    ONLINE_GAME = 1,
+    MENU = 2
 
 class Engine:
 
@@ -39,6 +39,8 @@ class Engine:
         self.render.process_offline_game = self.process_offline_game
         self.render.process_load_model = self.process_load_model
         self.render.process_confirm_auth = self.process_confirm_auth
+        self.render.on_game_exit = self.set_menu_state
+        self.render.process_skin_select = self.process_skin_select
         self.render.change_state(self.render, "fsm:MainMenu")
         self.online_game_was_started = False
 
@@ -52,12 +54,14 @@ class Engine:
         self.login = ''
         self.client = None
         self.on_update_now = False
-        self.game_state = None
+        self.game_state = GameStates.MENU
+        self.delta_rate = 0
 
         self.local_player = None
         self.online_player = None
         self.current_move = 0
         self.players = None
+        self.game_result = -1
 
         self.render.taskMgr.add(self.step, "step")
         self.render.run()
@@ -65,15 +69,17 @@ class Engine:
     def _make_client(self):
         # make client
         if self.client is None:
-            self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
+            self.client = Client(self.server_address, on_login_call=self.on_login,
+                                 on_update_call=self.on_update_game, on_update_time_call=self.on_update_time)
 
     def step(self, task):
         """
         Main loop function
         :return: NONE.
         """
-        if self.render.on_update_now:
+        if self.render.on_update_now or self.render.is_clearing:
             return Task.cont
+        self.render.on_update_now = True
         if self.game_state == GameStates.OFFLINE_GAME:
             cur_player = self.players[self.player_turn]
             # obtain time
@@ -87,15 +93,32 @@ class Engine:
 
             move = cur_player.get_move()
             other_move = self.players[(self.player_turn + 1) % 2].get_move()
+            if cur_player.is_time_over():
+                self.game_result = self.players[(self.player_turn + 1) % 2].side
+                self.delta_rate = 20
             if move is not None:
-                if self.game_controller.check_move(move, cur_player.side) != MoveResult.INCORRECT:
+                move_res = self.game_controller.check_move(move, cur_player.side)
+
+                if move_res != MoveResult.INCORRECT and self.game_result == -1:
                     self.game_controller.update(move)
                     self.player_turn = (self.player_turn + 1) % 2
                     self.players[self.player_turn].restart_timer()
+                    # game over
+                    if move_res == MoveResult.MATE:
+                        self.game_result = cur_player.side
+                        self.delta_rate = 20
+                    elif move_res == MoveResult.STALEMATE:
+                        self.game_result = None
+                        self.delta_rate = 0
 
                 self.render.process_set_move_player = self.players[self.player_turn].set_move
-            if move is not None or other_move is not None:
+            if move is not None or other_move is not None or self.game_result != -1:
                 self.render_update_board()
+
+            if self.game_result != -1:
+                self.render.cur_state.update_game_result_info(self.game_result, self.delta_rate)
+                self.players[0].stop_timer()
+                self.players[1].stop_timer()
 
         elif self.game_state == GameStates.ONLINE_GAME:
             if Side(self.current_move) == self.local_player.side:
@@ -117,7 +140,12 @@ class Engine:
                                                          move.point_to.y))
                         self.online_player.restart_timer()
                 self.render.process_set_move_player = self.local_player.set_move
-                self.render_update_board()
+            self.render_update_board()
+
+            if self.game_result != -1:
+                self.render.cur_state.update_game_result_info(self.game_result, self.delta_rate)
+                self.local_player.stop_timer()
+                self.online_player.stop_timer()
 
             # set text info
             white_login = self.local_player.login
@@ -135,7 +163,15 @@ class Engine:
         else:
             pass
 
+        self.render.on_update_now = False
         return Task.cont
+
+    def set_menu_state(self):
+        self.game_state = GameStates.MENU
+
+    def process_skin_select(self, pack_name):
+        self.whiteside_pack_name = copy.deepcopy(pack_name)
+        self.render.whiteside_pack_name = copy.deepcopy(pack_name)
 
     def process_offline_game(self):
         self.player_turn = 0
@@ -150,10 +186,13 @@ class Engine:
         self.players[1].update_rate(1800)
 
         self.render.process_set_move_player = self.players[0].set_move
-        self.game_state = GameStates.OFFLINE_GAME
+        self.game_result = -1
+        self.delta_rate = 0
 
         for i in range(0, len(self.players)):
             self.players[i].init_time(1000 * 60 * 5)  # 5 minutes
+
+        self.game_state = GameStates.OFFLINE_GAME
 
     def process_load_model(self, text_dict, side=None, figure=None):
         if side is not None and figure is not None:
@@ -214,12 +253,16 @@ class Engine:
             self.render.change_state(self.render, "fsm:Matchmaking")
 
     def on_update_game(self, text_dict):
+        self.game_state = GameStates.MENU
+        self.game_result = -1
+        self.delta_rate = 0
+
         if text_dict['board'] is "":
             self.chess_board = Board()
             self.game_controller = GameController(self.chess_board)
         else:
             print("board is " + str(text_dict['board']))
-            self.game_controller =  GameController(None, str(text_dict['board']))
+            self.game_controller = GameController(None, str(text_dict['board']))
 
         if text_dict['side'] == '0':
             self.local_player = LocalPlayer(Side.WHITE)
@@ -227,6 +270,14 @@ class Engine:
         else:
             self.local_player = LocalPlayer(Side.BLACK)
             self.online_player = Player(Side.WHITE)
+
+        if int(text_dict['is_playing']) == 0:
+            if text_dict['result'] is None:
+                self.game_result = None
+            else:
+                self.game_result = Side(int(text_dict['result']))
+            self.delta_rate = self.rate - int(text_dict['self_rate'])
+            self.rate = int(text_dict['self_rate'])
 
         self.local_player.update_login(self.login)
         self.local_player.update_rate(self.rate)
@@ -243,10 +294,29 @@ class Engine:
             print("kek2")
             self.render.change_state(self.render, "fsm:GameState")
             self.render.cur_state.update_camera(self.local_player.side)
-            self.game_state = GameStates.ONLINE_GAME
 
         self.render.process_set_move_player = self.local_player.set_move
         self.render_update_board()
+        self.game_state = GameStates.ONLINE_GAME
+
+    def on_update_time(self, text_dict):
+        if self.game_state != GameStates.ONLINE_GAME:
+            return
+
+        if int(text_dict['is_playing']) == 0:
+            if text_dict['result'] is None:
+                self.game_result = None
+            else:
+                self.game_result = Side(int(text_dict['result']))
+            self.delta_rate = self.rate - int(text_dict['self_rate'])
+            self.rate = int(text_dict['self_rate'])
+
+        self.local_player.update_login(self.login)
+        self.local_player.update_rate(self.rate)
+        self.local_player.init_time_from_str(text_dict['self_time'])
+
+        self.online_player.update_rate(text_dict['opponent_rate'])
+        self.online_player.init_time_from_str(text_dict['opponent_time'])
 
     def render_update_board(self):
         board_str = self.game_controller.export_to_chess_board_str()
