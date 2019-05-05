@@ -51,7 +51,7 @@ class FsmStateGameState(ScreenState):
         # camera debug god mode
         #base.oobe()
 
-        self.lights = Lights(base, self.render_fsm_ref.WIDTH, self.render_fsm_ref.HEIGHT)
+        self.lights = Lights(base, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
 
         self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-0.8, 0, 0.8))
         self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (0.8, 0, 0.8))
@@ -90,10 +90,10 @@ class FsmStateGameState(ScreenState):
     def _camera_set(self):
         if self.dimension == Dimension._3D:
             angle = Camera3D.WHITE_ANGLE if self.side is Side.WHITE else Camera3D.BLACK_ANGLE
-            self.camera_p = Camera3D(base.camera, base.camLens, angle)
+            self.camera_p = Camera3D(base.camera, base.camLens, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height, angle)
         else:
             angle = Camera2D.WHITE_ANGLE if self.side is Side.WHITE else Camera2D.BLACK_ANGLE
-            self.camera_p = Camera2D(base.camera, base.camLens, angle)
+            self.camera_p = Camera2D(base.camera, base.camLens, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height, angle)
             # rotate figures
             for i in range(0, len(self.figures)):
                 if self.figures[i] is not None:
@@ -167,9 +167,12 @@ class FsmStateGameState(ScreenState):
         # Make sure we really are dragging something
         if self.dragging is not False:
             # We have let go of the piece, but we are not on a square
-            if self.hiSq is False:
+            if self.dimension is Dimension._3D:
                 self.figures[self.dragging].setPos(
                     self.SquarePos(self.dragging))
+            else:
+                self.figures[self.dragging].setPos(
+                    self.FigurePos2D(self.dragging))
             if self.render_fsm_ref.process_set_move_player is not None:
                 self.render_fsm_ref.process_set_move_player(Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8))
 )
@@ -246,7 +249,10 @@ class FsmStateGameState(ScreenState):
                     self.figures[key].setPos(self.SquarePos(key))
                 else:
                     self.figures[key] = self.objMngr.load_figure_model_2D(self.str_board[key])
-                    self.figures[key].setHpr(180, -90, 0)
+                    if self.side is Side.WHITE:
+                        self.figures[key].setHpr(180, -90, 0)
+                    else:
+                        self.figures[key].setHpr(0, -90, 0)
                     self.figures[key].setPos(self.FigurePos2D(key))
 
                 self.figures[key].reparentTo(self.render_fsm_ref.render)
@@ -381,5 +387,3 @@ class FsmStateGameState(ScreenState):
                                                   "Delta rating is " + str(delta_rate),
                                                   pos=(-0.15, 0.7), scale=scale,
                                                   fg=(1.0, 0.0, 0.0, 1.0))
-
-
