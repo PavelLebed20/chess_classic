@@ -3,7 +3,7 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 10/04/2019     #
 ###############################
-
+import copy
 from enum import Enum
 from time import sleep
 
@@ -40,6 +40,7 @@ class Engine:
         self.render.process_load_model = self.process_load_model
         self.render.process_confirm_auth = self.process_confirm_auth
         self.render.on_game_exit = self.set_menu_state
+        self.render.process_skin_select = self.process_skin_select
         self.render.change_state(self.render, "fsm:MainMenu")
         self.online_game_was_started = False
 
@@ -166,6 +167,10 @@ class Engine:
 
     def set_menu_state(self):
         self.game_state = GameStates.MENU
+
+    def process_skin_select(self, pack_name):
+        self.whiteside_pack_name = copy.deepcopy(pack_name)
+        self.render.whiteside_pack_name = copy.deepcopy(pack_name)
 
     def process_offline_game(self):
         self.player_turn = 0
