@@ -69,7 +69,8 @@ class Engine:
     def _make_client(self):
         # make client
         if self.client is None:
-            self.client = Client(self.server_address, on_login_call=self.on_login, on_update_call=self.on_update_game)
+            self.client = Client(self.server_address, on_login_call=self.on_login,
+                                 on_update_call=self.on_update_game, on_update_time_call=self.on_update_time)
 
     def step(self, task):
         """
@@ -252,6 +253,7 @@ class Engine:
             self.render.change_state(self.render, "fsm:Matchmaking")
 
     def on_update_game(self, text_dict):
+        self.game_state = GameStates.MENU
         self.game_result = -1
         self.delta_rate = 0
 
@@ -292,10 +294,29 @@ class Engine:
             print("kek2")
             self.render.change_state(self.render, "fsm:GameState")
             self.render.cur_state.update_camera(self.local_player.side)
-            self.game_state = GameStates.ONLINE_GAME
 
         self.render.process_set_move_player = self.local_player.set_move
         self.render_update_board()
+        self.game_state = GameStates.ONLINE_GAME
+
+    def on_update_time(self, text_dict):
+        if self.game_state != GameStates.ONLINE_GAME:
+            return
+
+        if int(text_dict['is_playing']) == 0:
+            if text_dict['result'] is None:
+                self.game_result = None
+            else:
+                self.game_result = Side(int(text_dict['result']))
+            self.delta_rate = self.rate - int(text_dict['self_rate'])
+            self.rate = int(text_dict['self_rate'])
+
+        self.local_player.update_login(self.login)
+        self.local_player.update_rate(self.rate)
+        self.local_player.init_time_from_str(text_dict['self_time'])
+
+        self.online_player.update_rate(text_dict['opponent_rate'])
+        self.online_player.init_time_from_str(text_dict['opponent_time'])
 
     def render_update_board(self):
         board_str = self.game_controller.export_to_chess_board_str()

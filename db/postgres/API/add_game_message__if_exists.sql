@@ -9,12 +9,11 @@ DECLARE
     v_left_time TIME;
     v_last_update timestamp;
     v_next_move bit;
-    v_add_time int;
     v_delta_time interval;
     v_is_playing bit = 1::BIT;
     V_game_result bit = NULL;
 BEGIN
-   LOCK TABLE ONLY chess.messages in share mode;
+   --LOCK TABLE ONLY chess.messages in share mode;
 
     SELECT chess.game.game_id INTO v_game_id FROM chess.game WHERE
           chess.game.user_id1 = p_user_id and chess.game.is_playing = 1::bit
@@ -33,10 +32,6 @@ BEGIN
                   IF CAST(v_delta_time AS TIME) <= v_left_time then
                       begin
                           SELECT v_left_time - v_delta_time INTO v_left_time;
-                          if v_left_time > TIME '00:00:00' then
-                              SELECT chess.game.adding_time INTO v_add_time FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
-                              SELECT v_left_time + make_interval(secs := CAST(v_add_time AS double precision)) INTO v_left_time;
-                          end if;
                       end;
                   else
                       SELECT TIME '00:00:00' into v_left_time;
@@ -58,10 +53,6 @@ BEGIN
                   IF CAST(v_delta_time AS TIME) <= v_left_time then
                       begin
                           SELECT v_left_time - v_delta_time INTO v_left_time;
-                          if v_left_time > TIME '00:00:00' then
-                              SELECT chess.game.adding_time INTO v_add_time FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
-                              SELECT v_left_time + make_interval(secs := CAST(v_add_time AS double precision)) INTO v_left_time;
-                          end if;
                       end;
                   else
                       SELECT TIME '00:00:00' into v_left_time;
@@ -94,10 +85,6 @@ BEGIN
                   IF CAST(v_delta_time AS TIME) <= v_left_time then
                       begin
                           SELECT v_left_time - v_delta_time INTO v_left_time;
-                          if v_left_time > TIME '00:00:00' then
-                              SELECT chess.game.adding_time INTO v_add_time FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
-                              SELECT v_left_time + make_interval(secs := CAST(v_add_time AS double precision)) INTO v_left_time;
-                          end if;
                       end;
                   else
                       SELECT TIME '00:00:00' into v_left_time;
@@ -123,10 +110,6 @@ BEGIN
                   IF CAST(v_delta_time AS TIME) <= v_left_time then
                       begin
                           SELECT v_left_time - v_delta_time INTO v_left_time;
-                          if v_left_time > TIME '00:00:00' then
-                              SELECT chess.game.adding_time INTO v_add_time FROM chess.game WHERE chess.game.game_id=v_game_id LIMIT 1;
-                              SELECT v_left_time + make_interval(secs := CAST(v_add_time AS double precision)) INTO v_left_time;
-                          end if;
                       end;
                   else
                       SELECT TIME '00:00:00' into v_left_time;

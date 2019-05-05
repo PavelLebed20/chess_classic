@@ -5,16 +5,7 @@ DECLARE
     v_cnt int;
     v_tmp bigint;
 BEGIN
-    LOCK TABLE ONLY chess.messages in share row exclusive mode;
-begin
-  -- disable old messages
-  UPDATE chess.messages set request_id = 0, send_time = NULL WHERE
-                                                         (request_id <> 0 and
-                                                         chess.messages.send_time NOTNULL
-                                                          and chess.messages.add_time <
-                                                          NOW() - chess.messages.resend_stop_time);
-end;
-
+    --LOCK TABLE ONLY chess.messages in share row exclusive mode;
 begin
   UPDATE chess.messages set request_id = p_request_id, send_time = NOW() WHERE message_id in
                                                                             (SELECT distinct on (chess.messages.user_id)

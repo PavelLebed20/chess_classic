@@ -79,7 +79,7 @@ class RenderFsm(ShowBase):
 
     def change_state(self, render_fsm, link_key):
         while self.on_update_now or self.is_clearing:
-            sleep(1)
+            sleep(1000.0 / 1000.0)
         self.on_update_now = True
         print("create " + link_key)
         if render_fsm.cur_state is not None:

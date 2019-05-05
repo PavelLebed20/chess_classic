@@ -1,7 +1,8 @@
 
 # database and gamecontroller imports
-import json
+
 import smtplib
+from time import sleep
 
 from validate_email import validate_email
 
@@ -15,6 +16,7 @@ import eventlet
 
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
+from ServerComponents.Suppurt.server import execute_no_res_async, execute_one_res_async, execute_all_res_async
 
 eventlet.monkey_patch()
 from flask import Flask, request
@@ -25,9 +27,9 @@ socketio = SocketIO(app, async_mode='eventlet')
 usersAddr = {}
 
 clients = {}
+user_client_map = {}
 none_messages = {}
-con_sync = supp.db().con
-con_async = supp.db().con
+messages = {}
 
 # email data
 #server.starttls()
@@ -40,28 +42,23 @@ class Server:
         self.port = port
 
     def run(self):
-        cursor = con_sync.cursor()
-        cursor.execute("call chess.start_server()")
-        cursor.close()
+        execute_no_res_async("call chess.start_server()")
         socketio.start_background_task(self.message_queue_processing)
         socketio.run(app, port=self.port)
 
     def message_queue_processing(self):
         while True:
-            cursor = con_async.cursor()
-            cursor.execute("select chess.get_request()")
-            rec_id = cursor.fetchone()[0]
-            cursor.execute("select * from chess.get_messages({})".format(rec_id))
-            records = cursor.fetchall()
+            rec_id = execute_one_res_async("select chess.get_request()")[0]
+            records = execute_all_res_async("select * from chess.get_messages({})".format(rec_id))
             for rec in records:
                 user_id = int(rec[0])
                 actionToParams = str(rec[1]).split('?')
                 action = actionToParams[0]
                 params = actionToParams[1]
-                user_sid = supp.getkeyByVal(clients, user_id)
+                user_sid = user_client_map.get(user_id, None)
 
                 # fill none messages
-                if (user_sid is None):
+                if user_sid is None:
                     none_messages[user_id][0] = action
                     none_messages[user_id][1] = params
                 else:
@@ -75,8 +72,8 @@ class Server:
             #send none messages to not NONE clients
             for user_id in none_messages:
                 print(none_messages)
-                user_sid = supp.getkeyByVal(clients, user_id)
-                if (user_sid is not None):
+                user_sid = user_client_map.get(user_id, None)
+                if user_sid is not None:
                     print("user id is: " + str(user_id))
                     print("user SID is: " + str(user_sid))
                     print("action is " + str(none_messages[user_id][0]))
@@ -84,43 +81,42 @@ class Server:
                     socketio.emit(none_messages[user_id][0], none_messages[user_id][1], room=user_sid)
                     del none_messages[user_id]
 
-            cursor.close()
+            execute_no_res_async('call chess.run_jobs()')
+
 
 @socketio.on('connect')
 def on_connect():
     print("%s connected" % (request.sid))
+    if request.sid in clients:
+        user_client_map[clients[request.sid]] = None
     clients[request.sid] = None
+
 
 @socketio.on('disconnect')
 def on_disconnect():
     print("%s disconnected" % (request.sid))
-    cursor = con_sync.cursor()
     if request.sid in clients and clients[request.sid] is not None:
-        cursor.execute("call chess.on_disconnect({0})".format(clients[request.sid]))
-
-    cursor.close()
-    clients.pop(request.sid)
+        query = "call chess.on_disconnect({0})".format(clients[request.sid])
+        execute_no_res_async(query)
 
 @socketio.on('verify_message')
 def on_verify_message(data):
     #print("Message recieved: " + str(data) + "from client " + str(clients[request.sid]))
 
     paramsDict = supp.getParamsValMap(data)
-    cursor = con_sync.cursor()
     if request.sid in clients and clients[request.sid] is not None:
-        cursor.execute("call chess.verify_message({0}, {1})".format(paramsDict['request_id'], clients[request.sid]))
-
-    cursor.close()
+        query = "call chess.verify_message({0}, {1})".format(paramsDict['request_id'], clients[request.sid])
+        execute_no_res_async(query)
 
 @socketio.on('confirm_auth')
 def on_confirm_auth(data):
     print("Message recieved: " + str(data))
 
     paramsDict = supp.getParamsValMap(data)
-    cursor = con_sync.cursor()
 
-    cursor.execute("select chess.confirm_auth('{0}', '{1}')".format(paramsDict['email'],
-                                                                    paramsDict['auth_code']))
+    query = "select chess.confirm_auth('{0}', '{1}')".format(paramsDict['email'],
+                                                             paramsDict['auth_code'])
+    execute_no_res_async(query)
 
 @socketio.on('auth')
 def on_auth(data):
@@ -131,12 +127,11 @@ def on_auth(data):
     if not validate_email(paramsDict['email']):
         return
 
-    cursor = con_sync.cursor()
+    query = "select chess.registrate('{0}', '{1}', '{2}')".format(paramsDict['login'],
+                                                                  paramsDict['password'],
+                                                                  paramsDict['email'])
 
-    cursor.execute("select chess.registrate('{0}', '{1}', '{2}')".format(paramsDict['login'],
-                                                                         paramsDict['password'],
-                                                                         paramsDict['email']))
-    res = cursor.fetchone()[0]
+    res = execute_one_res_async(query)[0]
     print(str(res))
 
     print("Auth code is " + str(res))
@@ -159,50 +154,45 @@ def on_login(data):
     print("Message recieved: " + str(data))
 
     paramsDict = supp.getParamsValMap(data)
-    cursor = con_sync.cursor()
 
-    cursor.execute("select chess.login('{0}', '{1}')".format(paramsDict['login'], paramsDict['password']))
+    query = "select chess.login('{0}', '{1}')".format(paramsDict['login'], paramsDict['password'])
     # set user_id for session
     print("login SID is " + str(request.sid))
-    user_id = cursor.fetchone()[0]
-    supp.deleteKeyByVal(clients, user_id)
+    user_id = execute_one_res_async(query)[0]
     clients[request.sid] = user_id
+    user_client_map[user_id] = request.sid
     print("login ID is " + str(clients[request.sid]))
-
-    cursor.close()
 
 @socketio.on('find_pair')
 def on_find_pair(data):
     print("Message recieved: " + str(data))
     paramsDict = supp.getParamsValMap(data)
-    cursor = con_sync.cursor()
-    if (request.sid in clients and clients[request.sid] is not None):
-        cursor.execute("call chess.find_pair({0}, {1}, {2}, {3},"
-                   " p_game_time := TIME '00:0{4}:00')".format
-                   (clients[request.sid], paramsDict['low_rate'], paramsDict['hight_rate'],
-                    paramsDict['move_time'], paramsDict['game_time']))
+    if request.sid in clients and clients[request.sid] is not None:
+        query = "call chess.find_pair({0}, {1}, {2}, {3}," \
+                " p_game_time := TIME '00:0{4}:00')".format(clients[request.sid],
+                                                            paramsDict['low_rate'],
+                                                            paramsDict['hight_rate'],
+                                                            paramsDict['move_time'],
+                                                            paramsDict['game_time'])
+        execute_no_res_async(query)
 
-
-    cursor.close()
 
 @socketio.on('update_board')
 def on_update_board(data):
     print("Message recieved: " + str(data))
     paramsDict = supp.getParamsValMap(data)
-    cursor = con_sync.cursor()
 
     # get board from database
     if clients[request.sid] is not None:
-        cursor.execute("select * from chess.get_current_game_board_state({0})".format(clients[request.sid]))
+        query = "select * from chess.get_current_game_board_state({0})".format(clients[request.sid])
     else:
         return
     try:
-       rec = cursor.fetchone()
+       rec = execute_one_res_async(query)
        print("Game state is " + str(rec))
        board = rec[0]
        side = int(rec[1])
     except:
-        cursor.close()
         print("Game doesn't exists")
         return
     #print("server_board is " + str(rec))
@@ -222,7 +212,6 @@ def on_update_board(data):
     game_result = None
     if res == game_controller.MoveResult.INCORRECT:
         print("Wrong move send")
-        cursor.close()
         return
     elif res == game_controller.MoveResult.STALEMATE:
         is_playing = 0
@@ -233,19 +222,17 @@ def on_update_board(data):
     cur_game_controller.update(move)
 
     if game_result is None:
-        cursor.execute("call chess.update_game_state({0}, '{1}', "
-                       "{2}::bit, NULL)".format(clients[request.sid],
-                                          cur_game_controller.serialize_to_str(),
-                                          is_playing))
+        execute_no_res_async("call chess.update_game_state({0}, '{1}', "
+                             "{2}::bit, NULL)".format(clients[request.sid],
+                                                      cur_game_controller.serialize_to_str(),
+                                                      is_playing))
     else:
-        cursor.execute("call chess.update_game_state({0}, '{1}', "
-                       "{2}::bit, {3}::bit)".format(clients[request.sid],
-                                                    cur_game_controller.serialize_to_str(),
-                                                    is_playing,
-                                                    game_result))
+        execute_no_res_async("call chess.update_game_state({0}, '{1}', "
+                             "{2}::bit, {3}::bit)".format(clients[request.sid],
+                                                          cur_game_controller.serialize_to_str(),
+                                                          is_playing,
+                                                          game_result))
 
-
-    cursor.close()
 
 @socketio.on('message')
 def on_message(data):

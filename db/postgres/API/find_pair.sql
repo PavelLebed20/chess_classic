@@ -15,7 +15,7 @@ DECLARE
 BEGIN
 
 IF EXISTS (SELECT 1 FROM chess.game WHERE
-           chess.game.user_id1 = p_user_id or chess.game.user_id2 = p_user_id and is_playing = 1::BIT) THEN
+           (chess.game.user_id1 = p_user_id or chess.game.user_id2 = p_user_id) and chess.game.is_playing = 1::BIT) THEN
            RETURN;
 END IF;
 
@@ -47,7 +47,7 @@ IF v_pairing_id NOTNULL THEN
 		p_adding_time := p_adding_time,
 		p_user1_side := p_side,
 		p_user2_side := v_opponent_side);
-  end;
+    end;
 ELSE
    INSERT INTO chess.pairing (user_id, low_rate, high_rate, adding_time, game_time) VALUES
    (p_user_id, p_low_rate, p_high_rate, p_adding_time, p_game_time);
