@@ -95,7 +95,7 @@ def on_connect():
 def on_disconnect():
     print("%s disconnected" % (request.sid))
     cursor = con_sync.cursor()
-    if (clients[request.sid] is not None):
+    if request.sid in clients and clients[request.sid] is not None:
         cursor.execute("call chess.on_disconnect({0})".format(clients[request.sid]))
 
     cursor.close()
@@ -103,11 +103,11 @@ def on_disconnect():
 
 @socketio.on('verify_message')
 def on_verify_message(data):
-    print("Message recieved: " + str(data) + "from client " + str(clients[request.sid]))
+    #print("Message recieved: " + str(data) + "from client " + str(clients[request.sid]))
 
     paramsDict = supp.getParamsValMap(data)
     cursor = con_sync.cursor()
-    if (clients[request.sid] is not None):
+    if request.sid in clients and clients[request.sid] is not None:
         cursor.execute("call chess.verify_message({0}, {1})".format(paramsDict['request_id'], clients[request.sid]))
 
     cursor.close()
@@ -176,7 +176,7 @@ def on_find_pair(data):
     print("Message recieved: " + str(data))
     paramsDict = supp.getParamsValMap(data)
     cursor = con_sync.cursor()
-    if (clients[request.sid] is not None):
+    if (request.sid in clients and clients[request.sid] is not None):
         cursor.execute("call chess.find_pair({0}, {1}, {2}, {3},"
                    " p_game_time := TIME '00:0{4}:00')".format
                    (clients[request.sid], paramsDict['low_rate'], paramsDict['hight_rate'],

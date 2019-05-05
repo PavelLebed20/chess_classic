@@ -47,15 +47,18 @@ class RenderFsm(ShowBase):
         self.blackside_pack_name = None
 
         self.on_update_now = False
+        self.is_clearing = False
         self.state_priority = -1
         self.cur_state_key = ""
+        self.on_game_exit = None
 
     def init_state_by_key(self, key):
         self.cur_state_key = key
         if key == "fsm:MainMenu":
             return FsmStateMainMenu(self.process_offline_game)
         elif key == "fsm:GameState":
-            return FsmStateGameState(self, self.whiteside_pack_name, self.blackside_pack_name)
+            return FsmStateGameState(self, self.whiteside_pack_name,
+                                     self.blackside_pack_name, self.on_game_exit)
         elif key == "fsm:Multiplayer":
             return FsmStateMultiplayer()
         elif key == "fsm:Login":
@@ -75,7 +78,7 @@ class RenderFsm(ShowBase):
         self.cur_state.render(self)
 
     def change_state(self, render_fsm, link_key):
-        while self.on_update_now is True:
+        while self.on_update_now or self.is_clearing:
             sleep(1)
         self.on_update_now = True
         print("create " + link_key)
