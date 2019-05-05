@@ -89,7 +89,7 @@ class ScreenState:
 
             command = lambda str_res_, option_list_: (option_list_.command(str_res_))
             gui_option_list = DirectOptionMenu(text=option_list.text, scale = 0.1, pos=(pos[0], pos[1], pos[2]),
-                                               command=command)
+                                               items=option_list.items, command=command, extraArgs=[option_list])
 
             self.screen_atributes.scene_nodes.append(gui_option_list)
 
