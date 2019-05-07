@@ -60,7 +60,7 @@ class Camera3D:
         if self.fov_angle <= self.MIN_FOV and mouse_wheel > 0 or \
            self.fov_angle >= self.MAX_FOV and mouse_wheel < 0:
             return
-        self.fov_angle -= mouse_wheel * 3 * pow(self.fov_angle / self.MAX_FOV, 4)
+        self.fov_angle -= mouse_wheel * 3 * pow(self.fov_angle / self.MAX_FOV, 2)
         # check angle right
         if self.fov_angle < self.MIN_FOV:
             self.fov_angle = self.MIN_FOV
