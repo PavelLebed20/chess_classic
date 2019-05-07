@@ -184,6 +184,9 @@ class Engine:
 
     def process_skin_select(self, pack_name):
         self.pack_name = copy.deepcopy(pack_name)
+        if self.render.is_client_connected_to_server:
+            # make request for skin update
+            self.client.send_message('update_pack', 'pack_name={0}'.format(self.pack_name))
 
     def process_offline_game(self):
         self.player_turn = 0
@@ -264,8 +267,8 @@ class Engine:
             self.render.change_state(self.render, "fsm:AuthConfirm")
         else:
             self.rate = int(text_dict['self_rate'])
-            self.render.change_state(self.render, "fsm:Matchmaking")
             self.render.is_client_connected_to_server = True
+            self.render.change_state(self.render, "fsm:MainMenu")
 
     def on_update_game(self, text_dict):
         self.game_state = GameStates.MENU
