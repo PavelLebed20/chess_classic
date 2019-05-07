@@ -100,7 +100,7 @@ class FsmStateGameState(ScreenState):
                     self.figures[i].setHpr(angle, -90, 0)
 
     def init_sky_sphere(self):
-        self.skysphere = loader.loadModel("SkySphere.bam")
+        self.skysphere = self.objMngr.load_skybox_white_side()
         self.skysphere.setBin('background', 1)
         self.skysphere.setDepthWrite(0)
         self.skysphere.reparentTo(render)

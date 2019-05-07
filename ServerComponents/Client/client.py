@@ -75,3 +75,4 @@ class Client:
     def on_disconnect(self):
         self.sio.emit('disconnect', "")
         print('Disconnected from server')
+

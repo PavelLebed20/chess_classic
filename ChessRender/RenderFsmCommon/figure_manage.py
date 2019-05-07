@@ -126,3 +126,9 @@ class FigureMngr:
         obj.setTransparency(TransparencyAttrib.MAlpha)
 
         return obj
+
+    def load_skybox_white_side(self):
+        return loader.loadModel(self.whiteside_pack_name + "cubemap.bam")
+
+    def load_skybox_black_side(self):
+        return loader.loadModel(self.blackside_pack_name + "cubemap.bam")
