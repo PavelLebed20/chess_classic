@@ -26,45 +26,17 @@ offline game against AI with chess board and figures skinning.
 * Multilayer 
 * Free skin change
 * Choose own gamestate sound
-# Requirements
-## System
-* OS - Mac OS X 10.6 and later or Windows 7 and later or Ubuntu 14.04 or later
-* Pentium 
-## Hardware
-* 64mb HDD
-* GPU(CPU with MMX/SSX) or a GPU with OpenGL 1.1 or DirectX 3 support and 10-60MB GDDR RAM for the best performance
-64-128MB RAM
-# Installation quid
+# Installation guide
 ## Install python
-* https://www.python.org/downloads/release/python-372/ - download python 3.7
+* https://www.python.org/downloads/release/python-372/ - download python 3.7.2
 ### run commands:
-* pip install --upgrade pip
-* pip install altgraph==0.16.1
-cffi==1.12.2
-cycler==0.10.0
-future==0.17.1
-kiwisolver==1.0.1
-macholib==1.11
-matplotlib==3.0.3
-numpy==1.16.2
-panda3d==1.10.1
-pandas==0.24.1
-pefile==2018.8.8
-pycparser==2.19
-PyInstaller==3.4
-pyparsing==2.3.1
-python-chess==0.26.0
-python-dateutil==2.8.0
-pytz==2018.9
-pywin32-ctypes==0.2.0
-scipy==1.2.1
-seaborn==0.9.0
-six==1.12.0
-vectormath==0.2.1
+* python -m pip install --upgrade pip
+* pip install panda3d python_socketio psycopg2 smtplib validate_email py3DNS
 ## Install sql server
-* https://www.microsoft.com/en-US/download/details.aspx?id=42299 - install Express 
-and Tools version
+* https://www.openscg.com/postgresql/installers/- install PostgreSQL 11.2 
 * set mixed authorization mode
+* Run postgeSQL
+* run db/postgrs/install_full.py
 # Git workflow
 * Main demonstration branch - *master*
 * Main coding branch - *develop*
