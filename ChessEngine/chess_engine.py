@@ -15,6 +15,8 @@ from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
 from ChessRender.RenderFsmCommon.render_fsm import RenderFsm
 from direct.task.Task import Task
+
+from ChessSound.Sound import SoundTypes
 from ServerComponents.Client.client import Client
 
 
@@ -62,6 +64,8 @@ class Engine:
         self.current_move = 0
         self.players = None
         self.game_result = -1
+        self.game_controller = None
+        self.chess_board = None
 
         self.render.taskMgr.add(self.step, "step")
         self.render.run()
@@ -110,6 +114,8 @@ class Engine:
                     elif move_res == MoveResult.STALEMATE:
                         self.game_result = None
                         self.delta_rate = 0
+                    # play music
+                    self.render.sound.play(SoundTypes.MOVE)
 
                 self.render.process_set_move_player = self.players[self.player_turn].set_move
             if move is not None or other_move is not None or self.game_result != -1:
@@ -139,6 +145,8 @@ class Engine:
                                                          move.point_to.x,
                                                          move.point_to.y))
                         self.online_player.restart_timer()
+                        # play music
+                        self.render.sound.play(SoundTypes.MOVE)
                 self.render.process_set_move_player = self.local_player.set_move
             self.render_update_board()
 
@@ -262,7 +270,10 @@ class Engine:
             self.game_controller = GameController(self.chess_board)
         else:
             print("board is " + str(text_dict['board']))
-            self.game_controller = GameController(None, str(text_dict['board']))
+            if text_dict['board'] != self.game_controller.serialize_to_str():
+                # play music
+                self.render.sound.play(SoundTypes.MOVE)
+                self.game_controller = GameController(None, str(text_dict['board']))
 
         if text_dict['side'] == '0':
             self.local_player = LocalPlayer(Side.WHITE)

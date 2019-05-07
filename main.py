@@ -3,7 +3,6 @@
 # AUTHOR: Lebed' Pavel        #
 # LAST UPDATE: 03/03/2019     #
 ###############################
-import smtplib
 
 from ChessEngine.chess_engine import Engine
 
