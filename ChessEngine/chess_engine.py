@@ -223,6 +223,7 @@ class Engine:
         self.players[1].update_login('Computer')
         self.players[1].update_rate(1800)
 
+        self.render.side = Side.WHITE
         self.render.process_set_move_player = self.players[0].set_move
         self.game_result = -1
         self.delta_rate = 0
@@ -325,11 +326,13 @@ class Engine:
             self.online_player = Player(Side.BLACK)
             self.render.whiteside_pack_name = text_dict['self_pack']
             self.render.blackside_pack_name = text_dict['opponent_pack']
+            self.render.side = Side.BLACK  # watch opponent
         else:
             self.local_player = LocalPlayer(Side.BLACK)
             self.online_player = Player(Side.WHITE)
             self.render.whiteside_pack_name = text_dict['opponent_pack']
             self.render.blackside_pack_name = text_dict['self_pack']
+            self.render.side = Side.WHITE  # watch opponent
 
         if self.online_game_was_started is False:
             self.online_game_was_started = True

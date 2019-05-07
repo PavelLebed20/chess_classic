@@ -21,9 +21,11 @@ class Dimension(Enum):
 
 
 class FsmStateGameState(ScreenState):
-    def __init__(self, render_fsm, whiteside_pack_name, blackside_pack_name, on_exit_func=None):
+    def __init__(self, render_fsm, whiteside_pack_name, blackside_pack_name, side, on_exit_func=None):
         ScreenState.__init__(self)
         self.render_fsm_ref = render_fsm
+        self.side = side
+        self.skysphere = None
         self.objMngr = FigureMngr(blackside_pack_name, whiteside_pack_name)
 
         self.dimension = Dimension._3D
@@ -100,7 +102,10 @@ class FsmStateGameState(ScreenState):
                     self.figures[i].setHpr(angle, -90, 0)
 
     def init_sky_sphere(self):
-        self.skysphere = self.objMngr.load_skybox_white_side()
+        if self.side is Side.WHITE:
+            self.skysphere = self.objMngr.load_skybox_white_side()
+        else:
+            self.skysphere = self.objMngr.load_skybox_black_side()
         self.skysphere.setBin('background', 1)
         self.skysphere.setDepthWrite(0)
         self.skysphere.reparentTo(render)
