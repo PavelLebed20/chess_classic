@@ -1,4 +1,14 @@
 # Release Notes
+## Version 2.0.0 (Sprint 5) (08.05.2019)
+### New Features
+* Game over full obtain
+* Move, main, win music
+* Packs works!
+* Registration auth message
+# Fixed
+* Full screen screen bugs
+* Menu bad design 
+# Release Notes
 ## Version 1.0.0 (Sprint 4) (24.04.2019)
 ### New Features
 * Game process handling
