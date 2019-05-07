@@ -1,3 +1,4 @@
+import sys
 from time import sleep
 
 from direct.showbase.ShowBase import ShowBase, WindowProperties
@@ -12,24 +13,29 @@ from ChessRender.RenderFsmCommon.RenderFsmStates.match_making_state import FsmSt
 from ChessRender.RenderFsmCommon.RenderFsmStates.multiplayer_menu_render_state import FsmStateMultiplayer
 from ChessRender.RenderFsmCommon.RenderFsmStates.registration_render_state import FsmStateRegistration
 from ChessRender.RenderFsmCommon.RenderFsmStates.skin_select_render_state import FsmStateSkinSelect
+from ChessRender.RenderFsmCommon.RenderFsmStates.window_settings_render_state import FsmStateWindowSettings, \
+    DEFAULT16x9SCREEN_W, DEFAULT16x9SCREEN_H
 
 
 class RenderFsm(ShowBase):
-    WIDTH = 1024
-    HEIGHT = 900
 
     def __init__(self):
         ShowBase.__init__(self)
 
+        self.cur_window_width = DEFAULT16x9SCREEN_W
+        self.cur_window_height = DEFAULT16x9SCREEN_H
+
         props = WindowProperties()
         props.clearSize()
         props.setTitle('Chess Classic')
-        props.setSize(self.WIDTH, self.HEIGHT)
+        props.setSize(self.cur_window_width, self.cur_window_height)
+        props.setFixedSize(True)
         self.win.requestProperties(props)
 
         self.taskMgr.add(self.mouse_task, 'mouseTask')
         self.accept("mouse1", self.mouse_press)
         self.accept("mouse1-up", self.mouse_release)
+        self.accept("escape", sys.exit)
 
         self.cur_state = None
 
@@ -73,6 +79,8 @@ class RenderFsm(ShowBase):
             return FsmStateSkinSelect(self, self.process_skin_select)
         elif key == "fsm:AuthConfirm":
             return FsmStateAuthConfirm(self.process_confirm_auth)
+        elif key == "fsm:WinSettings":
+            return FsmStateWindowSettings(self)
 
     def render(self):
         self.cur_state.render(self)

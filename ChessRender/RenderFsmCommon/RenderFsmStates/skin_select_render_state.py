@@ -13,8 +13,8 @@ class FsmStateSkinSelect(ScreenState):
     def __init__(self, render_fsm, process_skin_select):
         ScreenState.__init__(self)
         self.render_fsm_ref = render_fsm
-        self.lights = Lights(base, self.render_fsm_ref.WIDTH, self.render_fsm_ref.HEIGHT)
-        self.camera_p = Camera3D(base.camera, base.camLens)
+        self.lights = Lights(base, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
+        self.camera_p = Camera3D(base.camera, base.camLens, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
         base.disableMouse()
 
         self.need_camera_update = False
@@ -61,10 +61,10 @@ class FsmStateSkinSelect(ScreenState):
     def change_dimension(self):
         if self.dimension == Dimension._3D:
             self.dimension = Dimension._2D
-            self.camera_p = Camera2D(base.camera, base.camLens)
+            self.camera_p = Camera2D(base.camera, base.camLens, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
         else:
             self.dimension = Dimension._3D
-            self.camera_p = Camera3D(base.camera, base.camLens)
+            self.camera_p = Camera3D(base.camera, base.camLens, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
 
         self.load_model_to_screen()
 

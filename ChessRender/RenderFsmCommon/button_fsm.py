@@ -1,9 +1,8 @@
 
 class ButtonFsm:
-    def __init__(self, title, position, command=None, link_key=None, call_back_obj=None):
+    def __init__(self, title, position, command=None, link_key=None):
         self.title = title
         self.command = command
-        self.call_back_obj = call_back_obj
         self.link_key = link_key
         self.position = position
 

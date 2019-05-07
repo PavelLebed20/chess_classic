@@ -1,10 +1,8 @@
 from direct.gui.DirectButton import DirectButton
 from direct.gui.DirectEntry import DirectEntry
 from direct.gui.DirectOptionMenu import DirectOptionMenu
-from direct.gui.DirectScrollBar import DirectScrollBar
-from direct.gui.DirectScrolledFrame import DirectScrolledFrame
+from direct.gui.DirectRadioButton import DirectRadioButton
 from direct.gui.OnscreenText import OnscreenText
-import direct.gui.DirectGuiGlobals as DGG
 
 class ScreenAtributes:
     def __init__(self):
@@ -13,6 +11,7 @@ class ScreenAtributes:
         self.screen_texts = {}
         self.option_lists = {}
         self.extra_objects = {}
+        self.radio_buttons = {}
 
         self.scene_nodes = []
 
@@ -21,6 +20,7 @@ class ScreenState:
     def __init__(self):
         self.screen_atributes = ScreenAtributes()
         self.gui_text_fields = {}
+        self.radio_button_var = [0]
 
     def initialize_button_links(self):
         pass
@@ -30,6 +30,7 @@ class ScreenState:
         self.render_buttons(render_fsm)
         self.render_screen_texts()
         self.render_option_lists()
+        self.render_radio_buttons()
 
     def render_buttons(self, render_fsm):
         for button_key in self.screen_atributes.buttons.keys():
@@ -92,6 +93,22 @@ class ScreenState:
 
             self.screen_atributes.scene_nodes.append(gui_option_list)
 
+    def render_radio_buttons(self):
+        gui_radio_buttons = []
+
+        i = 0
+        for radio_button_key in self.screen_atributes.radio_buttons.keys():
+            radio_button = self.screen_atributes.radio_buttons[radio_button_key]
+            pos = radio_button.position
+            gui_radio_button = DirectRadioButton(text=radio_button.title, scale = 0.1, pos=(pos[0], pos[1], pos[2]), variable=self.radio_button_var, value=[i])
+
+            self.screen_atributes.scene_nodes.append(gui_radio_button)
+            gui_radio_buttons.append(gui_radio_button)
+            i = i + 1
+
+        for button in gui_radio_buttons:
+            button.setOthers(gui_radio_buttons)
+
     def clear(self):
         for node in self.screen_atributes.scene_nodes:
             node.removeNode()
@@ -106,4 +123,3 @@ class ScreenState:
 
     def mouse_release(self):
         pass
-

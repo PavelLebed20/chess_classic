@@ -13,7 +13,8 @@ class Camera3D:
     MAX_FOV = 45
     MIN_FOV = 20
 
-    def __init__(self, camera, lens, default_angle=WHITE_ANGLE):
+    def __init__(self, camera, lens, win_w, win_h, default_angle=WHITE_ANGLE):
+        self.MAX_FOV = win_w / win_h * 45
         self.default_angle = default_angle
         self.lens = lens
         self.camera = camera
@@ -84,7 +85,8 @@ class Camera2D:
     WHITE_ANGLE = 180
     BLACK_ANGLE = 0
 
-    def __init__(self, camera, lens, angle=WHITE_ANGLE):
+    def __init__(self, camera, lens, win_w, win_h, angle=WHITE_ANGLE):
+        self.MAX_FOV = win_w / win_h * 45
         self.lens = lens
         self.camera = camera
         self.z = 25
