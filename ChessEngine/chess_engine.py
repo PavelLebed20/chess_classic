@@ -32,7 +32,7 @@ class Engine:
         Initialize Engine class function
         """
         self.render = RenderFsm()
-        self.server_address = 'http://localhost:8000'
+        self.server_address = 'https://chessservertest.herokuapp.com'
 
         #### - functions to process data from users
         self.render.process_login = self.process_login
