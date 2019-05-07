@@ -32,7 +32,8 @@ class FsmStateSkinSelect(ScreenState):
         self.screen_atributes.buttons["but:Confirm"] = ButtonFsm("Confirm", (0.5, 0, -0.8))
         self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (-0.5, 0, -0.8))
 
-        self.screen_atributes.option_lists["oplst:PackName"] = OptionListFsm("Pack", ["pack0", "pack1"], self.option_list_confirm, (-0.8, 0 ,0.8))
+        items = ["pack0", "pack1", "pack2", "pack3", "pack4", "pack5", "pack6", "pack7", "pack8", "pack9", "pack10", "pack11"]
+        self.screen_atributes.option_lists["oplst:PackName"] = OptionListFsm("Pack", items, self.option_list_confirm, (-0.8, 0 ,0.8))
 
         self.initialize_button_links()
 
