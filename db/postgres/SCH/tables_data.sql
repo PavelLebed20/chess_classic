@@ -24,8 +24,8 @@ INSERT INTO chess.packs (pack_name) values
 
 TRUNCATE chess.players cascade;
 INSERT INTO chess.players (login, password_salt, rate, email, verified, user_packs) VALUES
-                          ('a', crypt('a', gen_salt('bf')), 1, 'amin1@mail.com', 1::bit, '{1, 2, 3, 4, 5, 6}'),
-                          ('b', crypt('b', gen_salt('bf')), 1, 'amin2@mail.com', 1::bit, '{1, 2, 3, 4, 5, 6}');
+                          ('a', crypt('a', gen_salt('bf')), 1, 'amin1@mail.com', 1::bit, '{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}'),
+                          ('b', crypt('b', gen_salt('bf')), 1, 'amin2@mail.com', 1::bit, '{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}');
 
 -- add jobs
 TRUNCATE chess.jobs cascade;
