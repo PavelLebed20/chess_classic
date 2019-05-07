@@ -44,6 +44,10 @@ SELECT * into v_user2 FROM chess.players WHERE chess.players.user_id = v_user_id
 
 SELECT 1 / (1 + power(10, CAST(ABS(v_user1.rate - v_user1.rate) AS INTEGER) /
                                    400.0)) INTO v_rate_coef;
+begin
+    DELETE FROM chess.game WHERE chess.game.user_id1 = p_user_id1 or chess.game.user_id1 = p_user_id2 or
+                                 chess.game.user_id2 = p_user_id1 or chess.game.user_id2 = p_user_id2;
+end;
 
 INSERT INTO chess.game (user_id1, user_id2, win_cost, draw_cost,
                         adding_time, player1_time_left,
