@@ -15,6 +15,7 @@ from ChessRender.RenderFsmCommon.RenderFsmStates.registration_render_state impor
 from ChessRender.RenderFsmCommon.RenderFsmStates.skin_select_render_state import FsmStateSkinSelect
 from ChessRender.RenderFsmCommon.RenderFsmStates.window_settings_render_state import FsmStateWindowSettings, \
     DEFAULT16x9SCREEN_W, DEFAULT16x9SCREEN_H
+from ChessSound.Sound import Sound, SoundTypes
 
 
 class RenderFsm(ShowBase):
@@ -58,6 +59,12 @@ class RenderFsm(ShowBase):
         self.cur_state_key = ""
         self.on_game_exit = None
 
+        # sound
+        self.sound = Sound(self)
+
+        # play default
+        self.sound.play(SoundTypes.MAIN_SOUND, is_looped=True)
+
     def init_state_by_key(self, key):
         self.cur_state_key = key
         if key == "fsm:MainMenu":
@@ -87,7 +94,7 @@ class RenderFsm(ShowBase):
 
     def change_state(self, render_fsm, link_key):
         while self.on_update_now or self.is_clearing:
-            sleep(1000.0 / 1000.0)
+            sleep(5.0 / 1000.0)
         self.on_update_now = True
         print("create " + link_key)
         if render_fsm.cur_state is not None:
@@ -95,6 +102,11 @@ class RenderFsm(ShowBase):
             render_fsm.cur_state.clear()
         render_fsm.cur_state = render_fsm.init_state_by_key(link_key)
         render_fsm.cur_state.render(render_fsm)
+        # play music
+        if link_key != "fsm:GameState":
+            render_fsm.sound.play(SoundTypes.MAIN_SOUND)
+        else:
+            render_fsm.sound.turn_off_all()
         self.on_update_now = False
 
     # Mouse functions

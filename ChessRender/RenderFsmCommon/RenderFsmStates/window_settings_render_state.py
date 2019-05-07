@@ -1,3 +1,5 @@
+from direct.gui.DirectScrollBar import DirectScrollBar
+
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
 from ChessRender.RenderFsmCommon.radio_button_fsm import RadioButtonFsm
 from ChessRender.RenderFsmCommon.screen_states import ScreenState
@@ -15,7 +17,7 @@ class FsmStateWindowSettings(ScreenState):
         ScreenState.__init__(self)
         self.render_fsm_ref = render_fsm
 
-        self.screen_atributes.screen_texts["screen_text:Title"] = ScreenTextFsm("Select your windows params:", (0, 0.3))
+        self.screen_atributes.screen_texts["screen_text:Title"] = ScreenTextFsm("Windows params:", (0, 0.2))
 
         self.screen_atributes.radio_buttons["rb:WinSize 16:9"] = RadioButtonFsm("16:9", (-0.2, 0, 0), self.confirm_command)
         self.screen_atributes.radio_buttons["rb:WinSize 4:3"] = RadioButtonFsm("4:3", (0.2, 0, 0), self.confirm_command)
@@ -25,6 +27,22 @@ class FsmStateWindowSettings(ScreenState):
 
         self.initialize_button_links()
 
+        # sound bar
+        self.sound_value = int(render_fsm.sound.get_volume() * 100)
+        self.screen_atributes.screen_texts["screen_text:sound"] = ScreenTextFsm("Sound volume:", (0, 0.7))
+        self.sound_bar = DirectScrollBar(range=(0, 100),
+                                         value=self.sound_value,
+                                         pageSize=3, command=self.on_sound_change)
+        self.sound_bar.setPos(0.0, 0.0, 0.5)
+        self.screen_atributes.screen_texts["screen_text:sound_volume"] = ScreenTextFsm(str(self.sound_value), (0, 0.4))
+
+    def on_sound_change(self):
+        self.sound_value = int(self.sound_bar.getValue())
+        self.render_fsm_ref.sound.set_volume(self.sound_value / 100.0)
+        # sound bar
+        self.screen_atributes.screen_texts["screen_text:sound_volume"] = ScreenTextFsm(str(self.sound_value), (0, 0.4))
+        self.clear_nodes()
+        self.render(self.render_fsm_ref)
 
     def initialize_button_links(self):
         self.screen_atributes.buttons["but:Confirm"].add_link("fsm:MainMenu")
@@ -49,3 +67,16 @@ class FsmStateWindowSettings(ScreenState):
             props.setSize(DEFAULT4x3SCREEN_W, DEFAULT4x3SCREEN_H)
             props.setFixedSize(True)
             self.render_fsm_ref.win.requestProperties(props)
+
+    def clear(self):
+        for node in self.screen_atributes.scene_nodes:
+            node.removeNode()
+        for key in self.gui_text_fields.keys():
+            self.gui_text_fields[key].removeNode()
+        self.sound_bar.destroy()
+
+    def clear_nodes(self):
+        for node in self.screen_atributes.scene_nodes:
+            node.removeNode()
+        for key in self.gui_text_fields.keys():
+            self.gui_text_fields[key].removeNode()

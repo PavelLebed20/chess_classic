@@ -27,6 +27,9 @@ BEGIN
         begin
             call chess.add_game_message_if_exists(v_user.user_id);
         end;
+        begin
+            call chess.add_avail_packs_message(v_user.user_id);
+        end;
     end if;
     DELETE FROM chess.pairing WHERE chess.pairing.user_id = v_user.user_id;
     return v_user.user_id;

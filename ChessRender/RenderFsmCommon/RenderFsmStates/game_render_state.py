@@ -387,4 +387,3 @@ class FsmStateGameState(ScreenState):
                                                   "Delta rating is " + str(delta_rate),
                                                   pos=(-0.15, 0.7), scale=scale,
                                                   fg=(1.0, 0.0, 0.0, 1.0))
-    

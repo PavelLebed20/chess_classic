@@ -28,7 +28,6 @@ usersAddr = {}
 
 clients = {}
 user_client_map = {}
-none_messages = {}
 messages = {}
 
 # email data
@@ -52,34 +51,18 @@ class Server:
             records = execute_all_res_async("select * from chess.get_messages({})".format(rec_id))
             for rec in records:
                 user_id = int(rec[0])
-                actionToParams = str(rec[1]).split('?')
-                action = actionToParams[0]
-                params = actionToParams[1]
+                action_to_params = str(rec[1]).split('?')
+                action = action_to_params[0]
+                params = action_to_params[1]
                 user_sid = user_client_map.get(user_id, None)
 
                 # fill none messages
-                if user_sid is None:
-                    none_messages[user_id][0] = action
-                    none_messages[user_id][1] = params
-                else:
+                if user_sid is not None:
                     print("user id is: " + str(user_id))
                     print("user SID is: " + str(user_sid))
                     print("action is " + str(action))
                     print("params is " + str(params))
-
                     socketio.emit(action, params, room=user_sid)
-
-            #send none messages to not NONE clients
-            for user_id in none_messages:
-                print(none_messages)
-                user_sid = user_client_map.get(user_id, None)
-                if user_sid is not None:
-                    print("user id is: " + str(user_id))
-                    print("user SID is: " + str(user_sid))
-                    print("action is " + str(none_messages[user_id][0]))
-                    print("params is " + str(none_messages[user_id][1]))
-                    socketio.emit(none_messages[user_id][0], none_messages[user_id][1], room=user_sid)
-                    del none_messages[user_id]
 
             execute_no_res_async('call chess.run_jobs()')
 
@@ -87,7 +70,7 @@ class Server:
 @socketio.on('connect')
 def on_connect():
     print("%s connected" % (request.sid))
-    if request.sid in clients:
+    if request.sid in clients and clients[request.sid] is not None:
         user_client_map[clients[request.sid]] = None
     clients[request.sid] = None
 
@@ -98,6 +81,7 @@ def on_disconnect():
     if request.sid in clients and clients[request.sid] is not None:
         query = "call chess.on_disconnect({0})".format(clients[request.sid])
         execute_no_res_async(query)
+
 
 @socketio.on('verify_message')
 def on_verify_message(data):
@@ -158,7 +142,10 @@ def on_login(data):
     query = "select chess.login('{0}', '{1}')".format(paramsDict['login'], paramsDict['password'])
     # set user_id for session
     print("login SID is " + str(request.sid))
-    user_id = execute_one_res_async(query)[0]
+    user_id = int(execute_one_res_async(query)[0])
+    if user_id < 0:
+        print('Invalid user!')
+        return
     clients[request.sid] = user_id
     user_client_map[user_id] = request.sid
     print("login ID is " + str(clients[request.sid]))
@@ -169,11 +156,11 @@ def on_find_pair(data):
     paramsDict = supp.getParamsValMap(data)
     if request.sid in clients and clients[request.sid] is not None:
         query = "call chess.find_pair({0}, {1}, {2}, {3}," \
-                " p_game_time := TIME '00:0{4}:00')".format(clients[request.sid],
-                                                            paramsDict['low_rate'],
-                                                            paramsDict['hight_rate'],
-                                                            paramsDict['move_time'],
-                                                            paramsDict['game_time'])
+                " p_game_time := TIME '00:{4}:00')".format(clients[request.sid],
+                                                           int(paramsDict['low_rate']),
+                                                           int(paramsDict['hight_rate']),
+                                                           int(paramsDict['move_time']),
+                                                           str(paramsDict['game_time']).rjust(2, '0'))
         execute_no_res_async(query)
 
 
@@ -232,6 +219,20 @@ def on_update_board(data):
                                                           cur_game_controller.serialize_to_str(),
                                                           is_playing,
                                                           game_result))
+
+
+@socketio.on('update_pack')
+def on_update_pack(data):
+    print("Message recieved: " + str(data))
+    params_dict = supp.getParamsValMap(data)
+    if request.sid in clients and clients[request.sid] is not None:
+        try:
+            query = "call chess.update_pack({0}, '{1}')" \
+                    "".format(clients[request.sid], params_dict['pack_name'])
+            print('query is ' + query)
+            execute_no_res_async(query)
+        except:
+            print("Error while update pack")
 
 
 @socketio.on('message')
