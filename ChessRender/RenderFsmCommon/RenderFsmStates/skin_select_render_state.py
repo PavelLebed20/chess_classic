@@ -10,7 +10,7 @@ from ChessRender.RenderFsmCommon.screen_states import ScreenState
 
 
 class FsmStateSkinSelect(ScreenState):
-    def __init__(self, render_fsm, process_skin_select):
+    def __init__(self, render_fsm, process_skin_select, avail_packs=["pack0", "pack1"]):
         ScreenState.__init__(self)
         self.render_fsm_ref = render_fsm
         self.lights = Lights(base, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
@@ -32,13 +32,16 @@ class FsmStateSkinSelect(ScreenState):
         self.screen_atributes.buttons["but:Confirm"] = ButtonFsm("Confirm", (0.5, 0, -0.8))
         self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (-0.5, 0, -0.8))
 
-        self.screen_atributes.option_lists["oplst:PackName"] = OptionListFsm("Pack", ["pack0", "pack1"], self.option_list_confirm, (-0.8, 0 ,0.8))
+        self.screen_atributes.option_lists["oplst:PackName"] = OptionListFsm("Pack",
+                                                                             avail_packs,
+                                                                             self.option_list_confirm,
+                                                                             (-0.8, 0 ,0.8))
 
         self.initialize_button_links()
 
         self.dimension = Dimension._3D
 
-        self.current_pack = "pack0"
+        self.current_pack = avail_packs[0]
         self.cur_model_num = 0
         self.cur_model_node = None
         self.models_order = ['k', 'q', 'b', 'n', 'r', 'p'

@@ -10,10 +10,14 @@ DECLARE
     v_user1_info chess.players%ROWTYPE;
     v_user2_info chess.players%ROWTYPE;
     v_user_data varchar;
+    v_user1_pack varchar(300);
+    v_user2_pack varchar(300);
 BEGIN
     SELECT * INTO v_game_row FROM chess.game WHERE chess.game.game_id = p_game_id;
     SELECT * INTO v_user2_info FROM chess.players WHERE chess.players.user_id = v_game_row.user_id2;
     SELECT * INTO v_user1_info FROM chess.players WHERE chess.players.user_id = v_game_row.user_id1;
+    select chess.packs.pack_name into v_user1_pack from chess.packs WHERE chess.packs.pack_id = v_game_row.player1_pack;
+    select chess.packs.pack_name into v_user2_pack from chess.packs WHERE chess.packs.pack_id = v_game_row.player2_pack;
     if p_add_user1 = 1::bit then
         begin
             SELECT CONCAT('update_game?board=', v_game_row.board,
@@ -25,7 +29,9 @@ BEGIN
                           '&self_rate=', v_user1_info.rate,
                           '&result=', v_game_row.game_result,
                           '&side=0',
-                          '&next_move=', v_game_row.next_move_player) INTO v_user_data;
+                          '&next_move=', v_game_row.next_move_player,
+                          '&self_pack=', v_user1_pack,
+                          '&opponent_pack=', v_user2_pack) INTO v_user_data;
 
                 begin
 	                call chess.add_message(p_data := v_user_data, p_user_id := v_game_row.user_id1,
@@ -44,7 +50,9 @@ BEGIN
                           '&self_rate=', v_user2_info.rate,
                           '&result=', v_game_row.game_result,
                           '&side=1',
-                          '&next_move=', v_game_row.next_move_player) INTO v_user_data;
+                          '&next_move=', v_game_row.next_move_player,
+                          '&self_pack=', v_user2_pack,
+                          '&opponent_pack=', v_user1_pack) INTO v_user_data;
 
                 begin
 	                call chess.add_message(p_data := v_user_data, p_user_id := v_game_row.user_id2,
