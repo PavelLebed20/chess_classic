@@ -233,7 +233,6 @@ class Engine:
         self.online_game_was_started = False
 
         # make client
-        self.connected = True
         self._make_client()
 
         # make request for connection
@@ -266,6 +265,7 @@ class Engine:
         else:
             self.rate = int(text_dict['self_rate'])
             self.render.change_state(self.render, "fsm:Matchmaking")
+            self.connected = True
 
     def on_update_game(self, text_dict):
         self.game_state = GameStates.MENU
