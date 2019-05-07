@@ -100,7 +100,7 @@ class FsmStateGameState(ScreenState):
                     self.figures[i].setHpr(angle, -90, 0)
 
     def init_sky_sphere(self):
-        self.skysphere = loader.loadModel("SkySphere.bam")
+        self.skysphere = self.objMngr.load_skybox_white_side()
         self.skysphere.setBin('background', 1)
         self.skysphere.setDepthWrite(0)
         self.skysphere.reparentTo(render)
@@ -387,3 +387,4 @@ class FsmStateGameState(ScreenState):
                                                   "Delta rating is " + str(delta_rate),
                                                   pos=(-0.15, 0.7), scale=scale,
                                                   fg=(1.0, 0.0, 0.0, 1.0))
+    

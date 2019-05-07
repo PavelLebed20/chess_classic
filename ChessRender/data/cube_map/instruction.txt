@@ -1,0 +1,6 @@
+bk -> 1 rotate right
+dn -> 5 180
+ft -> 0 rotate left
+lf -> 3 rotate 180
+rt -> 2 
+up -> 4
