@@ -31,7 +31,7 @@ class FsmStateMatchmaking(ScreenState):
     def initialize_button_links(self):
         self.screen_atributes.buttons["but:Confirm"].add_link("fsm:Load")
         self.screen_atributes.buttons["but:Confirm"].add_command(self.confirm_command)
-        self.screen_atributes.buttons["but:Back"].add_link("fsm:Login")
+        self.screen_atributes.buttons["but:Back"].add_link("fsm:MainMenu")
 
     def confirm_command(self):
         process_matchmaking_arg = {"MatchTime": self.gui_text_fields["text_field_match_time"].get(),

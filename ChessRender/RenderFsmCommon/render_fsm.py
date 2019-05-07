@@ -46,12 +46,16 @@ class RenderFsm(ShowBase):
         self.process_registration = None
         self.process_skin_select = None
         self.process_confirm_auth = None
+        self.process_continue_online_game = None
 
         self.process_offline_game = None
         self.process_set_move_player = None
 
         self.whiteside_pack_name = None
         self.blackside_pack_name = None
+
+        self.is_client_connected_to_server = False
+        self.is_game_played = False
 
         self.on_update_now = False
         self.is_clearing = False
@@ -65,12 +69,13 @@ class RenderFsm(ShowBase):
         self.sound = Sound(self)
 
         # play default
-        self.sound.play(SoundTypes.MAIN_SOUND, is_looped=True)
+        self.sound.play(SoundTypes.MAIN, is_looped=True)
 
     def init_state_by_key(self, key):
         self.cur_state_key = key
         if key == "fsm:MainMenu":
-            return FsmStateMainMenu(self.process_offline_game)
+            return FsmStateMainMenu(self.process_offline_game, self.is_client_connected_to_server,
+                                    self.is_game_played, self.process_continue_online_game)
         elif key == "fsm:GameState":
             return FsmStateGameState(self, self.whiteside_pack_name,
                                      self.blackside_pack_name, self.on_game_exit)
@@ -106,7 +111,7 @@ class RenderFsm(ShowBase):
         render_fsm.cur_state.render(render_fsm)
         # play music
         if link_key != "fsm:GameState":
-            render_fsm.sound.play(SoundTypes.MAIN_SOUND)
+            render_fsm.sound.play(SoundTypes.MAIN)
         else:
             render_fsm.sound.turn_off_all()
         self.on_update_now = False

@@ -43,6 +43,7 @@ class Engine:
         self.render.process_confirm_auth = self.process_confirm_auth
         self.render.on_game_exit = self.set_menu_state
         self.render.process_skin_select = self.process_skin_select
+        self.render.process_continue_online_game = self.on_continue_game
         self.render.change_state(self.render, "fsm:MainMenu")
         self.online_game_was_started = False
 
@@ -59,7 +60,8 @@ class Engine:
         self.game_state = GameStates.MENU
         self.delta_rate = 0
 
-        self.connected = False
+        self.render.is_client_connected_to_server = False
+        self.render.is_game_played = False
         self.local_player = None
         self.online_player = None
         self.current_move = 0
@@ -67,6 +69,7 @@ class Engine:
         self.game_result = -1
         self.game_controller = None
         self.chess_board = None
+        self.offline_game_played = False
 
         self.pack_name = 'pack0'
 
@@ -90,6 +93,9 @@ class Engine:
             return Task.cont
         self.render.on_update_now = True
         if self.game_state == GameStates.OFFLINE_GAME:
+            if self.offline_game_played is None:
+                self.offline_game_played = True
+                self.render_update_board()
             cur_player = self.players[self.player_turn]
             # obtain time
             cur_player.update_time()
@@ -105,6 +111,9 @@ class Engine:
             if cur_player.is_time_over():
                 self.game_result = self.players[(self.player_turn + 1) % 2].side
                 self.delta_rate = 20
+                self.offline_game_played = False
+                if self.game_result == self.local_player.side:
+                    self.render.sound.play(SoundTypes.WIN)
             if move is not None:
                 move_res = self.game_controller.check_move(move, cur_player.side)
 
@@ -116,9 +125,13 @@ class Engine:
                     if move_res == MoveResult.MATE:
                         self.game_result = cur_player.side
                         self.delta_rate = 20
+                        self.offline_game_played = False
+                        if self.game_result == self.local_player.side:
+                            self.render.sound.play(SoundTypes.WIN)
                     elif move_res == MoveResult.STALEMATE:
                         self.game_result = None
                         self.delta_rate = 0
+                        self.offline_game_played = False
                     # play music
                     self.render.sound.play(SoundTypes.MOVE)
 
@@ -132,6 +145,11 @@ class Engine:
                 self.players[1].stop_timer()
 
         elif self.game_state == GameStates.ONLINE_GAME:
+            if self.online_game_was_started is None:
+                self.render.cur_state.update_camera(self.local_player.side)
+                self.online_game_was_started = True
+                self.render_update_board()
+
             if Side(self.current_move) == self.local_player.side:
                 self.local_player.update_time()
             else:
@@ -184,8 +202,16 @@ class Engine:
 
     def process_skin_select(self, pack_name):
         self.pack_name = copy.deepcopy(pack_name)
+        if self.render.is_client_connected_to_server:
+            # make request for skin update
+            self.client.send_message('update_pack', 'pack_name={0}'.format(self.pack_name))
 
     def process_offline_game(self):
+        if self.offline_game_played:
+            self.render.whiteside_pack_name = self.pack_name
+            self.game_state = GameStates.OFFLINE_GAME
+            self.offline_game_played = None
+            return
         self.player_turn = 0
         self.chess_board = Board()
         self.game_controller = GameController(self.chess_board)
@@ -200,6 +226,8 @@ class Engine:
         self.render.process_set_move_player = self.players[0].set_move
         self.game_result = -1
         self.delta_rate = 0
+
+        self.offline_game_played = True
 
         for i in range(0, len(self.players)):
             self.players[i].init_time(1000 * 60 * 5)  # 5 minutes
@@ -264,8 +292,19 @@ class Engine:
             self.render.change_state(self.render, "fsm:AuthConfirm")
         else:
             self.rate = int(text_dict['self_rate'])
+            self.render.is_client_connected_to_server = True
+            self.render.change_state(self.render, "fsm:MainMenu")
+
+    def on_continue_game(self):
+        if self.online_game_was_started is False:
             self.render.change_state(self.render, "fsm:Matchmaking")
-            self.connected = True
+            return
+        self.render.change_state(self.render, "fsm:GameState")
+        self.render.cur_state.update_camera(self.local_player.side)
+        self.render.process_set_move_player = self.local_player.set_move
+        self.render_update_board()
+        self.game_state = GameStates.ONLINE_GAME
+
 
     def on_update_game(self, text_dict):
         self.game_state = GameStates.MENU
@@ -277,10 +316,9 @@ class Engine:
             self.game_controller = GameController(self.chess_board)
         else:
             print("board is " + str(text_dict['board']))
-            if text_dict['board'] != self.game_controller.serialize_to_str():
-                # play music
-                self.render.sound.play(SoundTypes.MOVE)
-                self.game_controller = GameController(None, str(text_dict['board']))
+            # play music
+            self.render.sound.play(SoundTypes.MOVE)
+            self.game_controller = GameController(None, str(text_dict['board']))
 
         if text_dict['side'] == '0':
             self.local_player = LocalPlayer(Side.WHITE)
@@ -293,11 +331,21 @@ class Engine:
             self.render.whiteside_pack_name = text_dict['opponent_pack']
             self.render.blackside_pack_name = text_dict['self_pack']
 
+        if self.online_game_was_started is False:
+            self.online_game_was_started = True
+            self.render.is_game_played = True
+            self.render.change_state(self.render, "fsm:GameState")
+            self.render.cur_state.update_camera(self.local_player.side)
+
         if int(text_dict['is_playing']) == 0:
+            self.online_game_was_started = False
+            self.render.is_game_played = False
             if text_dict['result'] is None:
                 self.game_result = None
             else:
                 self.game_result = Side(int(text_dict['result']))
+                if self.game_result == self.local_player.side:
+                    self.render.sound.play(SoundTypes.WIN)
             self.delta_rate = self.rate - int(text_dict['self_rate'])
             self.rate = int(text_dict['self_rate'])
 
@@ -311,11 +359,6 @@ class Engine:
         self.current_move = int(text_dict['next_move'])
         self.online_player.init_time_from_str(text_dict['opponent_time'])
 
-        if self.online_game_was_started is False:
-            self.online_game_was_started = True
-            self.render.change_state(self.render, "fsm:GameState")
-            self.render.cur_state.update_camera(self.local_player.side)
-
         self.render.process_set_move_player = self.local_player.set_move
         self.render_update_board()
         self.game_state = GameStates.ONLINE_GAME
@@ -325,10 +368,14 @@ class Engine:
             return
 
         if int(text_dict['is_playing']) == 0:
+            self.online_game_was_started = False
+            self.render.is_game_played = False
             if text_dict['result'] is None:
                 self.game_result = None
             else:
                 self.game_result = Side(int(text_dict['result']))
+                if self.game_result == self.local_player.side:
+                    self.render.sound.play(SoundTypes.WIN)
             self.delta_rate = self.rate - int(text_dict['self_rate'])
             self.rate = int(text_dict['self_rate'])
 

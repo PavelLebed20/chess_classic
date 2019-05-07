@@ -9,7 +9,8 @@ from enum import IntEnum
 class SoundTypes(IntEnum):
     MOVE = 0,
     TICK = 1,
-    MAIN_SOUND = 2
+    MAIN = 2,
+    WIN = 3
 
 
 class Sound:
@@ -21,8 +22,9 @@ class Sound:
         self.volume = 1.0
 
         #add default sounds
-        self.sounds[SoundTypes.MAIN_SOUND] = base_ref.loader.loadSfx(self.data_folder + 'main_sound.mp3')
+        self.sounds[SoundTypes.MAIN] = base_ref.loader.loadSfx(self.data_folder + 'main_sound.mp3')
         self.sounds[SoundTypes.MOVE] = base_ref.loader.loadSfx(self.data_folder + 'move.wav')
+        self.sounds[SoundTypes.WIN] = base_ref.loader.loadSfx(self.data_folder + 'win.mp3')
 
     def play(self, music_type, is_looped=False):
         sound = self.sounds.get(music_type, None)

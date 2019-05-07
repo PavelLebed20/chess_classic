@@ -40,8 +40,6 @@ class Client:
         if self.on_avail_packs_call is not None:
             self.on_avail_packs_call(paramsMap['packs'])
 
-
-
     def on_login(self, params_data):
         paramsMap = supp.getParamsValMap(params_data)
         print('Recieved message: ' + str(params_data) + ' ' + paramsMap['request_id'])
