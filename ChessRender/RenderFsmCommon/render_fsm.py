@@ -59,6 +59,8 @@ class RenderFsm(ShowBase):
         self.cur_state_key = ""
         self.on_game_exit = None
 
+        self.avail_packs = ['pack0']
+
         # sound
         self.sound = Sound(self)
 
@@ -83,7 +85,7 @@ class RenderFsm(ShowBase):
         elif key == "fsm:Matchmaking":
             return FsmStateMatchmaking(self.process_find_player)
         elif key == "fsm:SkinSelect":
-            return FsmStateSkinSelect(self, self.process_skin_select)
+            return FsmStateSkinSelect(self, self.process_skin_select, self.avail_packs)
         elif key == "fsm:AuthConfirm":
             return FsmStateAuthConfirm(self.process_confirm_auth)
         elif key == "fsm:WinSettings":
