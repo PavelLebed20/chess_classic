@@ -53,6 +53,8 @@ class RenderFsm(ShowBase):
         self.whiteside_pack_name = None
         self.blackside_pack_name = None
 
+        self.is_client_connected_to_server = False
+
         self.on_update_now = False
         self.is_clearing = False
         self.state_priority = -1
@@ -68,7 +70,7 @@ class RenderFsm(ShowBase):
     def init_state_by_key(self, key):
         self.cur_state_key = key
         if key == "fsm:MainMenu":
-            return FsmStateMainMenu(self.process_offline_game)
+            return FsmStateMainMenu(self.process_offline_game, self.is_client_connected_to_server)
         elif key == "fsm:GameState":
             return FsmStateGameState(self, self.whiteside_pack_name,
                                      self.blackside_pack_name, self.on_game_exit)
