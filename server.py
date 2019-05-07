@@ -221,6 +221,20 @@ def on_update_board(data):
                                                           game_result))
 
 
+@socketio.on('update_pack')
+def on_update_pack(data):
+    print("Message recieved: " + str(data))
+    params_dict = supp.getParamsValMap(data)
+    if request.sid in clients and clients[request.sid] is not None:
+        try:
+            query = "call chess.update_pack({0}, '{1}')" \
+                    "".format(clients[request.sid], params_dict['pack_name'])
+            print('query is ' + query)
+            execute_no_res_async(query)
+        except:
+            print("Error while update pack")
+
+
 @socketio.on('message')
 def on_message(data):
     print("Message recieved: " + str(data))

@@ -3,6 +3,20 @@
 DROP SCHEMA IF EXISTS chess cascade;
 CREATE SCHEMA chess;
 
+-- pack table create
+DROP TABLE IF EXISTS chess.packs;
+CREATE TABLE chess.packs
+(
+    pack_name varchar(300),
+    pack_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+);
+
+-- INDEXES OBTAIN
+create index packs_pack_name_idx ON chess.packs(pack_name);
+create index packs_pack_id_idx ON chess.packs(pack_id);
+
+-- end of pack table creation
+
 -- Players table create
 DROP TABLE IF EXISTS chess.players CASCADE;
 CREATE TABLE  chess.players
@@ -14,7 +28,9 @@ CREATE TABLE  chess.players
 	email varchar(128) NOT NULL UNIQUE,
 	verified bit NOT NULL DEFAULT 0::bit,
 	registration_time timestamp NOT NULL DEFAULT NOW(),
-	last_update timestamp NOT NULL DEFAULT NOW()
+	last_update timestamp NOT NULL DEFAULT NOW(),
+    user_packs integer[] NOT NULL DEFAULT '{1}',
+    current_pack int NOT NULL DEFAULT 1 references chess.packs(pack_id)
 );
 -- INDEXES OBTAIN
 create index players_login_idx ON chess.players(login);
@@ -54,7 +70,10 @@ CREATE TABLE chess.game
 	registration_time timestamp NOT NULL DEFAULT NOW(),
 	last_update timestamp NOT NULL DEFAULT NOW(),
 	is_playing bit NOT NULL DEFAULT 1::bit,
-	game_result bit DEFAULT NULL -- (0 - white, 1 - black, NULL - draw)
+	game_result bit DEFAULT NULL, -- (0 - white, 1 - black, NULL - draw)
+	-- packs info
+	player1_pack int not null,
+	player2_pack int not null
 );
 
 -- INDEXES OBTAIN
