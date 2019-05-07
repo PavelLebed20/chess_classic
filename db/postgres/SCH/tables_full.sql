@@ -3,19 +3,34 @@
 DROP SCHEMA IF EXISTS chess cascade;
 CREATE SCHEMA chess;
 
+-- pack table create
+DROP TABLE IF EXISTS chess.packs;
+CREATE TABLE chess.packs
+(
+    pack_name varchar(300),
+    pack_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+);
+
+-- INDEXES OBTAIN
+create index packs_pack_name_idx ON chess.packs(pack_name);
+create index packs_pack_id_idx ON chess.packs(pack_id);
+
+-- end of pack table creation
+
 -- Players table create
 DROP TABLE IF EXISTS chess.players CASCADE;
 CREATE TABLE  chess.players
 (
 	user_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	login varchar(50) NOT NULL UNIQUE,
+	login varchar(128) NOT NULL UNIQUE,
 	password_salt varchar(73) NOT NULL, -- use as bf salt
 	rate INT NOT NULL DEFAULT 0 CONSTRAINT rate_value CHECK (rate >= 0 and rate <= 5000),
-	email varchar(50) NOT NULL UNIQUE,
+	email varchar(128) NOT NULL UNIQUE,
 	verified bit NOT NULL DEFAULT 0::bit,
-	online bit NOT NULL DEFAULT 0::bit,
 	registration_time timestamp NOT NULL DEFAULT NOW(),
-	last_update timestamp NOT NULL DEFAULT NOW()
+	last_update timestamp NOT NULL DEFAULT NOW(),
+    user_packs integer[] NOT NULL DEFAULT '{1}',
+    current_pack int NOT NULL DEFAULT 1 references chess.packs(pack_id)
 );
 -- INDEXES OBTAIN
 create index players_login_idx ON chess.players(login);
@@ -55,8 +70,17 @@ CREATE TABLE chess.game
 	registration_time timestamp NOT NULL DEFAULT NOW(),
 	last_update timestamp NOT NULL DEFAULT NOW(),
 	is_playing bit NOT NULL DEFAULT 1::bit,
-	game_result bit DEFAULT NULL -- (0 - white, 1 - black, NULL - draw)
+	game_result bit DEFAULT NULL, -- (0 - white, 1 - black, NULL - draw)
+	-- packs info
+	player1_pack int not null,
+	player2_pack int not null
 );
+
+-- INDEXES OBTAIN
+create index game_game_id ON chess.game(game_id);
+create index game_user_id1 ON chess.game(user_id1);
+create index game_user_id2 ON chess.game(user_id2);
+create index game_is_playing ON chess.game(is_playing);
 -- End of Game table create
 
 -- Pairing table create
@@ -75,6 +99,7 @@ CREATE TABLE chess.pairing
 );
 
 -- INDEXES OBTAIN
+create index pairing_pairing_id ON chess.pairing(pairing_id);
 create index pairing_registration_time_idx ON chess.pairing(registration_time);
 create index pairing_user_id_idx ON chess.pairing(user_id);
 create index pairing_adding_time_game_time_idx ON chess.pairing(adding_time, game_time);
@@ -89,6 +114,7 @@ CREATE TABLE chess.message_types
     message_type_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	priority INT NOT NULL,
 	resend_time TIME NOT NULL,
+	resend_stop_time TIME NOT NULL,
 	description varchar(300) NOT NULL
 );
 
@@ -108,15 +134,30 @@ CREATE TABLE chess.messages
     message_type_id INT NOT NULL references chess.message_types(message_type_id),
     priority INT NOT NULL,
     send_time timestamp DEFAULT NULL,
-    resend_time TIME NOT NULL
+    resend_time TIME NOT NULL,
+    resend_stop_time TIME NOT NULL,
+    add_time timestamp DEFAULT NOW()
 );
 
 DROP sequence if exists requests_seq;
 create sequence requests_seq maxvalue 9223372036854775807;
 
 -- INDEXES OBTAIN
+create index messages_id_idx ON chess.messages(message_id);
 create index messages_send_time_idx ON chess.messages(send_time);
 create index messages_user_id_idx ON chess.messages(user_id);
 create index messages_priority_idx ON chess.messages(priority);
+create index messages_add_time ON chess.messages(add_time);
 -- End of Message table create
 
+-- Job table create
+DROP TABLE IF EXISTS chess.jobs;
+CREATE TABLE chess.jobs
+(
+    proc_name varchar(1000),
+    delta_execution TIME,
+    next_execution_time timestamp DEFAULT NOW()
+);
+-- INDEXES OBTAIN
+create index jobs_next_execution_time_idx ON chess.jobs(next_execution_time);
+-- END OF Job table create

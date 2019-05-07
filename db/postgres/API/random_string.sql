@@ -1,4 +1,4 @@
-create or replace function random_string(length integer) returns varchar as
+create or replace function chess.random_string(length integer) returns varchar as
 $$
 declare
   chars text[] := '{0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,G,H,I,J,K,' ||

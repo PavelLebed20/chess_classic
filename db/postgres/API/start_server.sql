@@ -4,6 +4,6 @@ LANGUAGE 'plpgsql'
 AS $BODY$
 DECLARE
 BEGIN
-  UPDATE chess.players SET online = 0::bit;
+  UPDATE chess.messages SET request_id = 0, send_time = NULL;
 END;
 $BODY$;
