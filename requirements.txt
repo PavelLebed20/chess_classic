@@ -1,0 +1,10 @@
+eventlet==0.24.1
+Flask==1.0.2
+psycopg2==2.8.2
+Flask_SocketIO==3.3.2
+panda3d==1.10.2
+direct==1.0.1
+pandac==1.0.0
+gevent_socketio==0.3.6
+typing==3.6.6
+validate_email==1.3

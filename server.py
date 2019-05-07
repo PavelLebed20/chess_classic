@@ -1,3 +1,5 @@
+import os
+port = int(os.environ.get("PORT", 8000))
 
 # database and gamecontroller imports
 
@@ -43,7 +45,7 @@ class Server:
     def run(self):
         execute_no_res_async("call chess.start_server()")
         socketio.start_background_task(self.message_queue_processing)
-        socketio.run(app, port=self.port)
+        socketio.run(app, port=self.port, host='0.0.0.0')
 
     def message_queue_processing(self):
         while True:
@@ -241,5 +243,5 @@ def on_message(data):
     socketio.emit('message', 'Response from server')
 
 
-server = Server(8000)
+server = Server(port)
 server.run()
