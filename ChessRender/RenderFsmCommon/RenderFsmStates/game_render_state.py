@@ -363,6 +363,7 @@ class FsmStateGameState(ScreenState):
         else:
             swaped_figures = ["q", "n", "b", "r"]
 
+        print('Side is ' + str(side))
         self.swaped_icons = []
         figure_num = 0
         for swaped_figure in swaped_figures:

@@ -195,18 +195,28 @@ def on_update_board(data):
                     vec.Vector2d(int(paramsDict['p3']), int(paramsDict['p4'])))
 
     res = cur_game_controller.check_move(move, Side(side))
-    is_playing = 1
-    game_result = None
+
     if res == game_controller.MoveResult.INCORRECT:
         print("Wrong move send")
         return
-    elif res == game_controller.MoveResult.STALEMATE:
+
+    is_playing = 1
+    game_result = None
+    pawn_swaped_figure = paramsDict['swapped_figure']
+
+    print('Swaped figure is ' + str(pawn_swaped_figure))
+
+    cur_game_controller.update(move, Side(side))
+    
+    if pawn_swaped_figure is not None:
+        cur_game_controller.swap_pawn(move.point_to, pawn_swaped_figure)
+        res = cur_game_controller.check_board_res(Side(side))
+
+    if res == game_controller.MoveResult.STALEMATE:
         is_playing = 0
     elif res == game_controller.MoveResult.MATE:
         is_playing = 0
         game_result = 0 if Side(side) is Side.WHITE else 1
-
-    cur_game_controller.update(move)
 
     if game_result is None:
         execute_no_res_async("call chess.update_game_state({0}, '{1}', "

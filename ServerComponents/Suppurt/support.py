@@ -4,5 +4,9 @@ def getParamsValMap(data):
 
     for paramVal in paramsVal:
         paramToVal = str(paramVal).split('=')
-        res.update({paramToVal[0]: paramToVal[1]})
+        if len(paramToVal) > 1:
+            data = paramToVal[1]
+        else:
+            data = None
+        res[paramToVal[0]] = data if data != '' else None
     return res

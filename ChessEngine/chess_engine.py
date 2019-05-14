@@ -60,7 +60,7 @@ class Engine:
         Initialize Engine class function
         """
         self.render = RenderFsm()
-        self.server_address = 'https://chessservertest.herokuapp.com'
+        self.server_address = 'http://localhost:8000'
 
         #### - functions to process data from users
         self.render.process_login = self.process_login
@@ -210,22 +210,23 @@ class Engine:
                     if self.game_controller.check_move(move, self.local_player.side) != MoveResult.INCORRECT:
                         self.game_controller.update(move, self.local_player.side)
 
+                        data_str = "p1={}&p2={}&p3={}&p4={}&swapped_figure=" \
+                            .format(move.point_from.x,
+                                    move.point_from.y,
+                                    move.point_to.x,
+                                    move.point_to.y)
                         if pawn_swaped_figure is not None:
                             self.game_controller.swap_pawn(move.point_to, pawn_swaped_figure)
                             move_res = self.game_controller.check_board_res(self.local_player.side)
                             assert (move_res != MoveResult.INCORRECT)
+                            data_str += str(pawn_swaped_figure)
 
-                        self.current_move = (int(self.current_move) + 1) % 2
-                        self.client.send_message('update_board', "p1={}&p2={}&p3={}&p4={}"
-                                                 .format(move.point_from.x,
-                                                         move.point_from.y,
-                                                         move.point_to.x,
-                                                         move.point_to.y))
+                        self.client.send_message('update_board', data_str)
                         self.online_player.restart_timer()
                         # play music
                         self.render.sound.play(SoundTypes.MOVE)
                 self.render.process_set_move_player = self.local_player.set_move
-            self.render_update_board()
+                self.render_update_board()
 
             if self.game_result != -1:
                 self.render.cur_state.update_game_result_info(self.game_result, self.delta_rate)
@@ -252,12 +253,13 @@ class Engine:
         return Task.cont
 
     def get_cur_turn_side(self):
-        if self.player_turn is None:
-            assert (False)
-        if self.player_turn == 0:
-            return Side.WHITE
+        if self.game_state is GameStates.ONLINE_GAME:
+            player_turn = self.current_move
         else:
-            return Side.BLACK
+            player_turn = self.player_turn
+        if player_turn is None:
+            assert (False)
+        return Side(player_turn)
 
     def set_menu_state(self):
         self.game_state = GameStates.MENU
@@ -430,7 +432,7 @@ class Engine:
         self.game_result = -1
         self.delta_rate = 0
 
-        if text_dict['board'] is "":
+        if text_dict['board'] is None:
             self.chess_board = Board()
             self.game_controller = GameController(self.chess_board)
         else:
@@ -452,11 +454,15 @@ class Engine:
             self.render.blackside_pack_name = text_dict['self_pack']
             self.render.side = Side.WHITE  # watch opponent
 
+        self.render.process_set_move_player = self.local_player.set_move
+        self.render.check_move_func_for_pawn_swap = self.game_controller.check_move
         if self.online_game_was_started is False:
             self.online_game_was_started = True
             self.render.is_game_played = True
             self.render.change_state(self.render, "fsm:GameState")
             self.render.cur_state.update_camera(self.local_player.side)
+
+        self.render.cur_state.check_move_func = self.game_controller.check_move
 
         if int(text_dict['is_playing']) == 0:
             self.online_game_was_started = False
@@ -480,7 +486,6 @@ class Engine:
         self.current_move = int(text_dict['next_move'])
         self.online_player.init_time_from_str(text_dict['opponent_time'])
 
-        self.render.process_set_move_player = self.local_player.set_move
         self.render_update_board()
         self.game_state = GameStates.ONLINE_GAME
 

@@ -156,3 +156,4 @@ class RenderFsm(ShowBase):
 
     def mouse_release(self):
         self.cur_state.mouse_release()
+
