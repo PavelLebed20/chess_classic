@@ -4,6 +4,7 @@ from direct.gui.DirectOptionMenu import DirectOptionMenu
 from direct.gui.DirectRadioButton import DirectRadioButton
 from direct.gui.OnscreenText import OnscreenText
 
+
 class ScreenAtributes:
     def __init__(self):
         self.buttons = {}
@@ -22,6 +23,8 @@ class ScreenState:
         self.gui_text_fields = {}
         self.radio_button_var = [0]
 
+        self.button_sizes = (-3, 3, -0.4, 0.8) # default sizes
+
     def initialize_button_links(self):
         pass
 
@@ -37,40 +40,46 @@ class ScreenState:
             button = self.screen_atributes.buttons[button_key]
             pos = button.position
 
-            if button.command is not None and button.link_key is not None:
-                commad_and_link = lambda render_fsm_, link_key_, button_: (button_.command(), render_fsm.change_state(render_fsm_, link_key_))
+            command_lambda = lambda button_: (
+                None if button_.command is None else button_.command()
+            )
 
-                gui_button = DirectButton(text=button.title, scale=0.2,
-                                          command=commad_and_link,
-                                          extraArgs=[render_fsm, button.link_key, button],
-                                          pos=(pos[0], pos[1], pos[2]))
-                self.screen_atributes.scene_nodes.append(gui_button)
+            link_lambda = lambda render_fsm_, button_: (
+                None if button_.link_key is None else render_fsm.change_state(render_fsm_, button_.link_key)
+            )
 
-            elif button.command is not None:
-                gui_button = DirectButton(text=button.title, scale=0.2,
-                                          command=button.command,
-                                          pos=(pos[0], pos[1], pos[2]))
-                self.screen_atributes.scene_nodes.append(gui_button)
+            commad_and_link = lambda command_lambda_, link_lambda_, render_fsm_, button_: (
+                command_lambda_(button_),
+                link_lambda_(render_fsm_, button_)
+            )
 
-            elif button.link_key is not None:
-                gui_button = DirectButton(text=button.title, scale=0.2,
-                                          command=render_fsm.change_state,
-                                          extraArgs=[render_fsm, button.link_key],
-                                          pos=(pos[0], pos[1], pos[2]))
-                self.screen_atributes.scene_nodes.append(gui_button)
+            if button.new_size is None:
+                button_sizes = self.button_sizes
+            else:
+                button_sizes = button.new_size
 
-            elif button.command is None and button.link_key is None:
-                gui_button = DirectButton(text=button.title, scale=0.2,
-                                          pos=(pos[0], pos[1], pos[2]))
-                self.screen_atributes.scene_nodes.append(gui_button)
+            gui_button = DirectButton(text=button.title, scale=0.2,
+                                      command=commad_and_link,
+                                      extraArgs=[command_lambda, link_lambda, render_fsm, button],
+                                      pos=(pos[0], pos[1], pos[2]),
+                                      frameColor=((0.8, 0.8, 0.8, 0.8), (0.4, 0.4, 0.4, 0.8), (0.4, 0.4, 0.8, 0.8),
+                                                  (0.1, 0.1, 0.1, 0.8)),
+                                      frameSize=button_sizes
+                                     )
+            self.screen_atributes.scene_nodes.append(gui_button)
+
 
     def render_text_fields(self):
         for text_field_key in self.screen_atributes.text_fields.keys():
             text_field = self.screen_atributes.text_fields[text_field_key]
             pos = text_field.position
 
-            gui_text_field = DirectEntry(initialText=text_field.initial_text, scale=0.1,
-                                      pos=(pos[0], pos[1], pos[2]), numLines=2)
+            gui_text_field = DirectEntry(initialText=text_field.initial_text,
+                                         scale=0.1,
+                                         pos=(pos[0], pos[1], pos[2]),
+                                         numLines=2,
+                                         obscured=text_field.need_hide,
+                                        )
             self.gui_text_fields[text_field.title] = gui_text_field
 
     def render_screen_texts(self):
