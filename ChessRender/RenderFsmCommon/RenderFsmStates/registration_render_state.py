@@ -13,7 +13,7 @@ class FsmStateRegistration(ScreenState):
 
         self.screen_atributes.text_fields["text_field:Login"] = TextFieldFsm("text_field_login", (-0.5, 0, 0.5))
         self.screen_atributes.text_fields["text_field:Email"] = TextFieldFsm("text_field_email", (-0.5, 0, 0.3))
-        self.screen_atributes.text_fields["text_field:Password"] = TextFieldFsm("text_field_password", (-0.5, 0, 0.1))
+        self.screen_atributes.text_fields["text_field:Password"] = TextFieldFsm("text_field_password", (-0.5, 0, 0.1), True)
 
         self.screen_atributes.screen_texts["scrtext:Login"] = ScreenTextFsm("Login:   ", (-0.7, 0.5))
         self.screen_atributes.screen_texts["scrtext:Email"] = ScreenTextFsm("Email:", (-0.7, 0.3))

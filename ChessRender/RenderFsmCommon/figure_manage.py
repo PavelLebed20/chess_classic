@@ -9,6 +9,7 @@ from enum import Enum, IntEnum
 from direct.gui.OnscreenText import TransparencyAttrib
 
 BLACK = (0.8, 0.3, 0.5, 1)
+#BLACK = (0.0, 0.0, 0.0, 1)
 WHITE = (1, 1, 1, 1)
 
 class RenderState(Enum):
@@ -119,12 +120,16 @@ class FigureMngr:
 
     def load_plane_object(self, render_object):
         obj = copy.deepcopy(self.modeles[RenderObject.PLANE])
-
         texture = copy.deepcopy(self.textures[render_object])
         obj.set_texture(texture)
-
         obj.setTransparency(TransparencyAttrib.MAlpha)
+        return obj
 
+    def load_plane_textured(self, texture_path):
+        obj = copy.deepcopy(self.modeles[RenderObject.PLANE])
+        texture = loader.loadTexture(texture_path)
+        obj.set_texture(texture)
+        obj.setTransparency(TransparencyAttrib.MAlpha)
         return obj
 
     def load_skybox_white_side(self):
