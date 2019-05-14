@@ -29,6 +29,9 @@ class Player:
         """
         pass
 
+    def get_pawn_swaped_figure(self):
+        pass
+
     def get_move(self):
         """
         Try get move calculation results

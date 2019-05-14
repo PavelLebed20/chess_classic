@@ -44,10 +44,14 @@ class GameController:
     def export_to_chess_board_str(self):
         return self.game_board.export_chess_board()
 
-    def update(self, move):
+    def swap_pawn(self, position, figure_latter):
+        self.game_board.swap_pawn(position, figure_latter)
+
+    def update(self, move, side):
         figure = self.game_board.get(move.point_from)
         assert figure is not None
         self.game_board.make_move(move)
+        self.game_board.delete_double_move(Side.get_oposite(side))
 
     def check_move(self, move, side):
         """
@@ -119,6 +123,25 @@ class GameController:
 
         return res_cells
 
+    def check_board_res(self, side):
+        result = MoveResult.DEFAULT
+
+        new_game_board = copy.deepcopy(self.game_board)
+        if new_game_board.is_that_check(Side.get_oposite(side)):
+            result = MoveResult.INCORRECT
+
+        if result == MoveResult.INCORRECT:
+            return result
+
+        if new_game_board.is_that_check(side):
+            result = MoveResult.CHECK
+            if new_game_board.is_that_mate(side):
+                result = MoveResult.MATE
+        else:
+            if new_game_board.is_that_stalemate(side):
+                result = MoveResult.STALEMATE
+
+        return result
 
 ### USAGE EXAMPLE ###
 # chess_board = Board()
