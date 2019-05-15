@@ -455,6 +455,9 @@ class FsmStateGameState(ScreenState):
 
     def update_game_info(self, white_login, white_time, white_rate,
                          black_login, black_time, black_rate):
+        for key in self.text_info:
+            self.text_info[key].destroy()
+
         scale = self.scale
         if 'white_login' in self.text_info:
             self.text_info['white_login'].destroy()

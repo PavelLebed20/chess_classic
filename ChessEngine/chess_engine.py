@@ -4,6 +4,7 @@
 # LAST UPDATE: 10/04/2019     #
 ###############################
 import copy
+import sys
 from enum import Enum
 from time import sleep
 
@@ -62,6 +63,7 @@ class Engine:
         self.render = RenderFsm()
         self.server_address = 'http://localhost:8000'
 
+        self.render.on_application_exit = self.on_application_exit
         #### - functions to process data from users
         self.render.process_login = self.process_login
         self.render.process_registration = self.process_auth
@@ -110,6 +112,7 @@ class Engine:
         self.game_controller = None
         self.chess_board = None
         self.offline_game_played = False
+        self.server_calculation = False
 
         self.pack_name = 'pack0'
 
@@ -122,7 +125,8 @@ class Engine:
             self.client = Client(self.server_address, on_login_call=self.on_login,
                                  on_update_call=self.on_update_game,
                                  on_update_time_call=self.on_update_time,
-                                 on_avail_packs_call=self.on_avail_packs)
+                                 on_avail_packs_call=self.on_avail_packs,
+                                 on_win_pack_call=self.process_win_pack)
 
     def step(self, task):
         """
@@ -130,8 +134,9 @@ class Engine:
         :return: NONE.
         """
 
-        if self.render.on_update_now or self.render.is_clearing:
+        if self.render.on_update_now or self.render.is_clearing or self.server_calculation:
             return Task.cont
+        self.server_calculation = True
         self.render.on_update_now = True
         if self.game_state == GameStates.OFFLINE_GAME:
             if self.offline_game_played is None:
@@ -232,24 +237,25 @@ class Engine:
                 self.render.cur_state.update_game_result_info(self.game_result, self.delta_rate)
                 self.local_player.stop_timer()
                 self.online_player.stop_timer()
-
-            # set text info
-            white_login = self.local_player.login
-            white_time = self.local_player.time_str()
-            white_rate = self.local_player.rate
-            black_login = self.online_player.login
-            black_time = self.online_player.time_str()
-            black_rate = self.online_player.rate
-            if self.local_player.side is Side.BLACK:
-                white_login, black_login = black_login, white_login
-                white_time, black_time = black_time, white_time
-                white_rate, black_rate = black_rate, white_rate
-            self.render.cur_state.update_game_info(white_login, white_time, white_rate,
-                                                   black_login, black_time, black_rate)
+            else:
+                # set text info
+                white_login = self.local_player.login
+                white_time = self.local_player.time_str()
+                white_rate = self.local_player.rate
+                black_login = self.online_player.login
+                black_time = self.online_player.time_str()
+                black_rate = self.online_player.rate
+                if self.local_player.side is Side.BLACK:
+                    white_login, black_login = black_login, white_login
+                    white_time, black_time = black_time, white_time
+                    white_rate, black_rate = black_rate, white_rate
+                self.render.cur_state.update_game_info(white_login, white_time, white_rate,
+                                                       black_login, black_time, black_rate)
         else:
             pass
 
         self.render.on_update_now = False
+        self.server_calculation = False
         return Task.cont
 
     def get_cur_turn_side(self):
@@ -361,6 +367,7 @@ class Engine:
         self.players[1].stop_timer()
         self.players = None
 
+
     def process_reset_save_data_friend(self):
         self.offline_with_friend_match_data = None
 
@@ -368,6 +375,9 @@ class Engine:
         self.offline_with_computer_match_data = None
 
     def process_login(self, text_dict):
+        while self.server_calculation:
+            sleep(5.0 / 1000.0)
+        self.server_calculation = True
         """
         Process text from text fields (login, parol)
         :param text_dict: dictionary, where
@@ -388,6 +398,8 @@ class Engine:
         # make request for connection
         self.client.send_message('login', 'login={0}&password={1}'.format(login, password))
 
+        self.server_calculation = False
+
     def process_auth(self, text_dict):
         login = text_dict["Login"]
         email = text_dict["Email"]
@@ -406,8 +418,12 @@ class Engine:
         self._make_client()
         # make request for connection
         self.client.send_message('confirm_auth', 'email={0}&auth_code={1}'.format(email, auth_code))
+        self.render.change_state(self.render, "fsm:MainMenu")
 
     def on_login(self, text_dict):
+        while self.server_calculation:
+            sleep(5.0 / 1000.0)
+        self.server_calculation = True
         if self.render.cur_state_key == "fsm:GameState":
             return
         if 'not_verified' in text_dict:
@@ -416,6 +432,7 @@ class Engine:
             self.rate = int(text_dict['self_rate'])
             self.render.is_client_connected_to_server = True
             self.render.change_state(self.render, "fsm:MainMenu")
+        self.server_calculation = False
 
     def on_continue_game(self):
         if self.online_game_was_started is False:
@@ -428,6 +445,9 @@ class Engine:
         self.game_state = GameStates.ONLINE_GAME
 
     def on_update_game(self, text_dict):
+        while self.server_calculation:
+            sleep(5.0 / 1000.0)
+        self.server_calculation = True
         self.game_state = GameStates.MENU
         self.game_result = -1
         self.delta_rate = 0
@@ -488,6 +508,7 @@ class Engine:
 
         self.render_update_board()
         self.game_state = GameStates.ONLINE_GAME
+        self.server_calculation = False
 
     def on_update_time(self, text_dict):
         if self.game_state != GameStates.ONLINE_GAME:
@@ -546,6 +567,21 @@ class Engine:
         self.client.send_message('find_pair',
                                  'low_rate={0}&hight_rate={1}&game_time={2}&move_time={3}'
                                  .format(min_rate, max_rate, game_time, move_time))
+
+    def process_win_pack(self, pack_data):
+        while self.server_calculation:
+            sleep(5.0 / 1000.0)
+        self.server_calculation = True
+        self.game_state = GameStates.MENU
+        self.render.avail_packs.append(pack_data['new_pack'])
+        self.render.win_pack = pack_data['new_pack']
+        self.render.change_state(self.render, "fsm:WinPack")
+        self.server_calculation = False
+
+    def on_application_exit(self):
+        if self.client is not None:
+            self.client.disconnect()
+        sys.exit()
 
 
 
