@@ -43,13 +43,9 @@ DROP TABLE IF EXISTS chess.auth_codes;
 CREATE TABLE  chess.auth_codes
 (
 	user_id INT NOT NULL references chess.players(user_id) PRIMARY KEY,
-	code_salt varchar(73) NOT NULL,
-	verified bit NOT NULL DEFAULT 0::bit,
-	generated_time timestamp NOT NULL DEFAULT NOW()
+	auth_code varchar(64) NOT NULL,
+	send bit DEFAULT 0::bit
 );
-
--- INDEXES OBTAIN
-create index auth_codes_generated_time_idx ON chess.auth_codes(generated_time);
 
 -- End of AuthCodes table create
 

@@ -123,6 +123,10 @@ BEGIN
       call chess.add_game_message(p_game_id := v_game_id, p_add_user1 := 1::bit, p_add_user2 := 1::bit);
   end;
 
+  if p_is_playing = 0::bit then
+      call chess.add_win_pack(v_game_id);
+  end if;
+
 END;
 
 $BODY$;

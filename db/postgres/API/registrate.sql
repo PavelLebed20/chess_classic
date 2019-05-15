@@ -5,7 +5,7 @@ p_login varchar(50),
 p_password varchar(64),
 p_email varchar(50),
 p_rate int default 100,
-p_auth_length integer default 64) returns varchar as
+p_auth_length integer default 4) returns varchar as
 $$
 declare
   v_user_id int;
@@ -42,8 +42,8 @@ BEGIN
     (p_login, crypt(p_password, gen_salt('bf')), p_rate, p_email)
     RETURNING chess.players.user_id INTO v_user_id;
 
-    INSERT INTO chess.auth_codes (user_id, code_salt) VALUES
-    (v_user_id, crypt(v_auth_code, gen_salt('bf')));
+    INSERT INTO chess.auth_codes (user_id, auth_code) VALUES
+    (v_user_id, v_auth_code);
   end;
   RETURN v_auth_code;
 end;

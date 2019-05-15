@@ -114,6 +114,9 @@ BEGIN
                                            p_action_name := 'update_time');
                 end;
             end;
+            if v_is_playing = 0::bit then
+                call chess.add_win_pack(r_game.game_id);
+            end if;
         end;
     end loop;
 END;
