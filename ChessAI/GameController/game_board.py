@@ -310,3 +310,24 @@ class GameBoard:
                         sign = -1
                     total = total + (figure.evaluate(j, i) * sign)
         return total
+
+    def delete_double_move(self, side_to_del):
+        for j in range(Board.ROW_SIZE):
+            for i in range(Board.COLUMN_SIZE):
+                figure = self.get_by_pos(j, i)
+                if figure is not None and figure.side == side_to_del:
+                    if isinstance(figure, Figures.Pawn):
+                        figure.double_move = False
+
+    def swap_pawn(self, position, figure_lat):
+        side = self.board[position.x][position.y].side
+        lower = figure_lat.lower()
+        if lower == 'q':
+            self.board[position.x][position.y] = Figures.Queen(side, position)
+        if lower == 'b':
+            self.board[position.x][position.y] = Figures.Bishop(side, position)
+        if lower == 'n':
+            self.board[position.x][position.y] = Figures.Knight(side, position)
+        if lower == 'r':
+            self.board[position.x][position.y] = Figures.Rook(side, position, True)
+

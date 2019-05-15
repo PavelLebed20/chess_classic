@@ -13,7 +13,9 @@ from ChessRender.RenderFsmCommon.RenderFsmStates.main_menu_render_state import F
 from ChessRender.RenderFsmCommon.RenderFsmStates.match_making_state import FsmStateMatchmaking
 from ChessRender.RenderFsmCommon.RenderFsmStates.multiplayer_menu_render_state import FsmStateMultiplayer
 from ChessRender.RenderFsmCommon.RenderFsmStates.registration_render_state import FsmStateRegistration
+from ChessRender.RenderFsmCommon.RenderFsmStates.single_player_lobby import FsmStateSinglePlayerLobby
 from ChessRender.RenderFsmCommon.RenderFsmStates.skin_select_render_state import FsmStateSkinSelect
+from ChessRender.RenderFsmCommon.RenderFsmStates.win_pack_render_state import FsmStateWinPack
 from ChessRender.RenderFsmCommon.RenderFsmStates.window_settings_render_state import FsmStateWindowSettings, \
     DEFAULT16x9SCREEN_W, DEFAULT16x9SCREEN_H
 from ChessSound.Sound import Sound, SoundTypes
@@ -31,7 +33,7 @@ class RenderFsm(ShowBase):
         props.clearSize()
         props.setTitle('Chess Classic')
         props.setSize(self.cur_window_width, self.cur_window_height)
-        props.setFixedSize(True)
+        #props.setFixedSize(True)
         self.win.requestProperties(props)
 
         self.taskMgr.add(self.mouse_task, 'mouseTask')
@@ -49,8 +51,16 @@ class RenderFsm(ShowBase):
         self.process_confirm_auth = None
         self.process_continue_online_game = None
 
-        self.process_offline_game = None
+        self.process_offline_with_firend = None
+        self.process_offline_with_computer = None
+        self.process_reset_save_data_friend = None
+        self.process_reset_save_data_computer = None
+        self.on_offline_game_exit = None
         self.process_set_move_player = None
+
+        self.on_application_exit = None
+
+        self.get_cur_turn_side = None
 
         self.whiteside_pack_name = None
         self.blackside_pack_name = None
@@ -73,14 +83,35 @@ class RenderFsm(ShowBase):
         # play default
         self.sound.play(SoundTypes.MAIN, is_looped=True)
 
+        self.check_move_func_for_pawn_swap = None
+
+        self.win_pack = None
+
     def init_state_by_key(self, key):
         self.cur_state_key = key
         if key == "fsm:MainMenu":
-            return FsmStateMainMenu(self.process_offline_game, self.is_client_connected_to_server,
-                                    self.process_continue_online_game)
+            return FsmStateMainMenu(self.is_client_connected_to_server,
+                                    self.process_continue_online_game, self.on_application_exit)
+        elif key == "fsm:SinglePlayerLobby":
+            return FsmStateSinglePlayerLobby(self.process_offline_with_computer, self.process_offline_with_firend, self.process_reset_save_data_friend, self.process_reset_save_data_computer)
         elif key == "fsm:GameState":
-            return FsmStateGameState(self, self.whiteside_pack_name,
-                                     self.blackside_pack_name, self.side, self.on_game_exit)
+            if isinstance(self.cur_state, FsmStateSinglePlayerLobby):
+                return FsmStateGameState(self,
+                                         self.whiteside_pack_name,
+                                         self.blackside_pack_name,
+                                         self.side,
+                                         "fsm:SinglePlayerLobby",
+                                         self.check_move_func_for_pawn_swap,
+                                         self.get_cur_turn_side,
+                                         self.on_offline_game_exit)
+            else:
+                return FsmStateGameState(self,
+                                         self.whiteside_pack_name,
+                                         self.blackside_pack_name,
+                                         self.side, "fsm:Matchmaking",
+                                         self.check_move_func_for_pawn_swap,
+                                         self.get_cur_turn_side,
+                                         self.on_game_exit)
         elif key == "fsm:Multiplayer":
             return FsmStateMultiplayer()
         elif key == "fsm:Login":
@@ -97,6 +128,8 @@ class RenderFsm(ShowBase):
             return FsmStateAuthConfirm(self.process_confirm_auth)
         elif key == "fsm:WinSettings":
             return FsmStateWindowSettings(self)
+        elif key == "fsm:WinPack":
+            return FsmStateWinPack(self.win_pack)
 
     def render(self):
         self.cur_state.render(self)
@@ -130,3 +163,4 @@ class RenderFsm(ShowBase):
 
     def mouse_release(self):
         self.cur_state.mouse_release()
+

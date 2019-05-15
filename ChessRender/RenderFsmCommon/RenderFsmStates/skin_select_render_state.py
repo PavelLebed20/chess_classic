@@ -1,4 +1,7 @@
 from direct.task import Task
+from direct.gui.DirectButton import DirectButton
+from direct.gui.DirectScrolledList import DirectScrolledList
+
 
 from ChessRender.RenderFsmCommon.Camera.camera3d import Camera3D, Camera2D
 from ChessRender.RenderFsmCommon.Lights.lights import Lights
@@ -12,6 +15,7 @@ from ChessRender.RenderFsmCommon.screen_states import ScreenState
 class FsmStateSkinSelect(ScreenState):
     def __init__(self, render_fsm, process_skin_select, avail_packs=["pack0", "pack1"]):
         ScreenState.__init__(self)
+        self.button_sizes = (-2, 2, -0.4, 0.8)
         self.render_fsm_ref = render_fsm
         self.lights = Lights(base, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
         self.camera_p = Camera3D(base.camera, base.camLens, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
@@ -26,16 +30,51 @@ class FsmStateSkinSelect(ScreenState):
         render_fsm.accept("wheel_up", self.wheel_up)
         render_fsm.accept("wheel_down", self.wheel_down)
 
-        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (0.8, 0, 0.8))
-        self.screen_atributes.buttons["but:Prev"] = ButtonFsm("Prev", (-0.5, 0, -0.5))
-        self.screen_atributes.buttons["but:Next"] = ButtonFsm("Next", (0.5, 0, -0.5))
+        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (0.5, 0, 0.8))
+        self.screen_atributes.buttons["but:Prev"] = ButtonFsm("<--", (-0.5, 0, -0.5))
+        self.screen_atributes.buttons["but:Next"] = ButtonFsm("-->", (0.5, 0, -0.5))
         self.screen_atributes.buttons["but:Confirm"] = ButtonFsm("Confirm", (0.5, 0, -0.8))
         self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (-0.5, 0, -0.8))
 
-        self.screen_atributes.option_lists["oplst:PackName"] = OptionListFsm("Pack",
-                                                                             avail_packs,
-                                                                             self.option_list_confirm,
-                                                                             (-0.8, 0 ,0.8))
+        #self.screen_atributes.option_lists["oplst:PackName"] = OptionListFsm("Pack",
+        #                                                                     avail_packs,
+        #                                                                     self.option_list_confirm,
+        #                                                                     (-0.8, 0 ,0.8))
+
+        packs_in_list = []
+        for pack in avail_packs:
+            packs_in_list.append(
+                DirectButton(
+                    text=pack, scale=0.1,
+                    command=self.option_list_confirm,
+                    extraArgs=[pack],
+                    frameColor=((0.8, 0.8, 0.8, 0.8), (0.4, 0.4, 0.4, 0.8), (0.4, 0.4, 0.8, 0.8),
+                                (0.1, 0.1, 0.1, 0.8)),
+                    frameSize=(-1.5, 1.5, -0.4, 0.8)
+                             )
+            )
+
+        self.my_scrolled_list = DirectScrolledList(
+            decButton_pos=(0.35, 0, 0.7),
+            decButton_text="up",
+            decButton_text_scale=0.08,
+            decButton_borderWidth=(0.005, 0.005),
+
+            incButton_pos=(0.35, 0, 0.05),
+            incButton_text="down",
+            incButton_text_scale=0.08,
+            incButton_borderWidth=(0.005, 0.005),
+
+            frameSize=(0.0, 0.7, 0.8, 0),
+            frameColor=(0.3, 0.3, 1, 0.5),
+            pos=(-1, 0, 0),
+            items=packs_in_list,
+            numItemsVisible=4,
+            forceHeight=0.11,
+            itemFrame_frameSize=(-0.2, 0.2, -0.42, 0.11),
+            itemFrame_pos=(0.35, 0, 0.55),
+        )
+
 
         self.initialize_button_links()
 
@@ -74,6 +113,7 @@ class FsmStateSkinSelect(ScreenState):
     def clear_state(self):
         self.lights.unset()
         self.cur_model_node.removeNode()
+        self.my_scrolled_list.removeNode()
 
     def get_next(self):
         self.cur_model_num += 1

@@ -1,4 +1,3 @@
-
 # database and gamecontroller imports
 
 import smtplib
@@ -10,13 +9,13 @@ import ServerComponents.Suppurt.support as supp
 import ChessAI.GameController.game_controller as game_controller
 import Vector2d.Vector2d as vec
 
-
 # server connection
 import eventlet
 
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
 from ServerComponents.Suppurt.server import execute_no_res_async, execute_one_res_async, execute_all_res_async
+from message_sender import send_email
 
 eventlet.monkey_patch()
 from flask import Flask, request
@@ -30,9 +29,10 @@ clients = {}
 user_client_map = {}
 messages = {}
 
+
 # email data
-#server.starttls()
-#server.login("chess.classic.official@gmail.com", "ChhessClassicc1488")
+# server.starttls()
+# server.login("chess.classic.official@gmail.com", "ChhessClassicc1488")
 
 
 class Server:
@@ -85,12 +85,13 @@ def on_disconnect():
 
 @socketio.on('verify_message')
 def on_verify_message(data):
-    #print("Message recieved: " + str(data) + "from client " + str(clients[request.sid]))
+    # print("Message recieved: " + str(data) + "from client " + str(clients[request.sid]))
 
     paramsDict = supp.getParamsValMap(data)
     if request.sid in clients and clients[request.sid] is not None:
         query = "call chess.verify_message({0}, {1})".format(paramsDict['request_id'], clients[request.sid])
         execute_no_res_async(query)
+
 
 @socketio.on('confirm_auth')
 def on_confirm_auth(data):
@@ -98,9 +99,10 @@ def on_confirm_auth(data):
 
     paramsDict = supp.getParamsValMap(data)
 
-    query = "select chess.confirm_auth('{0}', '{1}')".format(paramsDict['email'],
+    query = "call chess.confirm_auth('{0}', '{1}')".format(paramsDict['email'],
                                                              paramsDict['auth_code'])
     execute_no_res_async(query)
+
 
 @socketio.on('auth')
 def on_auth(data):
@@ -116,21 +118,20 @@ def on_auth(data):
                                                                   paramsDict['email'])
 
     res = execute_one_res_async(query)[0]
-    print(str(res))
-
     print("Auth code is " + str(res))
     if res is not None:
-        try:
-            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-            server.ehlo()
-            server.login("chess.classic.official@gmail.com", "ChhessClassicc1488")
-            msg = "{0}, thank your for authorization on chess classic club.".format(paramsDict['login'])
-            msg += "Your authentication code is {0}.".format(res)
+        """
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login("chess.classic.official@gmail.com", "ChhessClassicc1488")
+        msg = "{0}, thank your for authorization on chess classic club.".format(paramsDict['login'])
+        msg += "Your authentication code is {0}.".format(res)
 
-            server.sendmail("chess.classic.official@gmail.com", [paramsDict['email']], msg)
-            server.quit()
-        except:
-            print('Failed to send email to {}'.format(paramsDict['email']))
+        server.sendmail("chess.classic.official@gmail.com", [paramsDict['email']], msg)
+        server.quit()
+        print('Failed to send email to {}'.format(paramsDict['email']))
+        """
+        pass
 
 
 @socketio.on('login')
@@ -149,6 +150,7 @@ def on_login(data):
     clients[request.sid] = user_id
     user_client_map[user_id] = request.sid
     print("login ID is " + str(clients[request.sid]))
+
 
 @socketio.on('find_pair')
 def on_find_pair(data):
@@ -175,14 +177,14 @@ def on_update_board(data):
     else:
         return
     try:
-       rec = execute_one_res_async(query)
-       print("Game state is " + str(rec))
-       board = rec[0]
-       side = int(rec[1])
+        rec = execute_one_res_async(query)
+        print("Game state is " + str(rec))
+        board = rec[0]
+        side = int(rec[1])
     except:
         print("Game doesn't exists")
         return
-    #print("server_board is " + str(rec))
+    # print("server_board is " + str(rec))
     # convert to game_controller
     print("Board is " + str(board))
     print("Side is " + str(side))
@@ -195,18 +197,28 @@ def on_update_board(data):
                     vec.Vector2d(int(paramsDict['p3']), int(paramsDict['p4'])))
 
     res = cur_game_controller.check_move(move, Side(side))
-    is_playing = 1
-    game_result = None
+
     if res == game_controller.MoveResult.INCORRECT:
         print("Wrong move send")
         return
-    elif res == game_controller.MoveResult.STALEMATE:
+
+    is_playing = 1
+    game_result = None
+    pawn_swaped_figure = paramsDict['swapped_figure']
+
+    print('Swaped figure is ' + str(pawn_swaped_figure))
+
+    cur_game_controller.update(move, Side(side))
+
+    if pawn_swaped_figure is not None:
+        cur_game_controller.swap_pawn(move.point_to, pawn_swaped_figure)
+        res = cur_game_controller.check_board_res(Side(side))
+
+    if res == game_controller.MoveResult.STALEMATE:
         is_playing = 0
     elif res == game_controller.MoveResult.MATE:
         is_playing = 0
         game_result = 0 if Side(side) is Side.WHITE else 1
-
-    cur_game_controller.update(move)
 
     if game_result is None:
         execute_no_res_async("call chess.update_game_state({0}, '{1}', "

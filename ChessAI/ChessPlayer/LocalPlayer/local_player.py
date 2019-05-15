@@ -18,6 +18,7 @@ class LocalPlayer(Player):
         super().__init__(side)
         self.side = Side(side)
         self.move = None
+        self.pawn_swaped_figure = None
 
     def get_move(self):
         """
@@ -29,10 +30,14 @@ class LocalPlayer(Player):
         self.move = None
         return res
 
-    def set_move(self, move):
+    def get_pawn_swaped_figure(self):
+        return self.pawn_swaped_figure
+
+    def set_move(self, move, pawn_swaped_figure=None):
         """
         Render obtain player move function
         :param move: move to obtain
         :return: NONE.
         """
         self.move = copy.deepcopy(move)
+        self.pawn_swaped_figure = pawn_swaped_figure

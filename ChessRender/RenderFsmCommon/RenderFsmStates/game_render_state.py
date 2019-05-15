@@ -1,16 +1,19 @@
+import copy
 from enum import Enum
 
 from direct.gui.OnscreenText import CollisionTraverser, CollisionHandlerQueue, CollisionNode, \
-    CollisionRay, OnscreenText
+    CollisionRay, OnscreenText, TransparencyAttrib
 from direct.task import Task
 from panda3d.core import BitMask32, LPoint3
+from direct.gui.DirectButton import DirectButton
 
+from ChessAI.GameController.game_controller import MoveResult
 from ChessBoard.chess_figure import Side
 from ChessRender.RenderFsmCommon.Camera.camera3d import Camera3D, Camera2D
 from ChessRender.RenderFsmCommon.Lights.lights import Lights
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
 from ChessRender.RenderFsmCommon.screen_states import ScreenState
-from ChessRender.RenderFsmCommon.figure_manage import FigureMngr
+from ChessRender.RenderFsmCommon.figure_manage import FigureMngr, figure_as_render_object
 from Vector2d.Vector2d import Vector2d, Move
 
 HIGHLIGHT = (0, 1, 1, 1)
@@ -21,8 +24,10 @@ class Dimension(Enum):
 
 
 class FsmStateGameState(ScreenState):
-    def __init__(self, render_fsm, whiteside_pack_name, blackside_pack_name, side, on_exit_func=None):
+    def __init__(self, render_fsm, whiteside_pack_name, blackside_pack_name, side, exit_link, check_move_func, get_cur_turn_side, on_exit_func=None):
         ScreenState.__init__(self)
+        self.exit_link = exit_link
+        self.button_sizes = (-1.5, 1.5, -0.4, 0.8)
         self.render_fsm_ref = render_fsm
         self.side = side
         self.skysphere = None
@@ -34,6 +39,9 @@ class FsmStateGameState(ScreenState):
         self.init_sky_sphere()
         self.squares = [None for i in range(64)]
         self.init_nodes_to_chsess_board()
+        self.init_info_panel()
+        self.pawn_change_panel = None
+        self.swaped_icons = None
 
         self.str_board = "rnbqkbnr" \
                          "pppppppp" \
@@ -55,8 +63,8 @@ class FsmStateGameState(ScreenState):
 
         self.lights = Lights(base, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
 
-        self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-0.8, 0, 0.8))
-        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (0.8, 0, 0.8))
+        self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-1, 0, 0.8))
+        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (1, 0, 0.8))
         self.initialize_button_links()
 
         self.init_ray()
@@ -81,7 +89,11 @@ class FsmStateGameState(ScreenState):
         self.scale = 0.07
         self.on_exit_func = on_exit_func
 
+        self.check_move_func = check_move_func
+        self.get_cur_turn_side = get_cur_turn_side
+
     def change_dimension(self):
+        self.render_fsm_ref.taskMgr.remove('camPosTask')
         if self.dimension == Dimension._3D:
             self.dimension = Dimension._2D
         else:
@@ -112,9 +124,6 @@ class FsmStateGameState(ScreenState):
         self.skysphere.setPos(0, 0, 0)
         self.skysphere.setScale(20)
 
-    def process_set_move_player(self):
-        pass
-
     def clear_state(self):
         self.render_fsm_ref.is_clearing = True
         for figure in self.figures:
@@ -128,6 +137,13 @@ class FsmStateGameState(ScreenState):
         for key in self.text_info:
             self.text_info[key].destroy()
 
+        self.panel.removeNode()
+        if self.pawn_change_panel is not None:
+            self.pawn_change_panel.removeNode()
+
+        if self.swaped_icons is not None:
+            for icon in self.swaped_icons:
+                icon.removeNode()
         self.render_fsm_ref.is_clearing = False
 
     def on_exit(self):
@@ -137,9 +153,8 @@ class FsmStateGameState(ScreenState):
 
     def initialize_button_links(self):
         self.screen_atributes.buttons["but:Exit"].add_command(self.on_exit)
-        self.screen_atributes.buttons["but:Exit"].add_link("fsm:MainMenu")
+        self.screen_atributes.buttons["but:Exit"].add_link(self.exit_link)
         self.screen_atributes.buttons["but:2D/3D"].add_command(self.change_dimension)
-
 
     def wheel_up(self):
         self.camera_p.update_on_mouse_wheel(1)
@@ -148,14 +163,20 @@ class FsmStateGameState(ScreenState):
         self.camera_p.update_on_mouse_wheel(-1)
 
     def middle_click(self):
-        self.camera_p.set_default()
+        self.render_fsm_ref.taskMgr.remove('camPosTask')
+        #self.camera_p.set_default()
+        if not isinstance(self.camera_p, Camera2D):
+            self.camera_p.prepare_task_goto_player_side_position(self.get_cur_turn_side())
+            self.render_fsm_ref.taskMgr.add(self.camera_p.task_goto_player_side_position, 'camPosTask')
 
     def right_click(self):
+        self.render_fsm_ref.taskMgr.remove('camPosTask')
         mouse_watcher = base.mouseWatcherNode
         self.camera_p.start_rotating(mouse_watcher.getMouseX(), mouse_watcher.getMouseY())
         self.need_camera_update = True
 
     def right_release(self):
+        self.render_fsm_ref.taskMgr.remove('camPosTask')
         self.need_camera_update = False
 
     def grab_piece(self):
@@ -179,11 +200,39 @@ class FsmStateGameState(ScreenState):
                 self.figures[self.dragging].setPos(
                     self.FigurePos2D(self.dragging))
             if self.render_fsm_ref.process_set_move_player is not None:
+                move = Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8))
+                if self.figures[self.dragging].getTag("figue_lat") is "p" and self.hiSq // 8 is 7:
+                    if self.get_cur_turn_side() is Side.BLACK and self.check_move_func(move, Side.BLACK) != MoveResult.INCORRECT:
+                        self.swap_figures(self.dragging, self.hiSq)
+                        if self.figures[self.dragging] is not None:
+                            self.figures[self.dragging].removeNode()
+                        self.dragging = False
+                        self.fire_pawn_change_panel(Side.BLACK, move)
+                        return
+                if self.figures[self.dragging].getTag("figue_lat") is "P" and self.hiSq // 8 is 0:
+                    if self.get_cur_turn_side() is Side.WHITE and self.check_move_func(move, Side.WHITE) != MoveResult.INCORRECT:
+                        self.swap_figures(self.dragging, self.hiSq)
+                        if self.figures[self.dragging] is not None:
+                            self.figures[self.dragging].removeNode()
+                        self.dragging = False
+                        self.fire_pawn_change_panel(Side.WHITE, move)
+                        return
                 self.render_fsm_ref.process_set_move_player(Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8))
 )
 
         # We are no longer dragging anything
         self.dragging = False
+
+    def fire_pawn_change_panel(self, side, move):
+        self.render_fsm_ref.ignore("mouse1")  # left-click grabs a piece
+        self.render_fsm_ref.ignore("mouse1-up")  # releasing places it
+        self.render_fsm_ref.ignore("mouse2")
+        self.render_fsm_ref.ignore("mouse3")
+        self.render_fsm_ref.ignore("mouse3-up")
+
+        self.render_fsm_ref.ignore("wheel_up")
+        self.render_fsm_ref.ignore("wheel_down")
+        self.init_pawn_change_panel(side, move)
 
     def swap_figures(self, fr, to):
         temp = self.figures[fr]
@@ -262,6 +311,7 @@ class FsmStateGameState(ScreenState):
 
                 self.figures[key].reparentTo(self.render_fsm_ref.render)
                 self.figures[key].setTag("figue_tag", str(key))
+                self.figures[key].setTag("figue_lat", self.str_board[key])
 
                 # rotate white figures
                 if self.dimension is Dimension._3D:
@@ -293,6 +343,50 @@ class FsmStateGameState(ScreenState):
             # Set a tag on the square's node so we can look up what square this is
             # later during the collision pass
             self.squares[i].find("**/polygon").node().setTag('square', str(i))
+
+    def init_info_panel(self):
+        self.panel = self.objMngr.load_plane_textured("ChessRender/data/panel.png")
+        self.panel.reparentTo(self.render_fsm_ref.aspect2d)
+        self.panel.setPos((0, 0, 0.85))
+        self.panel.setSx(1.3)
+        self.panel.setSz(0.3)
+
+    def init_pawn_change_panel(self, side, move):
+        self.pawn_change_panel = self.objMngr.load_plane_textured("ChessRender/data/panel.png")
+        self.pawn_change_panel.reparentTo(self.render_fsm_ref.aspect2d)
+        self.pawn_change_panel.setPos((0, 0, -0.85))
+        self.pawn_change_panel.setSx(1.8)
+        self.pawn_change_panel.setSz(0.3)
+
+        if side is Side.WHITE:
+            swaped_figures = ["Q", "N", "B", "R"]
+        else:
+            swaped_figures = ["q", "n", "b", "r"]
+
+        print('Side is ' + str(side))
+        self.swaped_icons = []
+        figure_num = 0
+        for swaped_figure in swaped_figures:
+            but = DirectButton(text="", scale=0.13,
+                         command=self.swap_pawn_command,
+                         extraArgs=[swaped_figure, move],
+                         frameColor=((0.8, 0.8, 0.8, 0.0)),
+                         pos=(-0.5 + 0.35 * figure_num, 0, -0.85),
+                         image=self.objMngr.textures[figure_as_render_object(swaped_figure)]
+                         )
+            but.setTransparency(TransparencyAttrib.MAlpha)
+            self.swaped_icons.append(but)
+            figure_num += 1
+
+    def swap_pawn_command(self, swaped_figure_latter, move):
+        self.render_fsm_ref.accept("mouse1", self.grab_piece)  # left-click grabs a piece
+        self.render_fsm_ref.accept("mouse1-up", self.release_piece)  # releasing places it
+        self.render_fsm_ref.accept("mouse2", self.middle_click)
+        self.render_fsm_ref.accept("mouse3", self.right_click)
+        self.render_fsm_ref.accept("mouse3-up", self.right_release)
+        self.render_fsm_ref.accept("wheel_up", self.wheel_up)
+        self.render_fsm_ref.accept("wheel_down", self.wheel_down)
+        self.render_fsm_ref.process_set_move_player(move, swaped_figure_latter)
 
     def SquareTexture(self, i):
         if (i + ((i // 8) % 2)) % 2:
@@ -331,6 +425,12 @@ class FsmStateGameState(ScreenState):
         self.myTraverser.addCollider(self.pickerNP, self.myHandler)
 
     def update_board(self, board_str):
+        if self.pawn_change_panel is not None:
+            self.pawn_change_panel.removeNode()
+
+            for icon in self.swaped_icons:
+                icon.removeNode()
+
         need_add_dragging_figure = None
         if self.dragging is not False:
             if self.str_board[self.dragging] == board_str[self.dragging]:
@@ -355,40 +455,46 @@ class FsmStateGameState(ScreenState):
 
     def update_game_info(self, white_login, white_time, white_rate,
                          black_login, black_time, black_rate):
+        for key in self.text_info:
+            self.text_info[key].destroy()
+
         scale = self.scale
         if 'white_login' in self.text_info:
             self.text_info['white_login'].destroy()
         self.text_info['white_login'] = OnscreenText(text=white_login + " (" + str(white_rate) + ")",
-                                                     pos=(-0.4, 0.9), scale=scale)
+                                                     pos=(-0.4, 0.9), scale=scale, fg=(1.0, 1.0, 1.0, 1.0))
 
         if 'white_time' in self.text_info:
             self.text_info['white_time'].destroy()
         self.text_info['white_time'] = OnscreenText(text=white_time,
-                                                    pos=(-0.4, 0.8), scale=scale)
+                                                    pos=(-0.4, 0.8), scale=scale, fg=(1.0, 1.0, 1.0, 1.0))
 
         if 'slash' in self.text_info:
             self.text_info['slash'].destroy()
-        self.text_info['slash'] = OnscreenText("-", pos=(-0.15, 0.9), scale=scale)
+        self.text_info['slash'] = OnscreenText("-", pos=(-0.15, 0.9), scale=scale, fg=(1.0, 1.0, 1.0, 1.0))
 
         if 'black_login' in self.text_info:
             self.text_info['black_login'].destroy()
         self.text_info['black_login'] = OnscreenText(text=black_login + " (" + str(black_rate) + ")",
-                                                     pos=(0.2, 0.9), scale=scale)
+                                                     pos=(0.2, 0.9), scale=scale, fg=(1.0, 1.0, 1.0, 1.0))
 
         if 'black_time' in self.text_info:
             self.text_info['black_time'].destroy()
-        self.text_info['black_time'] = OnscreenText(text=black_time, pos=(0.2, 0.8), scale=scale)
+        self.text_info['black_time'] = OnscreenText(text=black_time, pos=(0.2, 0.8), scale=scale, fg=(1.0, 1.0, 1.0, 1.0))
 
     def update_game_result_info(self, win_side, delta_rate):
+        for key in self.text_info:
+            self.text_info[key].destroy()
+
         scale = self.scale
         if 'win_info' in self.text_info:
             self.text_info['win_info'].destroy()
-        side_text = "Game over! "
+        side_text = "Game over! \n"
         if win_side in (Side.WHITE, Side.BLACK):
             side_text += "Black won. " if win_side is Side.BLACK else "White won. "
         else:
             side_text += "It is draw. "
         self.text_info['win_info'] = OnscreenText(text=side_text +
                                                   "Delta rating is " + str(delta_rate),
-                                                  pos=(-0.15, 0.7), scale=scale,
+                                                  pos=(-0.05, 0.9), scale=scale,
                                                   fg=(1.0, 0.0, 0.0, 1.0))

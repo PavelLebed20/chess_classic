@@ -15,6 +15,7 @@ DEFAULT4x3SCREEN_H = 768
 class FsmStateWindowSettings(ScreenState):
     def __init__(self, render_fsm):
         ScreenState.__init__(self)
+        self.button_sizes = (-3, 3, -0.4, 0.8)
         self.render_fsm_ref = render_fsm
 
         self.screen_atributes.screen_texts["screen_text:Title"] = ScreenTextFsm("Windows params:", (0, 0.2))
@@ -30,11 +31,14 @@ class FsmStateWindowSettings(ScreenState):
         # sound bar
         self.sound_value = int(render_fsm.sound.get_volume() * 100)
         self.screen_atributes.screen_texts["screen_text:sound"] = ScreenTextFsm("Sound volume:", (0, 0.7))
+
         self.sound_bar = DirectScrollBar(range=(0, 100),
                                          value=self.sound_value,
                                          pageSize=3, command=self.on_sound_change)
+
         self.sound_bar.setPos(0.0, 0.0, 0.5)
         self.screen_atributes.screen_texts["screen_text:sound_volume"] = ScreenTextFsm(str(self.sound_value), (0, 0.4))
+
 
     def on_sound_change(self):
         self.sound_value = int(self.sound_bar.getValue())

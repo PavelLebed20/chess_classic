@@ -25,7 +25,7 @@ class FsmStateAuthConfirm(ScreenState):
         self.process_auth_confirm = process_auth_confirm
 
     def initialize_button_links(self):
-        self.screen_atributes.buttons["but:Confirm"].add_link("fsm:Load")
+        #self.screen_atributes.buttons["but:Confirm"].add_link("fsm:Load")
         self.screen_atributes.buttons["but:Confirm"].add_command(self.confirm_command)
         self.screen_atributes.buttons["but:Back"].add_link("fsm:Multiplayer")
 

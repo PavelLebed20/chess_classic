@@ -423,9 +423,10 @@ class Pawn(FigureBase):
 
             x = self.position.x - 1
             y = self.position.y + delta_y
-            attack_cell = chess_board.get_by_pos(x, y)
-            if attack_cell is not None and attack_cell.side != self.side or is_attack:
-                correct_cells.append(Vector2d(x, y))
+            if Board.COLUMN_SIZE > y >= 0:
+                attack_cell = chess_board.get_by_pos(x, y)
+                if attack_cell is not None and attack_cell.side != self.side or is_attack:
+                    correct_cells.append(Vector2d(x, y))
 
         if self.position.x < Board.ROW_SIZE - 1:
             # en passent attack
@@ -433,12 +434,15 @@ class Pawn(FigureBase):
 
             x = self.position.x + 1
             y = self.position.y + delta_y
-            attack_cell = chess_board.get_by_pos(x, y)
-            if attack_cell is not None and attack_cell.side != self.side or is_attack:
-                correct_cells.append(Vector2d(x, y))
+            if Board.COLUMN_SIZE > y >= 0:
+                attack_cell = chess_board.get_by_pos(x, y)
+                if attack_cell is not None and attack_cell.side != self.side or is_attack:
+                    correct_cells.append(Vector2d(x, y))
 
+        if is_attack:
+            return correct_cells
         # pawn go forward
-        if self.was_moved is False and not is_attack:
+        if self.was_moved is False:
             _add_correct_cells_by_ray(self.position, correct_cells, chess_board, self.side, 0, delta_y, 2, False)
         else:
             _add_correct_cells_by_ray(self.position, correct_cells, chess_board, self.side, 0, delta_y, 1, False)
@@ -458,7 +462,7 @@ class Pawn(FigureBase):
         if self.position.x > 0:
             self.en_passant(chess_board, passent_cells, -1, delta_y)
 
-        if self.position.y - point_to.y > 1:
+        if abs(self.position.y - point_to.y) > 1:
             self.double_move = True
         else:
             self.double_move = False
