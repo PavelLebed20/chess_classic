@@ -5,20 +5,23 @@ import ServerComponents.Suppurt.support as supp
 
 
 class Client:
-    def __init__(self, adress, on_login_call, on_update_call, on_update_time_call, on_avail_packs_call):
+    def __init__(self, adress, on_login_call, on_update_call,
+                 on_update_time_call, on_avail_packs_call, on_win_pack_call):
         self.sio = socketio.Client()
         self.sio.on('connect', self.on_connect)
-        self.sio.on('disconnect', self.on_disconnect)
+        #self.sio.on('disconnect', self.on_disconnect)
         self.sio.on('message', self.on_message)
         self.sio.on('login', self.on_login)
         self.sio.on('update_game', self.on_update_board)
         self.sio.on('update_time', self.on_update_time)
         self.sio.on('avail_packs', self.on_avail_packs)
+        self.sio.on('win_pack', self.on_win_pack)
 
         self.on_update_call = on_update_call
         self.on_login_call = on_login_call
         self.on_update_time_call = on_update_time_call
         self.on_avail_packs_call = on_avail_packs_call
+        self.on_win_pack_call = on_win_pack_call
 
         try:
             self.sio.connect(adress)
@@ -73,6 +76,19 @@ class Client:
         print('Connection established')
 
     def on_disconnect(self):
-        self.sio.emit('disconnect', "")
+        self.sio.emit('disconnect', "exit")
         print('Disconnected from server')
+
+    def disconnect(self):
+        self.sio.disconnect()
+
+    def on_win_pack(self, data):
+        paramsMap = supp.getParamsValMap(data)
+
+        print('Recieved message: ' + str(paramsMap))
+
+        self.sio.emit('verify_message', "request_id={}".format(paramsMap['request_id']))
+
+        if self.on_win_pack_call is not None:
+            self.on_win_pack_call(paramsMap)
 
