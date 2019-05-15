@@ -118,11 +118,15 @@ class ScreenState:
         for button in gui_radio_buttons:
             button.setOthers(gui_radio_buttons)
 
+    def clear_state(self):
+        pass
+
     def clear(self):
         for node in self.screen_atributes.scene_nodes:
             node.removeNode()
         for key in self.gui_text_fields.keys():
             self.gui_text_fields[key].removeNode()
+        self.clear_state()
 
     def mouse_task(self):
         pass

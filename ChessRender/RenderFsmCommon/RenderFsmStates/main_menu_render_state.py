@@ -5,7 +5,7 @@ from ChessRender.RenderFsmCommon.screen_states import ScreenState
 
 
 class FsmStateMainMenu(ScreenState):
-    def __init__(self, is_client_connected_to_server, process_continue_online_game):
+    def __init__(self, is_client_connected_to_server, process_continue_online_game, on_application_exit):
         ScreenState.__init__(self)
         self.button_sizes = (-4, 4, -0.5, 1)
 
@@ -22,6 +22,7 @@ class FsmStateMainMenu(ScreenState):
        # self.process_offline_game = process_offline_game
         self.process_continue_online_game = process_continue_online_game
         self.is_client_connected_to_server = is_client_connected_to_server
+        self.on_application_exit = on_application_exit
         self.initialize_button_links()
 
     def initialize_button_links(self):
@@ -33,4 +34,4 @@ class FsmStateMainMenu(ScreenState):
             self.screen_atributes.buttons["but:Multiplayer"].add_command(self.process_continue_online_game)
         self.screen_atributes.buttons["but:Select skins"].add_link("fsm:SkinSelect")
         self.screen_atributes.buttons["but:Window settings"].add_link("fsm:WinSettings")
-        self.screen_atributes.buttons["but:Exit"].add_command(sys.exit)
+        self.screen_atributes.buttons["but:Exit"].add_command(self.on_application_exit)

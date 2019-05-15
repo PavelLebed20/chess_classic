@@ -15,6 +15,7 @@ from ChessRender.RenderFsmCommon.RenderFsmStates.multiplayer_menu_render_state i
 from ChessRender.RenderFsmCommon.RenderFsmStates.registration_render_state import FsmStateRegistration
 from ChessRender.RenderFsmCommon.RenderFsmStates.single_player_lobby import FsmStateSinglePlayerLobby
 from ChessRender.RenderFsmCommon.RenderFsmStates.skin_select_render_state import FsmStateSkinSelect
+from ChessRender.RenderFsmCommon.RenderFsmStates.win_pack_render_state import FsmStateWinPack
 from ChessRender.RenderFsmCommon.RenderFsmStates.window_settings_render_state import FsmStateWindowSettings, \
     DEFAULT16x9SCREEN_W, DEFAULT16x9SCREEN_H
 from ChessSound.Sound import Sound, SoundTypes
@@ -57,6 +58,8 @@ class RenderFsm(ShowBase):
         self.on_offline_game_exit = None
         self.process_set_move_player = None
 
+        self.on_application_exit = None
+
         self.get_cur_turn_side = None
 
         self.whiteside_pack_name = None
@@ -82,11 +85,13 @@ class RenderFsm(ShowBase):
 
         self.check_move_func_for_pawn_swap = None
 
+        self.win_pack = None
+
     def init_state_by_key(self, key):
         self.cur_state_key = key
         if key == "fsm:MainMenu":
             return FsmStateMainMenu(self.is_client_connected_to_server,
-                                    self.process_continue_online_game)
+                                    self.process_continue_online_game, self.on_application_exit)
         elif key == "fsm:SinglePlayerLobby":
             return FsmStateSinglePlayerLobby(self.process_offline_with_computer, self.process_offline_with_firend, self.process_reset_save_data_friend, self.process_reset_save_data_computer)
         elif key == "fsm:GameState":
@@ -123,6 +128,8 @@ class RenderFsm(ShowBase):
             return FsmStateAuthConfirm(self.process_confirm_auth)
         elif key == "fsm:WinSettings":
             return FsmStateWindowSettings(self)
+        elif key == "fsm:WinPack":
+            return FsmStateWinPack(self.win_pack)
 
     def render(self):
         self.cur_state.render(self)
