@@ -162,12 +162,16 @@ class FsmStateGameState(ScreenState):
     def wheel_down(self):
         self.camera_p.update_on_mouse_wheel(-1)
 
-    def middle_click(self):
+    def middle_click(self, steps=60):
         self.render_fsm_ref.taskMgr.remove('camPosTask')
         #self.camera_p.set_default()
-        if not isinstance(self.camera_p, Camera2D):
-            self.camera_p.prepare_task_goto_player_side_position(self.get_cur_turn_side())
+        if isinstance(self.camera_p, Camera3D):
+            self.camera_p.prepare_task_goto_player_side_position(self.get_cur_turn_side(), steps)
             self.render_fsm_ref.taskMgr.add(self.camera_p.task_goto_player_side_position, 'camPosTask')
+        elif isinstance(self.camera_p, Camera2D):
+            self._camera_set()
+
+
 
     def right_click(self):
         self.render_fsm_ref.taskMgr.remove('camPosTask')

@@ -77,7 +77,8 @@ class ScreenState:
             gui_text_field = DirectEntry(initialText=text_field.initial_text,
                                          scale=0.1,
                                          pos=(pos[0], pos[1], pos[2]),
-                                         numLines=2,
+                                         numLines=1,
+                                         width = 15,
                                          obscured=text_field.need_hide,
                                         )
             self.gui_text_fields[text_field.title] = gui_text_field
