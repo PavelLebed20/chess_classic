@@ -184,6 +184,9 @@ class Engine:
                         self.game_result = None
                         self.delta_rate = 0
                         self.offline_game_played = False
+                    elif self.current_offline_game_mode is OfflineGameMode.WITH_FRIEND:
+                        self.render.cur_state.side = self.players[self.player_turn].side
+                        self.render.cur_state.middle_click(steps=30)
                     # play music
                     self.render.sound.play(SoundTypes.MOVE)
 

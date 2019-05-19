@@ -85,12 +85,12 @@ class Camera3D:
         self.old_x = new_x
         self.old_y = new_y
 
-    def prepare_task_goto_player_side_position(self, side):
+    def prepare_task_goto_player_side_position(self, side, steps=60):
         if side is Side.WHITE:
             self.need_to_change = self.WHITE_ANGLE - self.angle
         else:
             self.need_to_change = self.BLACK_ANGLE - self.angle
-        self.steps = 50
+        self.steps = steps
         self.change_step = self.need_to_change / self.steps
 
     def task_goto_player_side_position(self, task):
@@ -102,6 +102,7 @@ class Camera3D:
         if self.steps == 0:
             return Task.done
         return Task.cont
+
 
 class Camera2D:
     MAX_FOV = 45
@@ -125,14 +126,10 @@ class Camera2D:
         self._set_pos()
         self.camera.setH(angle)
 
-
     def set_default(self):
         pass
 
     def update_pos(self, new_x, new_y):
-        pass
-
-    def update_on_mouse_wheel(self, mouse_wheel):
         pass
 
     def _set_pos(self):

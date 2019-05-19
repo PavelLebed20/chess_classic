@@ -28,7 +28,7 @@ class MinmaxBot(Player):
         self.game_controller = game_controller
         self.is_move_calculating = False
         self.value = None
-        self.depth = 3
+        self.depth = 2
         self.pawn_swaped_figure = None
         self.pawn_swaped_latters = None
         if self.side is Side.WHITE:
