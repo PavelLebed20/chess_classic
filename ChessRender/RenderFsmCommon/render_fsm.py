@@ -123,7 +123,7 @@ class RenderFsm(ShowBase):
         elif key == "fsm:Matchmaking":
             return FsmStateMatchmaking(self.process_find_player)
         elif key == "fsm:SkinSelect":
-            return FsmStateSkinSelect(self, self.process_skin_select)#, self.avail_packs)
+            return FsmStateSkinSelect(self, self.process_skin_select, self.avail_packs)
         elif key == "fsm:AuthConfirm":
             return FsmStateAuthConfirm(self.process_confirm_auth)
         elif key == "fsm:WinSettings":

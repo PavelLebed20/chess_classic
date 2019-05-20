@@ -13,7 +13,7 @@ from ChessRender.RenderFsmCommon.screen_states import ScreenState
 
 
 class FsmStateSkinSelect(ScreenState):
-    def __init__(self, render_fsm, process_skin_select, avail_packs=["pack0", "pack13"]):
+    def __init__(self, render_fsm, process_skin_select, avail_packs=["pack0", "pack1"]):
         ScreenState.__init__(self)
         self.button_sizes = (-2, 2, -0.4, 0.8)
         self.render_fsm_ref = render_fsm
