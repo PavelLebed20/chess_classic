@@ -7,6 +7,7 @@
 * Pawn promotion
 * Game info background 
 * User executable archive
+* License under Apache 2.0
 # Fixed
 * Auth message send
 * Pawn move bug 
