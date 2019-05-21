@@ -30,11 +30,11 @@ class FsmStateSkinSelect(ScreenState):
         render_fsm.accept("wheel_up", self.wheel_up)
         render_fsm.accept("wheel_down", self.wheel_down)
 
-        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (0.5, 0, 0.8))
-        self.screen_atributes.buttons["but:Prev"] = ButtonFsm("<--", (-0.5, 0, -0.5))
-        self.screen_atributes.buttons["but:Next"] = ButtonFsm("-->", (0.5, 0, -0.5))
-        self.screen_atributes.buttons["but:Confirm"] = ButtonFsm("Confirm", (0.5, 0, -0.8))
-        self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (-0.5, 0, -0.8))
+        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (0.5, 0, 0.8), None, None, None, (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:Prev"] = ButtonFsm("<--", (-0.5, 0, -0.5), None, None, None, (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:Next"] = ButtonFsm("-->", (0.5, 0, -0.5), None, None, None, (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:Confirm"] = ButtonFsm("Confirm", (0.5, 0, -0.8), None, None, None, (2.2, 1, 1))
+        self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (-0.5, 0, -0.8), None, None, None, (2.2, 1, 1))
 
         #self.screen_atributes.option_lists["oplst:PackName"] = OptionListFsm("Pack",
         #                                                                     avail_packs,

@@ -3,6 +3,7 @@ from direct.gui.DirectEntry import DirectEntry
 from direct.gui.DirectOptionMenu import DirectOptionMenu
 from direct.gui.DirectRadioButton import DirectRadioButton
 from direct.gui.OnscreenText import OnscreenText
+from panda3d.core import TransparencyAttrib
 
 
 class ScreenAtributes:
@@ -24,6 +25,7 @@ class ScreenState:
         self.radio_button_var = [0]
 
         self.button_sizes = (-3, 3, -0.4, 0.8) # default sizes
+        self.image_sizes = (5, 1, 1) # default sizes
 
     def initialize_button_links(self):
         pass
@@ -57,15 +59,25 @@ class ScreenState:
                 button_sizes = self.button_sizes
             else:
                 button_sizes = button.new_size
+            if button.image_sizes is None:
+                image_sizes = self.image_sizes
+            else:
+                image_sizes = button.image_sizes
 
+            self.texture = loader.loadTexture("ChessRender\data\\button.png")
             gui_button = DirectButton(text=button.title, scale=0.2,
+                                      relief=None,
                                       command=commad_and_link,
                                       extraArgs=[command_lambda, link_lambda, render_fsm, button],
                                       pos=(pos[0], pos[1], pos[2]),
                                       frameColor=((0.8, 0.8, 0.8, 0.8), (0.4, 0.4, 0.4, 0.8), (0.4, 0.4, 0.8, 0.8),
                                                   (0.1, 0.1, 0.1, 0.8)),
-                                      frameSize=button_sizes
-                                     )
+                                      frameSize=button_sizes,
+                                      image=self.texture,
+                                      image_scale=image_sizes,
+                                      image_pos=(0, 0, 0.25)
+                                      )
+            gui_button.setTransparency(TransparencyAttrib.MAlpha)
             self.screen_atributes.scene_nodes.append(gui_button)
 
 
