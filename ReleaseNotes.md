@@ -1,4 +1,16 @@
 # Release Notes
+## Version 2.1.0 (Sprint 6) (22.05.2019)
+### New Features
+* Funny win packs process
+* New beautiful packs
+* 2d camera control, friend play camera autorotation
+* Pawn promotion
+* Game info background 
+* User executable archive
+* License under Apache 2.0
+# Fixed
+* Auth message send
+* Pawn move bug 
 ## Version 2.0.0 (Sprint 5) (08.05.2019)
 ### New Features
 * Game over full obtain
