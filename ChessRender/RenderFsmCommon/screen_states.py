@@ -25,6 +25,7 @@ class ScreenState:
         self.radio_button_var = [0]
 
         self.button_sizes = (-3, 3, -0.4, 0.8) # default sizes
+        self.image_sizes = (5, 1, 1) # default sizes
 
     def initialize_button_links(self):
         pass
@@ -58,12 +59,12 @@ class ScreenState:
                 button_sizes = self.button_sizes
             else:
                 button_sizes = button.new_size
+            if button.image_sizes is None:
+                image_sizes = self.image_sizes
+            else:
+                image_sizes = button.image_sizes
 
-            self.button_texture_obj = loader.loadModel("ChessRender\data\\button_maps.egg")
-            self.button_texture_obj.setColor((0.8, 0.8, 0.8, 0.8))
             self.texture = loader.loadTexture("ChessRender\data\\button.png")
-            self.button_texture_obj.setTexture(self.texture)
-
             gui_button = DirectButton(text=button.title, scale=0.2,
                                       relief=None,
                                       command=commad_and_link,
@@ -72,7 +73,9 @@ class ScreenState:
                                       frameColor=((0.8, 0.8, 0.8, 0.8), (0.4, 0.4, 0.4, 0.8), (0.4, 0.4, 0.8, 0.8),
                                                   (0.1, 0.1, 0.1, 0.8)),
                                       frameSize=button_sizes,
-                                      image=[self.button_texture_obj, self.button_texture_obj, self.button_texture_obj, self.button_texture_obj],
+                                      image=self.texture,
+                                      image_scale=image_sizes,
+                                      image_pos=(0, 0, 0.25)
                                       )
             gui_button.setTransparency(TransparencyAttrib.MAlpha)
             self.screen_atributes.scene_nodes.append(gui_button)

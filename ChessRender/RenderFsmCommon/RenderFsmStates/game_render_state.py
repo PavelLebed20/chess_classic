@@ -63,8 +63,8 @@ class FsmStateGameState(ScreenState):
 
         self.lights = Lights(base, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
 
-        self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-1, 0, 0.8))
-        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (1, 0, 0.8))
+        self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-1, 0, 0.8), None, None, None, (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (1, 0, 0.8), None, None, None, (1.8, 0.8, 0.8))
         self.initialize_button_links()
 
         self.init_ray()
