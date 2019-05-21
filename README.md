@@ -37,6 +37,9 @@ offline game against AI with chess board and figures skinning.
 * set mixed authorization mode
 * Run postgeSQL
 * run db/postgrs/install_full.py
+## Download archive
+* https://yadi.sk/d/E8n5qVb3lquqGw - link to a disk with installation archive
+
 # Git workflow
 * Main demonstration branch - *master*
 * Main coding branch - *develop*
