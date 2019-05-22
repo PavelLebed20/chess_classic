@@ -91,7 +91,9 @@ class RenderFsm(ShowBase):
         self.cur_state_key = key
         if key == "fsm:MainMenu":
             return FsmStateMainMenu(self.is_client_connected_to_server,
-                                    self.process_continue_online_game, self.on_application_exit)
+                                    self.process_continue_online_game,
+                                    self.on_application_exit,
+                                    self)
         elif key == "fsm:SinglePlayerLobby":
             return FsmStateSinglePlayerLobby(self.process_offline_with_computer, self.process_offline_with_firend, self.process_reset_save_data_friend, self.process_reset_save_data_computer)
         elif key == "fsm:GameState":

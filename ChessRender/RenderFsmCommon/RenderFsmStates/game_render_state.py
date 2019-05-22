@@ -2,7 +2,7 @@ import copy
 from enum import Enum
 
 from direct.gui.OnscreenText import CollisionTraverser, CollisionHandlerQueue, CollisionNode, \
-    CollisionRay, OnscreenText, TransparencyAttrib
+    CollisionRay, OnscreenText, TransparencyAttrib, CollisionSphere
 from direct.task import Task
 from panda3d.core import BitMask32, LPoint3
 from direct.gui.DirectButton import DirectButton
@@ -38,6 +38,7 @@ class FsmStateGameState(ScreenState):
 
         self.init_sky_sphere()
         self.squares = [None for i in range(64)]
+        self.cubes = [None for i in range(64)]
         self.init_nodes_to_chsess_board()
         self.init_info_panel()
         self.pawn_change_panel = None
@@ -132,6 +133,9 @@ class FsmStateGameState(ScreenState):
         for square in self.squares:
             square.removeNode()
         self.skysphere.removeNode()
+
+        for cube in self.cubes:
+            cube.removeNode()
 
         self.lights.unset()
         for key in self.text_info:
@@ -304,7 +308,7 @@ class FsmStateGameState(ScreenState):
 
                 if self.dimension is Dimension._3D:
                     self.figures[key] = self.objMngr.load_figure_model(self.str_board[key])
-                    self.figures[key].setPos(self.SquarePos(key))
+                    self.figures[key].setPos(self.FigurePos3D(key))
                 else:
                     self.figures[key] = self.objMngr.load_figure_model_2D(self.str_board[key])
                     if self.side is Side.WHITE:
@@ -335,8 +339,17 @@ class FsmStateGameState(ScreenState):
             self.squares[i] = loader.loadModel("ChessRender/data/chess_board/square")
             self.squares[i].setTexture(self.SquareTexture(i))
             self.squares[i].reparentTo(self.squareRoot)
-            self.squares[i].setPos(self.SquarePos(i))
+            self.squares[i].setPos(self.SquareOnCubePos3D(i))
             #self.squares[i].setColor(self.SquareColor(i))
+
+            self.cubes[i] = self.objMngr.load_cube()
+            self.cubes[i].setColor(self.SquareColor(i))
+            self.cubes[i].reparentTo(self.squareRoot)
+            self.cubes[i].setPos(self.SquarePos(i))
+            self.cubes[i].setScale(0.5)
+            self.cubes[i].setColor(self.SquareColor(i))
+            self.cubes[i].setTexture(self.SquareTexture(i))
+
 
             # Set the model itself to be collideable with the ray. If this model was
             # any more complex than a single polygon, you should set up a collision
@@ -405,7 +418,15 @@ class FsmStateGameState(ScreenState):
             return (0.98, 0.82, 0.01, 1)
 
     def SquarePos(self, i):
+        #if i % 2 is 1:
+        return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, -0.5)
+
+    def FigurePos3D(self, i):
+        #if i % 2 is 1:
         return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0)
+
+    def SquareOnCubePos3D(self, i):
+        return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, -0.01)
 
     def FigurePos2D(self, i):
         return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0.3)

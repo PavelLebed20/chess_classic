@@ -118,7 +118,10 @@ class Camera2D:
         self.camera = camera
         self.z = 25
         self.x = 0
-        self.y = 0
+        if angle == 180: #WHITE_ANGLE
+            self.y = -0.4
+        else:
+            self.y = 0.4
 
         self.fov_angle = (self.MAX_FOV + self.MIN_FOV) / 2
 
