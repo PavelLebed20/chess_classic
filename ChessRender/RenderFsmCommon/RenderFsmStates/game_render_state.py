@@ -109,10 +109,6 @@ class FsmStateGameState(ScreenState):
         else:
             angle = Camera2D.WHITE_ANGLE if self.side is Side.WHITE else Camera2D.BLACK_ANGLE
             self.camera_p = Camera2D(base.camera, base.camLens, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height, angle)
-            # rotate figures
-            for i in range(0, len(self.figures)):
-                if self.figures[i] is not None:
-                    self.figures[i].setHpr(angle, -90, 0)
 
     def init_sky_sphere(self):
         if self.side is Side.WHITE:
@@ -203,10 +199,10 @@ class FsmStateGameState(ScreenState):
             # We have let go of the piece, but we are not on a square
             if self.dimension is Dimension._3D:
                 self.figures[self.dragging].setPos(
-                    self.SquarePos(self.dragging))
+                    self.FigurePos(self.dragging))
             else:
                 self.figures[self.dragging].setPos(
-                    self.FigurePos2D(self.dragging))
+                    self.FigurePos(self.dragging))
             if self.render_fsm_ref.process_set_move_player is not None:
                 move = Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8))
                 if self.figures[self.dragging].getTag("figue_lat") is "p" and self.hiSq // 8 is 7:
@@ -247,9 +243,15 @@ class FsmStateGameState(ScreenState):
         self.figures[fr] = self.figures[to]
         self.figures[to] = temp
         if self.figures[fr]:
-            self.figures[fr].setPos(self.SquarePos(fr))
+            self.figures[fr].setPos(self.FigurePos(fr))
         if self.figures[to]:
-            self.figures[to].setPos(self.SquarePos(to))
+            self.figures[to].setPos(self.FigurePos(to))
+
+    def FigurePos(self, key):
+        if self.dimension == Dimension._3D:
+            return self.FigurePos3D(key)
+        else:
+            return self.FigurePos2D(key)
 
     def mouse_task(self):
         mouse_watcher = base.mouseWatcherNode
@@ -308,14 +310,14 @@ class FsmStateGameState(ScreenState):
 
                 if self.dimension is Dimension._3D:
                     self.figures[key] = self.objMngr.load_figure_model(self.str_board[key])
-                    self.figures[key].setPos(self.FigurePos3D(key))
+                    self.figures[key].setPos(self.FigurePos(key))
                 else:
                     self.figures[key] = self.objMngr.load_figure_model_2D(self.str_board[key])
                     if self.side is Side.WHITE:
                         self.figures[key].setHpr(180, -90, 0)
                     else:
                         self.figures[key].setHpr(0, -90, 0)
-                    self.figures[key].setPos(self.FigurePos2D(key))
+                    self.figures[key].setPos(self.FigurePos(key))
 
                 self.figures[key].reparentTo(self.render_fsm_ref.render)
                 self.figures[key].setTag("figue_tag", str(key))
