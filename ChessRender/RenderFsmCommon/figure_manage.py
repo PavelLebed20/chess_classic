@@ -8,9 +8,9 @@ import copy
 from enum import Enum, IntEnum
 from direct.gui.OnscreenText import TransparencyAttrib
 
-BLACK = (0.8, 0.3, 0.5, 1)
+BLACK = (0.15, 0.15, 0.15, 1)
 #BLACK = (0.0, 0.0, 0.0, 1)
-WHITE = (1, 1, 1, 1)
+WHITE = (0.75, 0.75, 0.75, 1)
 
 class RenderState(Enum):
     DEFAULT = -1
@@ -123,6 +123,11 @@ class FigureMngr:
         texture = copy.deepcopy(self.textures[render_object])
         obj.set_texture(texture)
         obj.setTransparency(TransparencyAttrib.MAlpha)
+        return obj
+
+    def load_cube(self):
+        self.data_path = "ChessRender/data/"
+        obj = loader.loadModel(self.data_path + "cube.egg")
         return obj
 
     def load_plane_textured(self, texture_path):

@@ -2,7 +2,7 @@ import copy
 from enum import Enum
 
 from direct.gui.OnscreenText import CollisionTraverser, CollisionHandlerQueue, CollisionNode, \
-    CollisionRay, OnscreenText, TransparencyAttrib
+    CollisionRay, OnscreenText, TransparencyAttrib, CollisionSphere
 from direct.task import Task
 from panda3d.core import BitMask32, LPoint3
 from direct.gui.DirectButton import DirectButton
@@ -38,6 +38,7 @@ class FsmStateGameState(ScreenState):
 
         self.init_sky_sphere()
         self.squares = [None for i in range(64)]
+        self.cubes = [None for i in range(64)]
         self.init_nodes_to_chsess_board()
         self.init_info_panel()
         self.pawn_change_panel = None
@@ -108,10 +109,6 @@ class FsmStateGameState(ScreenState):
         else:
             angle = Camera2D.WHITE_ANGLE if self.side is Side.WHITE else Camera2D.BLACK_ANGLE
             self.camera_p = Camera2D(base.camera, base.camLens, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height, angle)
-            # rotate figures
-            for i in range(0, len(self.figures)):
-                if self.figures[i] is not None:
-                    self.figures[i].setHpr(angle, -90, 0)
 
     def init_sky_sphere(self):
         if self.side is Side.WHITE:
@@ -132,6 +129,9 @@ class FsmStateGameState(ScreenState):
         for square in self.squares:
             square.removeNode()
         self.skysphere.removeNode()
+
+        for cube in self.cubes:
+            cube.removeNode()
 
         self.lights.unset()
         for key in self.text_info:
@@ -199,10 +199,10 @@ class FsmStateGameState(ScreenState):
             # We have let go of the piece, but we are not on a square
             if self.dimension is Dimension._3D:
                 self.figures[self.dragging].setPos(
-                    self.SquarePos(self.dragging))
+                    self.FigurePos(self.dragging))
             else:
                 self.figures[self.dragging].setPos(
-                    self.FigurePos2D(self.dragging))
+                    self.FigurePos(self.dragging))
             if self.render_fsm_ref.process_set_move_player is not None:
                 move = Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8))
                 if self.figures[self.dragging].getTag("figue_lat") is "p" and self.hiSq // 8 is 7:
@@ -243,9 +243,15 @@ class FsmStateGameState(ScreenState):
         self.figures[fr] = self.figures[to]
         self.figures[to] = temp
         if self.figures[fr]:
-            self.figures[fr].setPos(self.SquarePos(fr))
+            self.figures[fr].setPos(self.FigurePos(fr))
         if self.figures[to]:
-            self.figures[to].setPos(self.SquarePos(to))
+            self.figures[to].setPos(self.FigurePos(to))
+
+    def FigurePos(self, key):
+        if self.dimension == Dimension._3D:
+            return self.FigurePos3D(key)
+        else:
+            return self.FigurePos2D(key)
 
     def mouse_task(self):
         mouse_watcher = base.mouseWatcherNode
@@ -304,14 +310,14 @@ class FsmStateGameState(ScreenState):
 
                 if self.dimension is Dimension._3D:
                     self.figures[key] = self.objMngr.load_figure_model(self.str_board[key])
-                    self.figures[key].setPos(self.SquarePos(key))
+                    self.figures[key].setPos(self.FigurePos(key))
                 else:
                     self.figures[key] = self.objMngr.load_figure_model_2D(self.str_board[key])
                     if self.side is Side.WHITE:
                         self.figures[key].setHpr(180, -90, 0)
                     else:
                         self.figures[key].setHpr(0, -90, 0)
-                    self.figures[key].setPos(self.FigurePos2D(key))
+                    self.figures[key].setPos(self.FigurePos(key))
 
                 self.figures[key].reparentTo(self.render_fsm_ref.render)
                 self.figures[key].setTag("figue_tag", str(key))
@@ -335,8 +341,17 @@ class FsmStateGameState(ScreenState):
             self.squares[i] = loader.loadModel("ChessRender/data/chess_board/square")
             self.squares[i].setTexture(self.SquareTexture(i))
             self.squares[i].reparentTo(self.squareRoot)
-            self.squares[i].setPos(self.SquarePos(i))
+            self.squares[i].setPos(self.SquareOnCubePos3D(i))
             #self.squares[i].setColor(self.SquareColor(i))
+
+            self.cubes[i] = self.objMngr.load_cube()
+            self.cubes[i].setColor(self.SquareColor(i))
+            self.cubes[i].reparentTo(self.squareRoot)
+            self.cubes[i].setPos(self.SquarePos(i))
+            self.cubes[i].setScale(0.5)
+            self.cubes[i].setColor(self.SquareColor(i))
+            self.cubes[i].setTexture(self.SquareTexture(i))
+
 
             # Set the model itself to be collideable with the ray. If this model was
             # any more complex than a single polygon, you should set up a collision
@@ -405,7 +420,15 @@ class FsmStateGameState(ScreenState):
             return (0.98, 0.82, 0.01, 1)
 
     def SquarePos(self, i):
+        #if i % 2 is 1:
+        return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, -0.5)
+
+    def FigurePos3D(self, i):
+        #if i % 2 is 1:
         return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0)
+
+    def SquareOnCubePos3D(self, i):
+        return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, -0.01)
 
     def FigurePos2D(self, i):
         return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0.3)

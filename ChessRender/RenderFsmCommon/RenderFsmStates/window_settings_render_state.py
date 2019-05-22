@@ -60,7 +60,7 @@ class FsmStateWindowSettings(ScreenState):
             props.clearSize()
             props.setTitle('Chess Classic')
             props.setSize(DEFAULT16x9SCREEN_W, DEFAULT16x9SCREEN_H)
-            props.setFixedSize(True)
+            #props.setFixedSize(True)
             self.render_fsm_ref.win.requestProperties(props)
 
         # 4:3
@@ -69,7 +69,7 @@ class FsmStateWindowSettings(ScreenState):
             props.clearSize()
             props.setTitle('Chess Classic')
             props.setSize(DEFAULT4x3SCREEN_W, DEFAULT4x3SCREEN_H)
-            props.setFixedSize(True)
+            #props.setFixedSize(True)
             self.render_fsm_ref.win.requestProperties(props)
 
     def clear(self):
