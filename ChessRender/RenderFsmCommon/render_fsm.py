@@ -92,6 +92,8 @@ class RenderFsm(ShowBase):
 
         self.message = None
 
+        self.get_loacal_player_rating = None
+
     def init_state_by_key(self, key):
         if self.cur_state_key is not None:
             self.prev_render_not_message_state_key = self.cur_state_key
@@ -131,7 +133,7 @@ class RenderFsm(ShowBase):
         elif key == "fsm:Message":
             return FsmStateMessage(self.message, self)
         elif key == "fsm:Matchmaking":
-            return FsmStateMatchmaking(self.process_find_player)
+            return FsmStateMatchmaking(self.process_find_player, self)
         elif key == "fsm:SkinSelect":
             return FsmStateSkinSelect(self, self.process_skin_select, self.avail_packs)
         elif key == "fsm:AuthConfirm":

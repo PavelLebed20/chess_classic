@@ -73,6 +73,8 @@ class Engine:
         self.render.process_reset_save_data_friend = self.process_reset_save_data_friend
         self.render.process_reset_save_data_computer = self.process_reset_save_data_computer
 
+        self.render.get_loacal_player_rating = self.get_loacal_player_rating
+
         self.render.get_cur_turn_side = self.get_cur_turn_side
         self.player_turn = None
 
@@ -302,7 +304,6 @@ class Engine:
             self.offline_with_computer_match_data.white_player_data.player_init(self.players[0])
             self.offline_with_computer_match_data.black_player_data.player_init(self.players[1])
 
-
         self.render.side = Side.WHITE
         self.render.process_set_move_player = self.players[self.player_turn].set_move
         self.game_result = -1
@@ -337,7 +338,6 @@ class Engine:
             self.offline_with_friend_match_data.white_player_data.player_init(self.players[0])
             self.offline_with_friend_match_data.black_player_data.player_init(self.players[1])
 
-
         self.render.side = Side.WHITE
         self.render.process_set_move_player = self.players[self.player_turn].set_move
         self.game_result = -1
@@ -345,7 +345,6 @@ class Engine:
 
         self.offline_game_played = None
         self.current_offline_game_mode = OfflineGameMode.WITH_FRIEND
-
 
         self.game_state = GameStates.OFFLINE_GAME
 
@@ -427,6 +426,12 @@ class Engine:
         while self.server_calculation:
             sleep(5.0 / 1000.0)
         self.server_calculation = True
+
+        if 'error' in text_dict:
+            self.render.message = text_dict['error']
+            self.render.change_state(self.render, "fsm:Message")
+            return
+
         if self.render.cur_state_key == "fsm:GameState":
             return
         if 'not_verified' in text_dict:
@@ -586,6 +591,6 @@ class Engine:
             self.client.disconnect()
         sys.exit()
 
-
-
+    def get_loacal_player_rating(self):
+        return self.rate
 
