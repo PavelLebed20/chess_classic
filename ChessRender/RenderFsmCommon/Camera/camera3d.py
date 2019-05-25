@@ -155,3 +155,25 @@ class Camera2D:
         elif self.fov_angle > self.MAX_FOV:
             self.fov_angle = self.MAX_FOV
         self._set_pos()
+
+
+class CameraMenu:
+    def __init__(self, camera, lens):
+        self.lens = lens
+        self.camera = camera
+        self.radius = 15
+        self.z = 0
+        self.x = 0
+        self.y = 0
+
+        self.lookat_angle = 0
+
+    def update_on_task_rotate(self, task):
+        self.lookat_angle += 0.001
+        self._set_pos()
+        return Task.cont
+
+    def _set_pos(self):
+        self.camera.setPos(self.x, self.y, self.z)
+        self.camera.lookAt(cos(self.lookat_angle), sin(self.lookat_angle), sin(self.lookat_angle))
+        #self.lens.setFov(self.fov_angle)

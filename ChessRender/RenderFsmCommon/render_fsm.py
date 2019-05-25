@@ -5,6 +5,7 @@ from direct.showbase.ShowBase import ShowBase, WindowProperties
 from direct.task import Task
 
 from ChessBoard.chess_figure import Side
+from ChessRender.RenderFsmCommon.Camera.camera3d import CameraMenu
 from ChessRender.RenderFsmCommon.RenderFsmStates.auth_confirm_state import FsmStateAuthConfirm
 from ChessRender.RenderFsmCommon.RenderFsmStates.game_render_state import FsmStateGameState
 from ChessRender.RenderFsmCommon.RenderFsmStates.login_render_state import FsmStateLogin
@@ -94,6 +95,18 @@ class RenderFsm(ShowBase):
 
         self.get_loacal_player_rating = None
 
+        self.init_sky_sphere()
+        self.camera_m = CameraMenu(base.camera, base.camLens)
+        self.taskMgr.add(self.camera_m.update_on_task_rotate, 'camRotTask')
+
+    def init_sky_sphere(self):
+        self.skysphere = loader.loadModel("ChessRender/data/menu_cubemap1.bam")
+        self.skysphere.setBin('background', 1)
+        self.skysphere.setDepthWrite(0)
+        self.skysphere.reparentTo(render)
+        self.skysphere.setPos(0, 0, 0)
+        self.skysphere.setScale(25)
+
     def init_state_by_key(self, key):
         if self.cur_state_key is not None:
             self.prev_render_not_message_state_key = self.cur_state_key
@@ -108,6 +121,7 @@ class RenderFsm(ShowBase):
             return FsmStateSinglePlayerLobby(self.process_offline_with_computer, self.process_offline_with_firend, self.process_reset_save_data_friend, self.process_reset_save_data_computer)
         elif key == "fsm:GameState":
             if isinstance(self.cur_state, FsmStateSinglePlayerLobby):
+                self.taskMgr.remove('camRotTask')
                 return FsmStateGameState(self,
                                          self.whiteside_pack_name,
                                          self.blackside_pack_name,
