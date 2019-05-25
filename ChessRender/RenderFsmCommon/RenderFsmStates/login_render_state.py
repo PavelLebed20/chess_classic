@@ -5,7 +5,7 @@ from ChessRender.RenderFsmCommon.text_field_fsm import TextFieldFsm
 
 
 class FsmStateLogin(ScreenState):
-    def __init__(self, process_login):
+    def __init__(self, process_login, render_fsm):
         ScreenState.__init__(self)
 
         self.screen_atributes.buttons["but:Confirm"] = ButtonFsm("Confirm", (0, 0, -0.5))
@@ -23,9 +23,11 @@ class FsmStateLogin(ScreenState):
         self.password_field = None
 
         self.process_login = process_login
+        self.render_fsm_ref = render_fsm
+        self.render_fsm_ref.message = "Loading..."
 
     def initialize_button_links(self):
-        self.screen_atributes.buttons["but:Confirm"].add_link("fsm:Load")
+        self.screen_atributes.buttons["but:Confirm"].add_link("fsm:Message")
         self.screen_atributes.buttons["but:Confirm"].add_command(self.confirm_command)
         self.screen_atributes.buttons["but:Back"].add_link("fsm:Multiplayer")
 

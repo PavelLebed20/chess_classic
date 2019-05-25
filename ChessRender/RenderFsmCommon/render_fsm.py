@@ -7,7 +7,6 @@ from direct.task import Task
 from ChessBoard.chess_figure import Side
 from ChessRender.RenderFsmCommon.RenderFsmStates.auth_confirm_state import FsmStateAuthConfirm
 from ChessRender.RenderFsmCommon.RenderFsmStates.game_render_state import FsmStateGameState
-from ChessRender.RenderFsmCommon.RenderFsmStates.load_render_state import FsmStateLoad
 from ChessRender.RenderFsmCommon.RenderFsmStates.login_render_state import FsmStateLogin
 from ChessRender.RenderFsmCommon.RenderFsmStates.main_menu_render_state import FsmStateMainMenu
 from ChessRender.RenderFsmCommon.RenderFsmStates.match_making_state import FsmStateMatchmaking
@@ -18,6 +17,8 @@ from ChessRender.RenderFsmCommon.RenderFsmStates.skin_select_render_state import
 from ChessRender.RenderFsmCommon.RenderFsmStates.win_pack_render_state import FsmStateWinPack
 from ChessRender.RenderFsmCommon.RenderFsmStates.window_settings_render_state import FsmStateWindowSettings, \
     DEFAULT16x9SCREEN_W, DEFAULT16x9SCREEN_H
+
+from ChessRender.RenderFsmCommon.RenderFsmStates.message_render_state import FsmStateMessage
 from ChessSound.Sound import Sound, SoundTypes
 
 
@@ -87,7 +88,14 @@ class RenderFsm(ShowBase):
 
         self.win_pack = None
 
+        self.prev_render_not_message_state_key = None
+
+        self.message = None
+
     def init_state_by_key(self, key):
+        if self.cur_state_key is not None:
+            self.prev_render_not_message_state_key = self.cur_state_key
+
         self.cur_state_key = key
         if key == "fsm:MainMenu":
             return FsmStateMainMenu(self.is_client_connected_to_server,
@@ -117,11 +125,11 @@ class RenderFsm(ShowBase):
         elif key == "fsm:Multiplayer":
             return FsmStateMultiplayer()
         elif key == "fsm:Login":
-            return FsmStateLogin(self.process_login)
+            return FsmStateLogin(self.process_login, self)
         elif key == "fsm:Registration":
             return FsmStateRegistration(self.process_registration)
-        elif key == "fsm:Load":
-            return FsmStateLoad()
+        elif key == "fsm:Message":
+            return FsmStateMessage(self.message, self)
         elif key == "fsm:Matchmaking":
             return FsmStateMatchmaking(self.process_find_player)
         elif key == "fsm:SkinSelect":
@@ -132,6 +140,8 @@ class RenderFsm(ShowBase):
             return FsmStateWindowSettings(self)
         elif key == "fsm:WinPack":
             return FsmStateWinPack(self.win_pack)
+        else:
+            assert (False, "Incorrect fsm state")
 
     def render(self):
         self.cur_state.render(self)
@@ -154,6 +164,9 @@ class RenderFsm(ShowBase):
         else:
             render_fsm.sound.turn_off_all()
         self.on_update_now = False
+
+    def go_to_prev_state(self):
+        self.change_state(self, self.prev_render_not_message_state_key)
 
     # Mouse functions
     def mouse_task(self, task):
