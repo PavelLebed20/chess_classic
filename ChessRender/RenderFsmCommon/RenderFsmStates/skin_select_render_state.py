@@ -114,6 +114,8 @@ class FsmStateSkinSelect(ScreenState):
         self.lights.unset()
         self.cur_model_node.removeNode()
         self.my_scrolled_list.removeNode()
+        self.render_fsm_ref.taskMgr.remove('camRotTask')
+        self.render_fsm_ref.taskMgr.add(self.render_fsm_ref.camera_m.update_on_task_rotate, 'camRotTask')
 
     def get_next(self):
         self.cur_model_num += 1

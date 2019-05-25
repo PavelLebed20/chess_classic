@@ -159,6 +159,7 @@ class FsmStateGameState(ScreenState):
                 icon.removeNode()
         self.render_fsm_ref.is_clearing = False
 
+        self.render_fsm_ref.taskMgr.remove('camRotTask')
         self.render_fsm_ref.taskMgr.add(self.render_fsm_ref.camera_m.update_on_task_rotate, 'camRotTask')
 
     def on_exit(self):

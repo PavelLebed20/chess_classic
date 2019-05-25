@@ -149,6 +149,7 @@ class RenderFsm(ShowBase):
         elif key == "fsm:Matchmaking":
             return FsmStateMatchmaking(self.process_find_player, self)
         elif key == "fsm:SkinSelect":
+            self.taskMgr.remove('camRotTask')
             return FsmStateSkinSelect(self, self.process_skin_select, self.avail_packs)
         elif key == "fsm:AuthConfirm":
             return FsmStateAuthConfirm(self.process_confirm_auth)

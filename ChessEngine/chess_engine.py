@@ -5,6 +5,7 @@
 ###############################
 import copy
 import sys
+import threading
 from enum import Enum
 from time import sleep
 
@@ -386,7 +387,12 @@ class Engine:
         keys are one the string const of the form L_SOME (see. UIPrimitives.room)
         values are strings (print by user)
         """
+        self.login_process_thead = threading.Thread(target=self.login_process_theading,
+                                                    args=(text_dict,))
+        self.login_process_thead.start()
 
+    def login_process_theading(self, text_dict):
+        print("a")
         login = text_dict["Login"]
         password = text_dict["Password"]
 
