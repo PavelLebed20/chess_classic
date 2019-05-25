@@ -333,7 +333,6 @@ class FsmStateGameState(ScreenState):
 
     def init_nodes_to_chsess_board(self):
         self.squareRoot = self.render_fsm_ref.render.attachNewNode("squareRoot")
-
         # For each square
         for i in range(64):
             # Load, parent, color, and position the model (a single square
@@ -349,6 +348,9 @@ class FsmStateGameState(ScreenState):
             self.cubes[i].reparentTo(self.squareRoot)
             self.cubes[i].setPos(self.SquarePos(i))
             self.cubes[i].setScale(0.5)
+
+            #self.cubes[i].setShaderAuto()
+
             self.cubes[i].setColor(self.SquareColor(i))
             self.cubes[i].setTexture(self.SquareTexture(i))
 
