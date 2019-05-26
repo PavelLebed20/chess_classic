@@ -116,8 +116,9 @@ class FsmStateGameState(ScreenState):
 
         self.lights = Lights(base, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
 
-        self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-1, 0, 0.8), None, None, None, (1.8, 0.8, 0.8))
-        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (1, 0, 0.8), None, None, None, (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:Give up"] = ButtonFsm("Give up", (-1, 0, 0.87), None, None, (-1.6, 1.6, -0.3, 0.9), (1.8, 0.8, 0.8), 0.1)
+        self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (-1, 0, 0.73), None, None, (-1.6, 1.6, -0.3, 0.9), (1.8, 0.8, 0.8), 0.1)
+        self.screen_atributes.buttons["but:2D/3D"] = ButtonFsm("2D/3D", (1, 0, 0.8), None, None, None, (1.8, 0.8, 0.8), 0.2)
         self.initialize_button_links()
 
         self.init_ray()
@@ -222,6 +223,7 @@ class FsmStateGameState(ScreenState):
         self.screen_atributes.buttons["but:Exit"].add_command(self.on_exit)
         self.screen_atributes.buttons["but:Exit"].add_link(self.exit_link)
         self.screen_atributes.buttons["but:2D/3D"].add_command(self.change_dimension)
+        self.screen_atributes.buttons["but:Give up"].add_command(self.render_fsm_ref.on_press_giveup_button)
 
     def wheel_up(self):
         self.camera_p.update_on_mouse_wheel(1)

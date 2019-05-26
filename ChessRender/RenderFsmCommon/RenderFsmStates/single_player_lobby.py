@@ -6,13 +6,14 @@ class FsmStateSinglePlayerLobby(ScreenState):
     def __init__(self, process_game_with_computer, process_game_with_firend, process_reset_save_data_friend, process_reset_save_data_computer):
         ScreenState.__init__(self)
         self.button_sizes = (-4, 4, -0.5, 1)
-        self.screen_atributes.buttons["but:2Players"] = ButtonFsm("With friend", (-0.5, 0, 0.4), None, None, None, (4, 1, 1))
-        self.screen_atributes.buttons["but:Computer"] = ButtonFsm("With computer", (-0.5, 0, 0), None, None, None, (4, 1, 1))
+        self.screen_atributes.buttons["but:2Players"] = ButtonFsm("With friend", (-0.5, 0, 0.4), None, None, None, (4, 1, 1), 0.15)
+        self.screen_atributes.buttons["but:Computer"] = ButtonFsm("With computer", (-0.5, 0, 0), None, None, None, (4, 1, 1), 0.15)
 
-        self.screen_atributes.buttons["but:2PlayersReset"] = ButtonFsm("Reset", (0.8, 0, 0.4), None, None, (-1.3, 1.4, -0.5, 1), (3, 1, 1))
-        self.screen_atributes.buttons["but:ComputerReset"] = ButtonFsm("Reset", (0.8, 0, 0),  None, None, (-1.3, 1.4, -0.5, 1), (3, 1, 1))
+        self.screen_atributes.buttons["but:2PlayersReset"] = ButtonFsm("Reset", (0.8, 0, 0.4), None, None, (-1.3, 1.4, -0.5, 1), (3, 1, 1), 0.15)
+        self.screen_atributes.buttons["but:ComputerReset"] = ButtonFsm("Reset", (0.8, 0, 0),  None, None, (-1.3, 1.4, -0.5, 1), (3, 1, 1), 0.15)
 
         self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (0, 0, -0.8))
+        self.screen_atributes.buttons["but:Back"].scale = 0.15
 
         self.process_game_with_computer = process_game_with_computer
         self.process_game_with_firend = process_game_with_firend

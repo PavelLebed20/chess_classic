@@ -92,6 +92,7 @@ class ScreenState:
                                                       (0.1, 0.1, 0.1, 0.8)),
                                           frameSize=button_sizes,
                                           )
+            gui_button.setScale(button.scale)
             self.screen_atributes.scene_nodes.append(gui_button)
 
 
