@@ -61,7 +61,7 @@ class Engine:
         Initialize Engine class function
         """
         self.render = RenderFsm()
-        self.server_address = 'https://chessservertest.herokuapp.com'
+        self.server_address = 'http://localhost:8000'# 'https://chessservertest.herokuapp.com'
 
         self.render.on_application_exit = self.on_application_exit
         #### - functions to process data from users
@@ -126,7 +126,8 @@ class Engine:
                                  on_update_call=self.on_update_game,
                                  on_update_time_call=self.on_update_time,
                                  on_avail_packs_call=self.on_avail_packs,
-                                 on_win_pack_call=self.process_win_pack)
+                                 on_win_pack_call=self.process_win_pack,
+                                 on_find_pairing_list_call=self.process_pairing_list)
 
     def step(self, task):
         """
@@ -570,6 +571,10 @@ class Engine:
         self.client.send_message('find_pair',
                                  'low_rate={0}&hight_rate={1}&game_time={2}&move_time={3}'
                                  .format(min_rate, max_rate, game_time, move_time))
+
+    def process_pairing_list(self, text_dict):
+        # here add buttons with ids
+        pass
 
     def process_win_pack(self, pack_data):
         while self.server_calculation:
