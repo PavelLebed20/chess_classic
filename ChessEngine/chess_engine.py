@@ -468,7 +468,6 @@ class Engine:
             self.render.change_state(self.render, "fsm:AuthConfirm")
         else:
             self.rate = int(text_dict['self_rate'])
-            self.login = text_dict['login']
             self.render.is_client_connected_to_server = True
             self.render.change_state(self.render, "fsm:MainMenu")
         self.server_calculation = False
@@ -687,5 +686,4 @@ class Engine:
                 return self.computer_hist_movement_manager
 
     def refresh_matchmaking_pairlist(self):
-        pass
-        #self.render.set_pairing_list(pairings)
+        self.on_match_making_state()

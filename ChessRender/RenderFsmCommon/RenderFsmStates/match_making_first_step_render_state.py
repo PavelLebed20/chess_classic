@@ -56,13 +56,16 @@ class FsmStateMatchmakingFirstStep(ScreenState):
         self.screen_atributes.buttons["but:preset4"].add_command(self.confirm_preset4)
         self.screen_atributes.buttons["but:preset5"].add_command(self.confirm_preset5)
 
-        self.screen_atributes.buttons["but:Refresh"].add_command(self.refresh_command)
+        self.screen_atributes.buttons["but:Refresh"].add_command(self.proc_refresh)
 
         self.screen_atributes.buttons["but:preset1"].add_link("fsm:Message")
         self.screen_atributes.buttons["but:preset2"].add_link("fsm:Message")
         self.screen_atributes.buttons["but:preset3"].add_link("fsm:Message")
         self.screen_atributes.buttons["but:preset4"].add_link("fsm:Message")
         self.screen_atributes.buttons["but:preset5"].add_link("fsm:Message")
+
+    def proc_refresh(self):
+        self.refresh_command()
 
     def confirm_preset1(self):
         process_matchmaking_arg = {"MatchTime": 30,
