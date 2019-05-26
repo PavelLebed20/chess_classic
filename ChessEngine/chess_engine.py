@@ -674,6 +674,7 @@ class Engine:
             # make client
             self._make_client()
             # make request for connection
+            print('Send surrender message')
             self.client.send_message('surrender', '')
 
     def get_hist_movement_manager(self):
