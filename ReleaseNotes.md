@@ -1,4 +1,16 @@
 # Release Notes
+## Version 2.2.0 (Sprint 7) (26.05.2019)
+### New Features
+* Quick pairing choose from existing pairing responses
+* Quick pairing most common game param presets
+* Board game info
+* 3D game lighting
+* Surrender button
+* Menu active background
+* Game history iteration
+# Fixed
+* Not user friendly registration menu 
+# Release Notes
 ## Version 2.1.0 (Sprint 6) (22.05.2019)
 ### New Features
 * Funny win packs process
