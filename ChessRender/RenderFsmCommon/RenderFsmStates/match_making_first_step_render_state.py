@@ -14,8 +14,12 @@ class FsmStateMatchmakingFirstStep(ScreenState):
 
         self.render_fsm_ref = render_fsm
         self.start_game_by_pairing = start_game_by_pairing
-        self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (0, 0, -0.8))
-        self.screen_atributes.buttons["but:Create"] = ButtonFsm("Create game", (0, 0, -0.5))
+        self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (-0., 0, -0.8))
+        self.screen_atributes.buttons["but:Create"] = ButtonFsm("Create game", (-0., 0, -0.5))
+        self.screen_atributes.buttons["but:Refresh"] = ButtonFsm("Refresh", (0.3, 0, -0.1), None, None,
+                                                                 (-1.6, 1.6, -0.3, 0.9), (2.1, 0.9, 0.8), 0.1)
+
+        self.refresh_command = render_fsm.refresh_matchmaking_pairlist
 
         self.screen_atributes.screen_texts["scrtext:info"] = ScreenTextFsm(
             "Quick game:\nGame time (minutes), adding time (seconds)", (-0.85, 0.9))
@@ -24,9 +28,12 @@ class FsmStateMatchmakingFirstStep(ScreenState):
 
         self.screen_atributes.buttons["but:preset1"] = ButtonFsm("10, 0", (-1.25, 0, 0.6), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
         self.screen_atributes.buttons["but:preset2"] = ButtonFsm("30,0", (-0.5, 0, 0.6), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
-        self.screen_atributes.buttons["but:preset3"] = ButtonFsm("5, 3", (-1.25, 0, 0.2), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
-        self.screen_atributes.buttons["but:preset4"] = ButtonFsm("3, 2", (-0.5, 0, 0.2), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
-        self.screen_atributes.buttons["but:preset5"] = ButtonFsm("1, 0", (-0.9, 0, -0.2), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:preset3"] = ButtonFsm("5, 3", (-1.25, 0, 0.4), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:preset4"] = ButtonFsm("3, 2", (-0.5, 0, 0.4), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:preset5"] = ButtonFsm("1, 0", (-0.9, 0, 0.2), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
+
+        self.screen_atributes.screen_texts["scrtext:My rate"] = ScreenTextFsm(
+            "Your's rate: {}".format(render_fsm.get_loacal_player_rating()), (-1.25, -0.2))
 
         self.pairs_buts = []
         self.my_scrolled_list = None
@@ -48,6 +55,8 @@ class FsmStateMatchmakingFirstStep(ScreenState):
         self.screen_atributes.buttons["but:preset3"].add_command(self.confirm_preset3)
         self.screen_atributes.buttons["but:preset4"].add_command(self.confirm_preset4)
         self.screen_atributes.buttons["but:preset5"].add_command(self.confirm_preset5)
+
+        self.screen_atributes.buttons["but:Refresh"].add_command(self.refresh_command)
 
         self.screen_atributes.buttons["but:preset1"].add_link("fsm:Message")
         self.screen_atributes.buttons["but:preset2"].add_link("fsm:Message")
