@@ -10,6 +10,8 @@ from ChessRender.RenderFsmCommon.RenderFsmStates.auth_confirm_state import FsmSt
 from ChessRender.RenderFsmCommon.RenderFsmStates.game_render_state import FsmStateGameState
 from ChessRender.RenderFsmCommon.RenderFsmStates.login_render_state import FsmStateLogin
 from ChessRender.RenderFsmCommon.RenderFsmStates.main_menu_render_state import FsmStateMainMenu
+from ChessRender.RenderFsmCommon.RenderFsmStates.match_making_first_step_render_state import \
+    FsmStateMatchmakingFirstStep
 from ChessRender.RenderFsmCommon.RenderFsmStates.match_making_state import FsmStateMatchmaking
 from ChessRender.RenderFsmCommon.RenderFsmStates.multiplayer_menu_render_state import FsmStateMultiplayer
 from ChessRender.RenderFsmCommon.RenderFsmStates.registration_render_state import FsmStateRegistration
@@ -98,6 +100,8 @@ class RenderFsm(ShowBase):
         self.init_sky_sphere()
         self.camera_m = CameraMenu(base.camera, base.camLens)
         self.taskMgr.add(self.camera_m.update_on_task_rotate, 'camRotTask')
+        self.on_match_making_state = None
+        self.start_game_by_pairing = None
 
     def init_sky_sphere(self):
         self.skysphere = loader.loadModel("ChessRender/data/menu_cubemap1.bam")
@@ -108,7 +112,7 @@ class RenderFsm(ShowBase):
         self.skysphere.setScale(25)
 
     def init_state_by_key(self, key):
-        if self.cur_state_key is not None:
+        if self.cur_state_key != "fsm:Message":
             self.prev_render_not_message_state_key = self.cur_state_key
 
         self.cur_state_key = key
@@ -146,6 +150,9 @@ class RenderFsm(ShowBase):
             return FsmStateRegistration(self.process_registration)
         elif key == "fsm:Message":
             return FsmStateMessage(self.message, self)
+        elif key == "fsm:Matchmaking1Step":
+            self.on_match_making_state()
+            return FsmStateMatchmakingFirstStep(self.process_find_player, self.start_game_by_pairing, self)
         elif key == "fsm:Matchmaking":
             return FsmStateMatchmaking(self.process_find_player, self)
         elif key == "fsm:SkinSelect":
@@ -196,3 +203,6 @@ class RenderFsm(ShowBase):
     def mouse_release(self):
         self.cur_state.mouse_release()
 
+    def set_pairing_list(self, pairing_list):
+        if isinstance(self.cur_state, FsmStateMatchmakingFirstStep):
+            self.cur_state.set_pairing_list(pairing_list)
