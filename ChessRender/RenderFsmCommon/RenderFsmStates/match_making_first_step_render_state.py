@@ -16,7 +16,10 @@ class FsmStateMatchmakingFirstStep(ScreenState):
         self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (0, 0, -0.8))
         self.screen_atributes.buttons["but:Create"] = ButtonFsm("Create game", (0, 0, -0.5))
 
-        self.screen_atributes.screen_texts["scrtext:info"] = ScreenTextFsm("Game time (minutes), adding time (seconds)", (-0.85, 0.9))
+        self.screen_atributes.screen_texts["scrtext:info"] = ScreenTextFsm(
+            "Quick game:\nGame time (minutes), adding time (seconds)", (-0.85, 0.9))
+        self.screen_atributes.screen_texts["scrtext:info1"] = ScreenTextFsm(
+            "Connect to:\nLogin, rate, game time, adding time", (0.8, 0.73))
 
         self.screen_atributes.buttons["but:preset1"] = ButtonFsm("10, 0", (-1.25, 0, 0.7), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
         self.screen_atributes.buttons["but:preset2"] = ButtonFsm("30,0", (-0.5, 0, 0.7), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
@@ -100,33 +103,36 @@ class FsmStateMatchmakingFirstStep(ScreenState):
         self.pairing_list = pairing_list
         self.pairs_buts = []
         for pair in pairing_list:
+            print(str(pair))
             self.pairs_buts.append(
                 DirectButton(
-                    text=str(pair[1]) + ',' + str(pair[2]) + ',' + str(pair[3]) + ',' + str(pair[4]), scale=0.1,
+                    text=str(pair[1]) + ', ' + str(pair[2]) + ', ' + str(pair[3]) + ', ' + str(pair[4]), scale=0.1,
                     command=self.start_game_by_pairing,
                     extraArgs=[pair[0]],
                     frameColor=((0.8, 0.8, 0.8, 0.8), (0.4, 0.4, 0.4, 0.8), (0.4, 0.4, 0.8, 0.8),
                                 (0.1, 0.1, 0.1, 0.8)),
-                    frameSize=(-1.5, 1.5, -0.4, 0.8)
+                    frameSize=(-6.5, 6.5, -0.4, 0.8)
                 )
             )
 
         self.my_scrolled_list = DirectScrolledList(
-            decButton_pos=(0.35, 0, 0.9),
+            decButton_pos=(0.35, -0, 0.87),
             decButton_text="up",
             decButton_text_scale=0.08,
             decButton_borderWidth=(0.005, 0.005),
+            decButton_frameSize=(-0.25, 0.25, -0.05, 0.1),
 
-            incButton_pos=(0.35, 0, -0.1),
+            incButton_pos=(0.35, 0, -0.08),
             incButton_text="down",
             incButton_text_scale=0.08,
             incButton_borderWidth=(0.005, 0.005),
+            incButton_frameSize=(-0.25, 0.25, -0.05, 0.1),
 
-            #frameSize=(-0.7, 1.7, 0.8, 0),
-            #frameColor=(1.3, 0.3, 1, 0.5),
+            # frameSize=(-0.7, 1.7, 0.8, 0),
+            # frameColor=(1.3, 0.3, 1, 0.5),
             pos=(0.5, 0, 0),
             items=self.pairs_buts,
-            numItemsVisible=4,
+            numItemsVisible=5,
             forceHeight=0.11,
             itemFrame_frameSize=(-0.8, 0.8, -0.52, 0.26),
             itemFrame_pos=(0.35, 0, 0.55),

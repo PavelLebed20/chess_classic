@@ -272,7 +272,7 @@ class Engine:
         else:
             player_turn = self.player_turn
         if player_turn is None:
-            assert (False)
+            return None
         return Side(player_turn)
 
     def set_menu_state(self):
@@ -464,7 +464,7 @@ class Engine:
         self.delta_rate = 0
 
         self.current_move = int(text_dict['next_move'])
-        
+
         if text_dict['board'] is None:
             self.chess_board = Board()
             self.game_controller = GameController(self.chess_board)
@@ -588,7 +588,8 @@ class Engine:
             pairings_texts = str(text_dict['pairing_list']).split(';')
             pairings = []
             for p in pairings_texts:
-                pairings.append(str(p).split(','))
+                if p != '':
+                    pairings.append(str(p).split(','))
 
         self.render.set_pairing_list(pairings)
 
@@ -614,7 +615,9 @@ class Engine:
             sleep(5.0 / 1000.0)
         self.server_calculation = True
         self.game_state = GameStates.MENU
-        self.render.avail_packs.append(pack_data['new_pack'])
+        if pack_data['new_pack'] not in self.render.avail_packs:
+            self.render.avail_packs.append(pack_data['new_pack'])
+            self.render.avail_packs.sort()
         self.render.win_pack = pack_data['new_pack']
         self.render.change_state(self.render, "fsm:WinPack")
         self.server_calculation = False

@@ -35,9 +35,11 @@ class TapMovementManager:
         if self.cur_clicked is None or self.game_state.figures[self.cur_clicked] is None:
             if self.game_state.figures[hiSq] is None:
                 return
-
-            if self.game_state.get_cur_turn_side() is Side.WHITE and self.game_state.figures[hiSq].getTag("figue_lat").isupper() or \
-                self.game_state.get_cur_turn_side() is Side.BLACK and self.game_state.figures[hiSq].getTag("figue_lat").islower():
+            cur_side = self.game_state.get_cur_turn_side()
+            if cur_side is None:
+                return
+            if cur_side is Side.WHITE and self.game_state.figures[hiSq].getTag("figue_lat").isupper() or \
+                cur_side is Side.BLACK and self.game_state.figures[hiSq].getTag("figue_lat").islower():
 
                 self.cur_clicked = hiSq
                 self.cur_clicked_pos = pos
