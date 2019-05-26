@@ -106,6 +106,8 @@ class RenderFsm(ShowBase):
         self.on_match_making_state = None
         self.start_game_by_pairing = None
 
+        self.refresh_matchmaking_pairlist = None
+
     def init_sky_sphere(self):
         self.skysphere = loader.loadModel("ChessRender/data/menu_cubemap1.bam")
         self.skysphere.setBin('background', 1)

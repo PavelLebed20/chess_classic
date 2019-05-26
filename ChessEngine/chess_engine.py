@@ -90,6 +90,7 @@ class Engine:
         self.online_game_was_started = False
 
         self.render.get_hist_movement_manager = self.get_hist_movement_manager
+        self.render.refresh_matchmaking_pairlist = self.refresh_matchmaking_pairlist
 
         self.offline_with_friend_match_data = None
         self.offline_with_computer_match_data = None
@@ -102,7 +103,6 @@ class Engine:
         self.render.whiteside_pack_name = self.whiteside_pack_name
         self.render.blackside_pack_name = self.blackside_pack_name
 
-        self.rate = 0
         self.login = ''
         self.client = None
         self.on_update_now = False
@@ -669,3 +669,7 @@ class Engine:
                 return self.withfriend_hist_movement_manager
             else:
                 return self.computer_hist_movement_manager
+
+    def refresh_matchmaking_pairlist(self):
+        pass
+        #self.render.set_pairing_list(pairings)
