@@ -303,6 +303,8 @@ class FsmStateGameState(ScreenState):
 
         self.render_fsm_ref.ignore("wheel_up")
         self.render_fsm_ref.ignore("wheel_down")
+
+        self.screen_atributes.buttons["but:2D/3D"].command = None
         self.init_pawn_change_panel(side, move)
 
     def swap_figures(self, fr, to):
@@ -511,6 +513,7 @@ class FsmStateGameState(ScreenState):
         self.render_fsm_ref.accept("mouse3-up", self.right_release)
         self.render_fsm_ref.accept("wheel_up", self.wheel_up)
         self.render_fsm_ref.accept("wheel_down", self.wheel_down)
+        self.screen_atributes.buttons["but:2D/3D"].add_command(self.change_dimension)
         self.render_fsm_ref.process_set_move_player(move, swaped_figure_latter)
 
     def SquareTexture(self, i):

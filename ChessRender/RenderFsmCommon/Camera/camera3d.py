@@ -113,7 +113,7 @@ class Camera2D:
 
     def __init__(self, camera, lens, win_w, win_h, angle=WHITE_ANGLE):
         self.angle = angle
-        self.MAX_FOV = pow(win_w / win_h, 0.5) * 45
+        self.MAX_FOV = pow(win_w / win_h, 0.5) * 55
         self.lens = lens
         self.camera = camera
         self.z = 25
@@ -145,6 +145,8 @@ class Camera2D:
         pass
 
     def update_on_mouse_wheel(self, mouse_wheel):
+        if True:
+            return
         if self.fov_angle <= self.MIN_FOV and mouse_wheel > 0 or \
            self.fov_angle >= self.MAX_FOV and mouse_wheel < 0:
             return
