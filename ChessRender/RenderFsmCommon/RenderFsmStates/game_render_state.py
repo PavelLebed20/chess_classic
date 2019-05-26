@@ -23,6 +23,52 @@ class Dimension(Enum):
     _3D = 2
 
 
+class TapMovementManager:
+    def __init__(self, render_fsm_ref, game_state):
+        self.cur_clicked = None
+        self.cur_clicked_pos = None
+        self.render_fsm_ref = render_fsm_ref
+        self.game_state = game_state
+
+    def click(self, hiSq, pos):
+
+        if self.cur_clicked is None or self.game_state.figures[self.cur_clicked] is None:
+            if self.game_state.figures[hiSq] is None:
+                return
+
+            if self.game_state.get_cur_turn_side() is Side.WHITE and self.game_state.figures[hiSq].getTag("figue_lat").isupper() or \
+                self.game_state.get_cur_turn_side() is Side.BLACK and self.game_state.figures[hiSq].getTag("figue_lat").islower():
+
+                self.cur_clicked = hiSq
+                self.cur_clicked_pos = pos
+                return
+            else:
+                return
+
+        # We have let go of the piece, but we are not on a square
+        if self.render_fsm_ref.process_set_move_player is not None:
+            move = Move(self.cur_clicked_pos, Vector2d(hiSq % 8, hiSq // 8))
+            if self.game_state.figures[self.cur_clicked].getTag("figue_lat") is "p" and hiSq // 8 is 7:
+                if self.game_state.get_cur_turn_side() is Side.BLACK and self.game_state.check_move_func(move, Side.BLACK) != MoveResult.INCORRECT:
+                    self.game_state.swap_figures(self.cur_clicked, hiSq)
+                    if self.game_state.figures[self.cur_clicked] is not None:
+                        self.game_state.figures[self.cur_clicked].removeNode()
+                    self.cur_clicked = None
+                    self.game_state.fire_pawn_change_panel(Side.BLACK, copy.deepcopy(move))
+                    self.game_state.dragging = False
+                    return
+            if self.game_state.figures[self.cur_clicked].getTag("figue_lat") is "P" and hiSq // 8 is 0:
+                if self.game_state.get_cur_turn_side() is Side.WHITE and self.game_state.check_move_func(move, Side.WHITE) != MoveResult.INCORRECT:
+                    self.game_state.swap_figures(self.cur_clicked, hiSq)
+                    if self.game_state.figures[self.cur_clicked] is not None:
+                        self.game_state.figures[self.cur_clicked].removeNode()
+                    self.cur_clicked = None
+                    self.game_state.fire_pawn_change_panel(Side.WHITE, copy.deepcopy(move))
+                    self.game_state.dragging = False
+                    return
+            self.render_fsm_ref.process_set_move_player(Move(self.cur_clicked_pos, Vector2d(hiSq % 8, hiSq // 8)))
+            self.cur_clicked = None
+
 class FsmStateGameState(ScreenState):
     def __init__(self, render_fsm, whiteside_pack_name, blackside_pack_name, side, exit_link, check_move_func, get_cur_turn_side, on_exit_func=None):
         ScreenState.__init__(self)
@@ -38,8 +84,11 @@ class FsmStateGameState(ScreenState):
 
         self.init_sky_sphere()
         self.squares = [None for i in range(64)]
+        self.info_squares = [None for i in range(100)]
         self.cubes = [None for i in range(64)]
+        self.info_cubes = [None for i in range(100)]
         self.init_nodes_to_chsess_board()
+        self.init_nodes_to_board_info()
         self.init_info_panel()
         self.pawn_change_panel = None
         self.swaped_icons = None
@@ -93,6 +142,8 @@ class FsmStateGameState(ScreenState):
         self.check_move_func = check_move_func
         self.get_cur_turn_side = get_cur_turn_side
 
+        self.tap_movement_manager = TapMovementManager(render_fsm, self)
+
     def change_dimension(self):
         self.render_fsm_ref.taskMgr.remove('camPosTask')
         if self.dimension == Dimension._3D:
@@ -126,12 +177,22 @@ class FsmStateGameState(ScreenState):
         for figure in self.figures:
             if figure is not None:
                 figure.removeNode()
+
         for square in self.squares:
             square.removeNode()
+
         self.skysphere.removeNode()
+
+        for square in self.info_squares:
+            if square is not None:
+                square.removeNode()
 
         for cube in self.cubes:
             cube.removeNode()
+
+        for cube in self.info_cubes:
+            if cube is not None:
+                cube.removeNode()
 
         self.lights.unset()
         for key in self.text_info:
@@ -145,6 +206,9 @@ class FsmStateGameState(ScreenState):
             for icon in self.swaped_icons:
                 icon.removeNode()
         self.render_fsm_ref.is_clearing = False
+
+        self.render_fsm_ref.taskMgr.remove('camRotTask')
+        self.render_fsm_ref.taskMgr.add(self.render_fsm_ref.camera_m.update_on_task_rotate, 'camRotTask')
 
     def on_exit(self):
         if self.on_exit_func is not None:
@@ -171,8 +235,6 @@ class FsmStateGameState(ScreenState):
         elif isinstance(self.camera_p, Camera2D):
             self._camera_set()
 
-
-
     def right_click(self):
         self.render_fsm_ref.taskMgr.remove('camPosTask')
         mouse_watcher = base.mouseWatcherNode
@@ -189,7 +251,13 @@ class FsmStateGameState(ScreenState):
         if self.hiSq is not False and self.figures[self.hiSq]:
             self.dragging = self.hiSq
             self.dragging_figure_position = Vector2d(self.hiSq % 8, self.hiSq // 8)
+            if self.tap_movement_manager is not None:
+                self.tap_movement_manager.click(self.hiSq, self.dragging_figure_position)
             self.hiSq = False
+            return
+
+        if self.hiSq is not None and self.tap_movement_manager is not None:
+            self.tap_movement_manager.click(self.hiSq, Vector2d(self.hiSq % 8, self.hiSq // 8))
 
     def release_piece(self):
         # Letting go of a piece. If we are not on a square, return it to its original
@@ -221,8 +289,7 @@ class FsmStateGameState(ScreenState):
                         self.dragging = False
                         self.fire_pawn_change_panel(Side.WHITE, move)
                         return
-                self.render_fsm_ref.process_set_move_player(Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8))
-)
+                self.render_fsm_ref.process_set_move_player(Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8)))
 
         # We are no longer dragging anything
         self.dragging = False
@@ -236,6 +303,8 @@ class FsmStateGameState(ScreenState):
 
         self.render_fsm_ref.ignore("wheel_up")
         self.render_fsm_ref.ignore("wheel_down")
+
+        self.screen_atributes.buttons["but:2D/3D"].command = None
         self.init_pawn_change_panel(side, move)
 
     def swap_figures(self, fr, to):
@@ -338,9 +407,9 @@ class FsmStateGameState(ScreenState):
             # Load, parent, color, and position the model (a single square
             # polygon)
             self.squares[i] = loader.loadModel("ChessRender/data/chess_board/square")
-            self.squares[i].setTexture(self.SquareTexture(i))
+            #self.squares[i].setTexture(self.SquareTexture(i))
             self.squares[i].reparentTo(self.squareRoot)
-            self.squares[i].setPos(self.SquareOnCubePos3D(i))
+            self.squares[i].setPos(self.SquareUnderCubePos3D(i))
             #self.squares[i].setColor(self.SquareColor(i))
 
             self.cubes[i] = self.objMngr.load_cube()
@@ -364,6 +433,43 @@ class FsmStateGameState(ScreenState):
             # Set a tag on the square's node so we can look up what square this is
             # later during the collision pass
             self.squares[i].find("**/polygon").node().setTag('square', str(i))
+
+    def init_nodes_to_board_info(self):
+        #self.squareRoot = self.render_fsm_ref.render.attachNewNode("squareRoot")
+
+        # For each square
+        for i in range(100):
+            if i == 99 or i == 0 or i == 9 or i == 90:
+                continue
+
+            cube_pos = self.InfoCubePos(i)
+            if cube_pos is None:
+                continue
+
+            # Load, parent, color, and position the model (a single square
+            # polygon)
+
+            self.info_squares[i] = loader.loadModel("ChessRender/data/chess_board/square")
+            self.info_squares[i].setTexture(self.InfoTexture(i))
+            self.info_squares[i].reparentTo(self.squareRoot)
+            self.info_squares[i].setPos(self.InfoOnCubePos3D(i))
+
+            if not (i == 99 or i == 0 or i == 9 or i == 90):
+                if i // 10 == 0:
+                    self.info_squares[i].setHpr(180, 0, 0)
+                if i // 10 == 9:
+                    self.info_squares[i].setHpr(0, 0, 0)
+                if i % 10 == 0:
+                    self.info_squares[i].setHpr(0, 0, 0)
+                if i % 10 == 9:
+                    self.info_squares[i].setHpr(180, 0, 0)
+
+            self.info_cubes[i] = self.objMngr.load_cube()
+            self.info_cubes[i].setColor(self.SquareColor(i))
+            self.info_cubes[i].reparentTo(self.squareRoot)
+            self.info_cubes[i].setPos(cube_pos)
+            self.info_cubes[i].setScale(0.5)
+            self.info_cubes[i].setTexture(self.SquareTexture(1))
 
     def init_info_panel(self):
         self.panel = self.objMngr.load_plane_textured("ChessRender/data/panel.png")
@@ -407,6 +513,7 @@ class FsmStateGameState(ScreenState):
         self.render_fsm_ref.accept("mouse3-up", self.right_release)
         self.render_fsm_ref.accept("wheel_up", self.wheel_up)
         self.render_fsm_ref.accept("wheel_down", self.wheel_down)
+        self.screen_atributes.buttons["but:2D/3D"].add_command(self.change_dimension)
         self.render_fsm_ref.process_set_move_player(move, swaped_figure_latter)
 
     def SquareTexture(self, i):
@@ -415,6 +522,26 @@ class FsmStateGameState(ScreenState):
         else:
             return loader.loadTexture("ChessRender/data/white_cell.png")
 
+    def InfoTexture(self, i):
+        latters = ["A", "B", "C", "D", "E", "F", "G", "H"]
+        numbers = ["1", "2", "3", "4", "5", "6", "7", "8"]
+
+        if i == 99 or i == 0 or i == 9 or i == 90:
+            return loader.loadTexture(
+                "ChessRender/data/chess_board_info/cell_empty.jpg")
+        if i // 10 == 0:
+            return loader.loadTexture(
+                "ChessRender/data/chess_board_info/cell_{}.jpg".format(latters[i - 1]))
+        if i // 10 == 9:
+            return loader.loadTexture(
+                "ChessRender/data/chess_board_info/cell_{}.jpg".format(latters[i - 91]))
+        if i % 10 == 0:
+            return loader.loadTexture(
+                "ChessRender/data/chess_board_info/cell_{}.jpg".format(numbers[7 - (i // 10 - 1)]))
+        if i % 10 == 9:
+            return loader.loadTexture(
+                "ChessRender/data/chess_board_info/cell_{}.jpg".format(numbers[7 - (i // 10 - 1)]))
+
     def SquareColor(self, i):
         if (i + ((i // 8) % 2)) % 2:
             return (0.54, 0.4, 0.26, 1)#BLACK
@@ -422,15 +549,28 @@ class FsmStateGameState(ScreenState):
             return (0.98, 0.82, 0.01, 1)
 
     def SquarePos(self, i):
-        #if i % 2 is 1:
         return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, -0.5)
 
+    def InfoCubePos(self, i):
+        if i // 10 == 0 or i // 10 == 9 or i % 10 == 0 or i % 10 == 9:
+            return LPoint3(-(i % 10) + 4.5, int(i // 10) - 4.5, -0.5)
+        else:
+            return None
+
+    def InfoOnCubePos3D(self, i):
+        if i // 10 == 0 or i // 10 == 9 or i % 10 == 0 or i % 10 == 9:
+            return LPoint3(-(i % 10) + 4.5, int(i // 10) - 4.5, 0.01)
+        else:
+            return None
+
     def FigurePos3D(self, i):
-        #if i % 2 is 1:
         return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0)
 
-    def SquareOnCubePos3D(self, i):
+    def SquareUnderCubePos3D(self, i):
         return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, -0.01)
+
+    def SquareOnCubePos3D(self, i):
+        return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0.01)
 
     def FigurePos2D(self, i):
         return LPoint3(-(i % 8) + 3.5, int(i // 8) - 3.5, 0.3)

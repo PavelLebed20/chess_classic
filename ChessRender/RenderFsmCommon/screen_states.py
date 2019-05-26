@@ -114,7 +114,7 @@ class ScreenState:
             screen_text = self.screen_atributes.screen_texts[screen_text_key]
             pos = screen_text.position
 
-            gui_screen_text = OnscreenText(text=screen_text.text, pos=(pos[0], pos[1]))
+            gui_screen_text = OnscreenText(text=screen_text.text, pos=(pos[0], pos[1]), bg=(1, 1, 1, 1))
 
             self.screen_atributes.scene_nodes.append(gui_screen_text)
 

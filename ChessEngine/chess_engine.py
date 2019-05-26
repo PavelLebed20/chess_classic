@@ -5,6 +5,7 @@
 ###############################
 import copy
 import sys
+import threading
 from enum import Enum
 from time import sleep
 
@@ -72,6 +73,8 @@ class Engine:
         self.render.process_offline_with_firend = self.process_offline_game_with_firend
         self.render.process_reset_save_data_friend = self.process_reset_save_data_friend
         self.render.process_reset_save_data_computer = self.process_reset_save_data_computer
+
+        self.render.get_loacal_player_rating = self.get_loacal_player_rating
 
         self.render.get_cur_turn_side = self.get_cur_turn_side
         self.player_turn = None
@@ -302,7 +305,6 @@ class Engine:
             self.offline_with_computer_match_data.white_player_data.player_init(self.players[0])
             self.offline_with_computer_match_data.black_player_data.player_init(self.players[1])
 
-
         self.render.side = Side.WHITE
         self.render.process_set_move_player = self.players[self.player_turn].set_move
         self.game_result = -1
@@ -337,7 +339,6 @@ class Engine:
             self.offline_with_friend_match_data.white_player_data.player_init(self.players[0])
             self.offline_with_friend_match_data.black_player_data.player_init(self.players[1])
 
-
         self.render.side = Side.WHITE
         self.render.process_set_move_player = self.players[self.player_turn].set_move
         self.game_result = -1
@@ -345,7 +346,6 @@ class Engine:
 
         self.offline_game_played = None
         self.current_offline_game_mode = OfflineGameMode.WITH_FRIEND
-
 
         self.game_state = GameStates.OFFLINE_GAME
 
@@ -387,7 +387,12 @@ class Engine:
         keys are one the string const of the form L_SOME (see. UIPrimitives.room)
         values are strings (print by user)
         """
+        self.login_process_thead = threading.Thread(target=self.login_process_theading,
+                                                    args=(text_dict,))
+        self.login_process_thead.start()
 
+    def login_process_theading(self, text_dict):
+        print("a")
         login = text_dict["Login"]
         password = text_dict["Password"]
 
@@ -427,6 +432,12 @@ class Engine:
         while self.server_calculation:
             sleep(5.0 / 1000.0)
         self.server_calculation = True
+
+        if 'error' in text_dict:
+            self.render.message = text_dict['error']
+            self.render.change_state(self.render, "fsm:Message")
+            return
+
         if self.render.cur_state_key == "fsm:GameState":
             return
         if 'not_verified' in text_dict:
@@ -586,6 +597,6 @@ class Engine:
             self.client.disconnect()
         sys.exit()
 
-
-
+    def get_loacal_player_rating(self):
+        return self.rate
 
