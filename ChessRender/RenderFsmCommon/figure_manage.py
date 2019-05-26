@@ -132,9 +132,10 @@ class FigureMngr:
 
     def load_plane_textured(self, texture_path):
         obj = copy.deepcopy(self.modeles[RenderObject.PLANE])
-        texture = loader.loadTexture(texture_path)
-        obj.set_texture(texture)
-        obj.setTransparency(TransparencyAttrib.MAlpha)
+        if texture_path is not None:
+            texture = loader.loadTexture(texture_path)
+            obj.set_texture(texture)
+            obj.setTransparency(TransparencyAttrib.MAlpha)
         return obj
 
     def load_skybox_white_side(self):

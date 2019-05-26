@@ -11,14 +11,23 @@ class FsmStateMainMenu(ScreenState):
         self.button_sizes = (-4, 4, -0.5, 1)
 
         self.screen_atributes.buttons["but:Single player"] = ButtonFsm("Single player", (0, 0, 0.7))
+        self.screen_atributes.buttons["but:Single player"].scale = 0.15
         if is_client_connected_to_server is False:
             self.screen_atributes.buttons["but:Multiplayer"] = ButtonFsm("Connect to online", (0, 0, 0.35))
+            self.screen_atributes.buttons["but:Multiplayer"].scale = 0.15
+
         else:
             self.screen_atributes.buttons["but:Multiplayer"] = ButtonFsm("Multiplayer", (0, 0, 0.35))
+            self.screen_atributes.buttons["but:Multiplayer"].scale = 0.15
 
         self.screen_atributes.buttons["but:Select skins"] = ButtonFsm("Select skins", (0, 0, 0))
+        self.screen_atributes.buttons["but:Select skins"].scale = 0.15
+
         self.screen_atributes.buttons["but:Window settings"] = ButtonFsm("Settigns", (0, 0, -0.35))
+        self.screen_atributes.buttons["but:Window settings"].scale = 0.15
+
         self.screen_atributes.buttons["but:Exit"] = ButtonFsm("Exit", (0, 0, -0.8))
+        self.screen_atributes.buttons["but:Exit"].scale = 0.15
 
         #self.screen_atributes.buttons["but:Style"] = ButtonFsm("Style", (1.3, 0, 0.7), None, None, (-1.5, 1.5, -0.4, 0.8), (1.8, 0.8, 0.8))
 

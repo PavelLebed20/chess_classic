@@ -62,7 +62,7 @@ class Engine:
         Initialize Engine class function
         """
         self.render = RenderFsm()
-        self.server_address = 'http://localhost:8000' # 'https://chessservertest.herokuapp.com'
+        self.server_address = 'https://chessservertest.herokuapp.com'#'http://localhost:8000' # 'https://chessservertest.herokuapp.com'
 
         self.render.on_application_exit = self.on_application_exit
         #### - functions to process data from users
@@ -79,6 +79,7 @@ class Engine:
         self.render.get_cur_turn_side = self.get_cur_turn_side
         self.player_turn = None
 
+        self.render.on_press_giveup_button = self.on_localplayer_giveup
         self.render.on_offline_game_exit = self.on_offline_game_exit
         self.render.process_confirm_auth = self.process_confirm_auth
         self.render.on_game_exit = self.set_menu_state
@@ -630,3 +631,10 @@ class Engine:
     def get_loacal_player_rating(self):
         return self.rate
 
+    def on_localplayer_giveup(self):
+        if self.game_state == GameStates.OFFLINE_GAME:
+            self.game_result = 0
+            self.on_offline_game_exit()
+            self.render.go_to_prev_state()
+        if self.game_state == GameStates.ONLINE_GAME:
+            pass
