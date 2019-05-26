@@ -5,13 +5,14 @@ from ChessRender.RenderFsmCommon.text_field_fsm import TextFieldFsm
 
 
 class FsmStateAuthConfirm(ScreenState):
-    def __init__(self, process_auth_confirm):
+    def __init__(self, process_auth_confirm, email=''):
         ScreenState.__init__(self)
 
         self.screen_atributes.buttons["but:Confirm"] = ButtonFsm("Confirm", (0, 0, -0.5))
         self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (0, 0, -0.8))
 
-        self.screen_atributes.text_fields["text_field:Email"] = TextFieldFsm("text_field_email", (-0.5, 0, 0.5))
+        self.screen_atributes.text_fields["text_field:Email"] = TextFieldFsm("text_field_email", (-0.5, 0, 0.5),
+                                                                             initial_text=email)
         self.screen_atributes.text_fields["text_field:AuthCode"] = TextFieldFsm("text_field_auth_code", (-0.5, 0, 0.3))
 
         self.screen_atributes.screen_texts["scrtext:Email"] = ScreenTextFsm("email:   ", (-0.7, 0.5))
