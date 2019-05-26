@@ -65,6 +65,7 @@ class RenderFsm(ShowBase):
         self.on_application_exit = None
 
         self.on_press_giveup_button = None
+        self.get_hist_movement_manager = None
 
         self.get_cur_turn_side = None
 
