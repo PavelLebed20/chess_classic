@@ -178,6 +178,14 @@ def on_find_pair_list(data):
         execute_no_res_async(query)
 
 
+@socketio.on('surrender')
+def on_surrender(data):
+    print("Message recieved: " + str(data))
+    if request.sid in clients and clients[request.sid] is not None:
+        query = "call chess.surrender({0})".format(clients[request.sid])
+        execute_no_res_async(query)
+
+
 @socketio.on('update_board')
 def on_update_board(data):
     print("Message recieved: " + str(data))
