@@ -23,6 +23,52 @@ class Dimension(Enum):
     _3D = 2
 
 
+class TapMovementManager:
+    def __init__(self, render_fsm_ref, game_state):
+        self.cur_clicked = None
+        self.cur_clicked_pos = None
+        self.render_fsm_ref = render_fsm_ref
+        self.game_state = game_state
+
+    def click(self, hiSq, pos):
+
+        if self.cur_clicked is None or self.game_state.figures[self.cur_clicked] is None:
+            if self.game_state.figures[hiSq] is None:
+                return
+
+            if self.game_state.get_cur_turn_side() is Side.WHITE and self.game_state.figures[hiSq].getTag("figue_lat").isupper() or \
+                self.game_state.get_cur_turn_side() is Side.BLACK and self.game_state.figures[hiSq].getTag("figue_lat").islower():
+
+                self.cur_clicked = hiSq
+                self.cur_clicked_pos = pos
+                return
+            else:
+                return
+
+        # We have let go of the piece, but we are not on a square
+        if self.render_fsm_ref.process_set_move_player is not None:
+            move = Move(self.cur_clicked_pos, Vector2d(hiSq % 8, hiSq // 8))
+            if self.game_state.figures[self.cur_clicked].getTag("figue_lat") is "p" and hiSq // 8 is 7:
+                if self.game_state.get_cur_turn_side() is Side.BLACK and self.game_state.check_move_func(move, Side.BLACK) != MoveResult.INCORRECT:
+                    self.game_state.swap_figures(self.cur_clicked, hiSq)
+                    if self.game_state.figures[self.cur_clicked] is not None:
+                        self.game_state.figures[self.cur_clicked].removeNode()
+                    self.cur_clicked = None
+                    self.game_state.fire_pawn_change_panel(Side.BLACK, copy.deepcopy(move))
+                    self.game_state.dragging = False
+                    return
+            if self.game_state.figures[self.cur_clicked].getTag("figue_lat") is "P" and hiSq // 8 is 0:
+                if self.game_state.get_cur_turn_side() is Side.WHITE and self.game_state.check_move_func(move, Side.WHITE) != MoveResult.INCORRECT:
+                    self.game_state.swap_figures(self.cur_clicked, hiSq)
+                    if self.game_state.figures[self.cur_clicked] is not None:
+                        self.game_state.figures[self.cur_clicked].removeNode()
+                    self.cur_clicked = None
+                    self.game_state.fire_pawn_change_panel(Side.WHITE, copy.deepcopy(move))
+                    self.game_state.dragging = False
+                    return
+            self.render_fsm_ref.process_set_move_player(Move(self.cur_clicked_pos, Vector2d(hiSq % 8, hiSq // 8)))
+            self.cur_clicked = None
+
 class FsmStateGameState(ScreenState):
     def __init__(self, render_fsm, whiteside_pack_name, blackside_pack_name, side, exit_link, check_move_func, get_cur_turn_side, on_exit_func=None):
         ScreenState.__init__(self)
@@ -95,6 +141,8 @@ class FsmStateGameState(ScreenState):
 
         self.check_move_func = check_move_func
         self.get_cur_turn_side = get_cur_turn_side
+
+        self.tap_movement_manager = TapMovementManager(render_fsm, self)
 
     def change_dimension(self):
         self.render_fsm_ref.taskMgr.remove('camPosTask')
@@ -187,8 +235,6 @@ class FsmStateGameState(ScreenState):
         elif isinstance(self.camera_p, Camera2D):
             self._camera_set()
 
-
-
     def right_click(self):
         self.render_fsm_ref.taskMgr.remove('camPosTask')
         mouse_watcher = base.mouseWatcherNode
@@ -205,7 +251,13 @@ class FsmStateGameState(ScreenState):
         if self.hiSq is not False and self.figures[self.hiSq]:
             self.dragging = self.hiSq
             self.dragging_figure_position = Vector2d(self.hiSq % 8, self.hiSq // 8)
+            if self.tap_movement_manager is not None:
+                self.tap_movement_manager.click(self.hiSq, self.dragging_figure_position)
             self.hiSq = False
+            return
+
+        if self.hiSq is not None and self.tap_movement_manager is not None:
+            self.tap_movement_manager.click(self.hiSq, Vector2d(self.hiSq % 8, self.hiSq // 8))
 
     def release_piece(self):
         # Letting go of a piece. If we are not on a square, return it to its original
@@ -237,8 +289,7 @@ class FsmStateGameState(ScreenState):
                         self.dragging = False
                         self.fire_pawn_change_panel(Side.WHITE, move)
                         return
-                self.render_fsm_ref.process_set_move_player(Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8))
-)
+                self.render_fsm_ref.process_set_move_player(Move(self.dragging_figure_position, Vector2d(self.hiSq % 8, self.hiSq // 8)))
 
         # We are no longer dragging anything
         self.dragging = False
