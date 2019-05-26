@@ -463,6 +463,8 @@ class Engine:
         self.game_result = -1
         self.delta_rate = 0
 
+        self.current_move = int(text_dict['next_move'])
+        
         if text_dict['board'] is None:
             self.chess_board = Board()
             self.game_controller = GameController(self.chess_board)
@@ -514,7 +516,6 @@ class Engine:
         self.online_player.update_login(text_dict['opponent_login'])
         self.online_player.update_rate(text_dict['opponent_rate'])
 
-        self.current_move = int(text_dict['next_move'])
         self.online_player.init_time_from_str(text_dict['opponent_time'])
 
         self.render_update_board()

@@ -24,6 +24,8 @@ class FsmStateMatchmakingFirstStep(ScreenState):
         self.screen_atributes.buttons["but:preset4"] = ButtonFsm("3, 2", (-0.5, 0, 0.3), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
         self.screen_atributes.buttons["but:preset5"] = ButtonFsm("1, 0", (-0.9, 0, -0.1), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
 
+        self.pairs_buts = []
+        self.my_scrolled_list = None
         self.initialize_button_links()
 
         self.pairing_list = None
@@ -90,6 +92,11 @@ class FsmStateMatchmakingFirstStep(ScreenState):
         self.process_matchmaking(process_matchmaking_arg)
 
     def set_pairing_list(self, pairing_list):
+        for but in self.pairs_buts:
+            but.removeNode()
+        if self.my_scrolled_list is not None:
+            self.my_scrolled_list.removeNode()
+
         self.pairing_list = pairing_list
         self.pairs_buts = []
         for pair in pairing_list:
@@ -126,6 +133,10 @@ class FsmStateMatchmakingFirstStep(ScreenState):
         )
 
     def clear_state(self):
+        self.render_fsm_ref.is_clearing = True
         self.my_scrolled_list.removeNode()
         for but in self.pairs_buts:
-            but.remove_node()
+            but.removeNode()
+        #for but in self.pairs_buts:
+            #but.remove_node()
+        self.render_fsm_ref.is_clearing = False
