@@ -1,5 +1,6 @@
 from direct.gui.DirectButton import DirectButton
 from direct.gui.DirectScrolledList import DirectScrolledList
+from direct.gui.OnscreenText import OnscreenText
 
 from ChessRender.RenderFsmCommon.button_fsm import ButtonFsm
 from ChessRender.RenderFsmCommon.screen_states import ScreenState
@@ -18,14 +19,14 @@ class FsmStateMatchmakingFirstStep(ScreenState):
 
         self.screen_atributes.screen_texts["scrtext:info"] = ScreenTextFsm(
             "Quick game:\nGame time (minutes), adding time (seconds)", (-0.85, 0.9))
-        self.screen_atributes.screen_texts["scrtext:info1"] = ScreenTextFsm(
-            "Connect to:\nLogin, rate, game time, adding time", (0.8, 0.73))
+        self.text_todo_later_delete= OnscreenText(
+            text="Connect to:\nLogin, rate, game time, adding time", pos=(0.8, 0.73), bg=(1, 1, 1, 1))
 
-        self.screen_atributes.buttons["but:preset1"] = ButtonFsm("10, 0", (-1.25, 0, 0.7), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
-        self.screen_atributes.buttons["but:preset2"] = ButtonFsm("30,0", (-0.5, 0, 0.7), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
-        self.screen_atributes.buttons["but:preset3"] = ButtonFsm("5, 3", (-1.25, 0, 0.3), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
-        self.screen_atributes.buttons["but:preset4"] = ButtonFsm("3, 2", (-0.5, 0, 0.3), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
-        self.screen_atributes.buttons["but:preset5"] = ButtonFsm("1, 0", (-0.9, 0, -0.1), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:preset1"] = ButtonFsm("10, 0", (-1.25, 0, 0.6), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:preset2"] = ButtonFsm("30,0", (-0.5, 0, 0.6), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:preset3"] = ButtonFsm("5, 3", (-1.25, 0, 0.2), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:preset4"] = ButtonFsm("3, 2", (-0.5, 0, 0.2), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
+        self.screen_atributes.buttons["but:preset5"] = ButtonFsm("1, 0", (-0.9, 0, -0.2), None, None, (-1.5, 1.5, -0.3, 0.9), (1.8, 0.8, 0.8))
 
         self.pairs_buts = []
         self.my_scrolled_list = None
@@ -138,6 +139,12 @@ class FsmStateMatchmakingFirstStep(ScreenState):
             itemFrame_pos=(0.35, 0, 0.55),
         )
 
+        if self.text_todo_later_delete is not None:
+            self.text_todo_later_delete.removeNode()
+
+        self.text_todo_later_delete= OnscreenText(
+            text="Connect to:\nLogin, rate, game time, adding time", pos=(0.8, 0.73), bg=(1, 1, 1, 1))
+
     def clear_state(self):
         self.render_fsm_ref.is_clearing = True
         self.my_scrolled_list.removeNode()
@@ -146,3 +153,4 @@ class FsmStateMatchmakingFirstStep(ScreenState):
         #for but in self.pairs_buts:
             #but.remove_node()
         self.render_fsm_ref.is_clearing = False
+        self.text_todo_later_delete.removeNode()
