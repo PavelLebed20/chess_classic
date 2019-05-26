@@ -164,7 +164,7 @@ class RenderFsm(ShowBase):
             return FsmStateWindowSettings(self)
         elif key == "fsm:WinPack":
             self.taskMgr.remove('camRotTask')
-            return FsmStateWinPack(self.win_pack)
+            return FsmStateWinPack(self, self.win_pack)
         else:
             assert (False, "Incorrect fsm state")
 
