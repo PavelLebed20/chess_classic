@@ -124,8 +124,8 @@ class RenderFsm(ShowBase):
         elif key == "fsm:SinglePlayerLobby":
             return FsmStateSinglePlayerLobby(self.process_offline_with_computer, self.process_offline_with_firend, self.process_reset_save_data_friend, self.process_reset_save_data_computer)
         elif key == "fsm:GameState":
+            self.taskMgr.remove('camRotTask')
             if isinstance(self.cur_state, FsmStateSinglePlayerLobby):
-                self.taskMgr.remove('camRotTask')
                 return FsmStateGameState(self,
                                          self.whiteside_pack_name,
                                          self.blackside_pack_name,
@@ -163,6 +163,7 @@ class RenderFsm(ShowBase):
         elif key == "fsm:WinSettings":
             return FsmStateWindowSettings(self)
         elif key == "fsm:WinPack":
+            self.taskMgr.remove('camRotTask')
             return FsmStateWinPack(self.win_pack)
         else:
             assert (False, "Incorrect fsm state")
