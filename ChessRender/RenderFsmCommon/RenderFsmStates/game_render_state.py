@@ -113,6 +113,7 @@ class FsmStateGameState(ScreenState):
         base.disableMouse()
         # camera debug god mode
         #base.oobe()
+        self.is_in_past = False
 
         self.lights = Lights(base, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
 
@@ -122,6 +123,9 @@ class FsmStateGameState(ScreenState):
         self.initialize_button_links()
 
         self.init_ray()
+
+        render_fsm.accept("a", self.go_to_past)  # left-click grabs a piece
+        render_fsm.accept("d", self.go_to_future)  # releasing places it
 
         render_fsm.accept("mouse1", self.grab_piece)  # left-click grabs a piece
         render_fsm.accept("mouse1-up", self.release_piece)  # releasing places it
@@ -147,6 +151,19 @@ class FsmStateGameState(ScreenState):
         self.get_cur_turn_side = get_cur_turn_side
 
         self.tap_movement_manager = TapMovementManager(render_fsm, self)
+
+    def go_to_past(self):
+        board = self.render_fsm_ref.get_hist_movement_manager().get_prev()
+        if self.render_fsm_ref.get_hist_movement_manager().up_to_date():
+            return
+        self.is_in_past = True
+        self.update_board(board, True)
+
+    def go_to_future(self):
+        board = self.render_fsm_ref.get_hist_movement_manager().get_next()
+        if self.render_fsm_ref.get_hist_movement_manager().up_to_date():
+            self.is_in_past = False
+        self.update_board(board, True)
 
     def change_dimension(self):
         self.render_fsm_ref.taskMgr.remove('camPosTask')
@@ -214,6 +231,21 @@ class FsmStateGameState(ScreenState):
         self.render_fsm_ref.taskMgr.remove('camRotTask')
         self.render_fsm_ref.taskMgr.add(self.render_fsm_ref.camera_m.update_on_task_rotate, 'camRotTask')
 
+        render_fsm = self.render_fsm_ref
+        render_fsm.ignore("a")  # left-click grabs a piece
+        render_fsm.ignore("d")  # releasing places it
+
+        render_fsm.ignore("mouse1")  # left-click grabs a piece
+        render_fsm.ignore("mouse1-up")  # releasing places it
+
+        render_fsm.ignore("mouse2")
+
+        render_fsm.ignore("mouse3")
+        render_fsm.ignore("mouse3-up")
+
+        render_fsm.ignore("wheel_up")
+        render_fsm.ignore("wheel_down")
+
     def on_exit(self):
         if self.on_exit_func is not None:
             self.on_exit_func()
@@ -251,6 +283,8 @@ class FsmStateGameState(ScreenState):
         self.need_camera_update = False
 
     def grab_piece(self):
+        if self.is_in_past:
+            return
         # If a square is highlighted and it has a piece, set it to dragging
         # mode
         if self.hiSq is not False and self.figures[self.hiSq]:
@@ -598,7 +632,11 @@ class FsmStateGameState(ScreenState):
         self.pickerNode.addSolid(self.pickerRay)
         self.myTraverser.addCollider(self.pickerNP, self.myHandler)
 
-    def update_board(self, board_str):
+    def update_board(self, board_str, watch_hist=False):
+        if watch_hist is False:
+            self.render_fsm_ref.get_hist_movement_manager().reset_offset()
+            self.is_in_past = False
+
         if self.pawn_change_panel is not None:
             self.pawn_change_panel.removeNode()
 

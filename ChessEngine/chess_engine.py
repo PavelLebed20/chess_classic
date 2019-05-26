@@ -15,6 +15,7 @@ from ChessAI.ChessPlayer.chess_player import Player
 from ChessAI.GameController.game_controller import GameController, MoveResult
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
+from ChessEngine.hist_movement_manager import HistMovementManager
 from ChessRender.RenderFsmCommon.render_fsm import RenderFsm
 from direct.task.Task import Task
 
@@ -88,6 +89,8 @@ class Engine:
         self.render.change_state(self.render, "fsm:MainMenu")
         self.online_game_was_started = False
 
+        self.render.get_hist_movement_manager = self.get_hist_movement_manager
+
         self.offline_with_friend_match_data = None
         self.offline_with_computer_match_data = None
 
@@ -119,6 +122,10 @@ class Engine:
         self.server_calculation = False
 
         self.pack_name = 'pack0'
+
+        self.withfriend_hist_movement_manager = HistMovementManager()
+        self.computer_hist_movement_manager = HistMovementManager()
+        self.online_hist_movement_manager = HistMovementManager()
 
         self.render.taskMgr.add(self.step, "step")
         self.render.run()
@@ -365,8 +372,10 @@ class Engine:
         else:
             if self.current_offline_game_mode is OfflineGameMode.WITH_FRIEND:
                 self.offline_with_friend_match_data = None
+                self.withfriend_hist_movement_manager.clear()
             if self.current_offline_game_mode is OfflineGameMode.WITH_COMPUTER:
                 self.offline_with_computer_match_data = None
+                self.computer_hist_movement_manager.clear()
         self.game_state = GameStates.MENU
         self.offline_game_played = None
         self.players[0].stop_timer()
@@ -375,9 +384,11 @@ class Engine:
 
 
     def process_reset_save_data_friend(self):
+        self.withfriend_hist_movement_manager.clear()
         self.offline_with_friend_match_data = None
 
     def process_reset_save_data_computer(self):
+        self.computer_hist_movement_manager.clear()
         self.offline_with_computer_match_data = None
 
     def process_login(self, text_dict):
@@ -552,6 +563,15 @@ class Engine:
     def render_update_board(self):
         board_str = self.game_controller.export_to_chess_board_str()
         self.chess_board = Board(board_str)
+
+        if self.game_result == GameStates.ONLINE_GAME:
+            self.online_hist_movement_manager.make_screen(board_str)
+        else:
+            if self.current_offline_game_mode == OfflineGameMode.WITH_FRIEND:
+                self.withfriend_hist_movement_manager.make_screen(board_str)
+            else:
+                self.computer_hist_movement_manager.make_screen(board_str)
+
         self.render.cur_state.update_board(board_str)
 
     def process_find_player(self, text_dict):
@@ -610,7 +630,6 @@ class Engine:
         self.render.message = text_dict['message']
         self.render.change_state(self.render, "fsm:Message")
 
-
     def process_win_pack(self, pack_data):
         while self.server_calculation:
             sleep(5.0 / 1000.0)
@@ -638,3 +657,12 @@ class Engine:
             self.render.go_to_prev_state()
         if self.game_state == GameStates.ONLINE_GAME:
             pass
+
+    def get_hist_movement_manager(self):
+        if self.game_result == GameStates.ONLINE_GAME:
+            return self.online_hist_movement_manager
+        else:
+            if self.current_offline_game_mode == OfflineGameMode.WITH_FRIEND:
+                return self.withfriend_hist_movement_manager
+            else:
+                return self.computer_hist_movement_manager
