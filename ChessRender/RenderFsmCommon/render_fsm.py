@@ -81,6 +81,9 @@ class RenderFsm(ShowBase):
         self.on_game_exit = None
         self.side = Side.WHITE
 
+        self.login = ''
+        self.email = ''
+
         self.avail_packs = ['pack0']
 
         # sound
@@ -161,7 +164,7 @@ class RenderFsm(ShowBase):
             self.taskMgr.remove('camRotTask')
             return FsmStateSkinSelect(self, self.process_skin_select, self.avail_packs)
         elif key == "fsm:AuthConfirm":
-            return FsmStateAuthConfirm(self.process_confirm_auth)
+            return FsmStateAuthConfirm(self.process_confirm_auth, self.email)
         elif key == "fsm:WinSettings":
             return FsmStateWindowSettings(self)
         elif key == "fsm:WinPack":

@@ -101,7 +101,7 @@ def on_confirm_auth(data):
 
     query = "select chess.confirm_auth('{0}', '{1}')".format(paramsDict['email'],
                                                            paramsDict['auth_code'])
-    res = int(execute_one_res_async(query))
+    res = int(execute_one_res_async(query)[0])
     if res == 0:
         # send error message
         socketio.emit('error', 'message=wrong auth code or email', room=request.sid)

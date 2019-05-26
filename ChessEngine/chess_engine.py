@@ -62,7 +62,7 @@ class Engine:
         Initialize Engine class function
         """
         self.render = RenderFsm()
-        self.server_address = 'http://localhost:8000'  # 'http://localhost:8000' 'https://chessservertest.herokuapp.com'
+        self.server_address = 'https://chessservertest.herokuapp.com'  # 'http://localhost:8000' 'https://chessservertest.herokuapp.com'
 
         self.render.on_application_exit = self.on_application_exit
         #### - functions to process data from users
@@ -101,6 +101,8 @@ class Engine:
 
         self.rate = 0
         self.login = ''
+        self.email = ''
+        self.password = ''
         self.client = None
         self.on_update_now = False
         self.game_state = GameStates.MENU
@@ -400,6 +402,7 @@ class Engine:
         password = text_dict["Password"]
 
         self.login = str(login)
+        self.password = str(password)
 
         self.online_game_was_started = False
 
@@ -416,10 +419,19 @@ class Engine:
         email = text_dict["Email"]
         password = text_dict["Password"]
 
+        # save params
+        self.email = email
+        self.login = login
+        self.password = password
+
         # make client
         self._make_client()
         # make request for connection
         self.client.send_message('auth', 'login={0}&email={1}=&password={2}'.format(login, email, password))
+        # go to confirm menu
+        self.render.login = login
+        self.render.email = email
+        self.render.change_state(self.render, "fsm:AuthConfirm")
 
     def process_confirm_auth(self, text_dict):
         email = text_dict["Email"]
@@ -429,6 +441,9 @@ class Engine:
         self._make_client()
         # make request for connection
         self.client.send_message('confirm_auth', 'email={0}&auth_code={1}'.format(email, auth_code))
+        sleep(0.5)
+        # make request for connection
+        self.client.send_message('login', 'login={0}&password={1}'.format(self.login, self.password))
         self.render.change_state(self.render, "fsm:MainMenu")
 
     def on_login(self, text_dict):
@@ -442,6 +457,7 @@ class Engine:
             self.render.change_state(self.render, "fsm:AuthConfirm")
         else:
             self.rate = int(text_dict['self_rate'])
+            self.login = text_dict['login']
             self.render.is_client_connected_to_server = True
             self.render.change_state(self.render, "fsm:MainMenu")
         self.server_calculation = False
@@ -609,7 +625,6 @@ class Engine:
     def process_error(self, text_dict):
         self.render.message = text_dict['message']
         self.render.change_state(self.render, "fsm:Message")
-
 
     def process_win_pack(self, pack_data):
         while self.server_calculation:
