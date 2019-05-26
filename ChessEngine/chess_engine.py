@@ -62,7 +62,7 @@ class Engine:
         Initialize Engine class function
         """
         self.render = RenderFsm()
-        self.server_address = 'https://chessservertest.herokuapp.com'  # 'http://localhost:8000'
+        self.server_address = 'http://localhost:8000' # 'https://chessservertest.herokuapp.com'
 
         self.render.on_application_exit = self.on_application_exit
         #### - functions to process data from users
@@ -73,9 +73,9 @@ class Engine:
         self.render.process_offline_with_firend = self.process_offline_game_with_firend
         self.render.process_reset_save_data_friend = self.process_reset_save_data_friend
         self.render.process_reset_save_data_computer = self.process_reset_save_data_computer
-
+        self.render.on_match_making_state = self.on_match_making_state
         self.render.get_loacal_player_rating = self.get_loacal_player_rating
-
+        self.render.start_game_by_pairing = self.start_game_by_pairing
         self.render.get_cur_turn_side = self.get_cur_turn_side
         self.player_turn = None
 
@@ -130,7 +130,8 @@ class Engine:
                                  on_update_time_call=self.on_update_time,
                                  on_avail_packs_call=self.on_avail_packs,
                                  on_win_pack_call=self.process_win_pack,
-                                 on_find_pairing_list_call=self.process_pairing_list)
+                                 on_find_pairing_list_call=self.process_pairing_list,
+                                 on_error_call=self.process_error)
 
     def step(self, task):
         """
@@ -271,7 +272,7 @@ class Engine:
         else:
             player_turn = self.player_turn
         if player_turn is None:
-            assert (False)
+            return None
         return Side(player_turn)
 
     def set_menu_state(self):
@@ -434,11 +435,6 @@ class Engine:
             sleep(5.0 / 1000.0)
         self.server_calculation = True
 
-        if 'error' in text_dict:
-            self.render.message = text_dict['error']
-            self.render.change_state(self.render, "fsm:Message")
-            return
-
         if self.render.cur_state_key == "fsm:GameState":
             return
         if 'not_verified' in text_dict:
@@ -451,7 +447,7 @@ class Engine:
 
     def on_continue_game(self):
         if self.online_game_was_started is False:
-            self.render.change_state(self.render, "fsm:Matchmaking")
+            self.render.change_state(self.render, "fsm:Matchmaking1Step")
             return
         self.render.change_state(self.render, "fsm:GameState")
         self.render.cur_state.update_camera(self.local_player.side)
@@ -466,6 +462,8 @@ class Engine:
         self.game_state = GameStates.MENU
         self.game_result = -1
         self.delta_rate = 0
+
+        self.current_move = int(text_dict['next_move'])
 
         if text_dict['board'] is None:
             self.chess_board = Board()
@@ -518,7 +516,6 @@ class Engine:
         self.online_player.update_login(text_dict['opponent_login'])
         self.online_player.update_rate(text_dict['opponent_rate'])
 
-        self.current_move = int(text_dict['next_move'])
         self.online_player.init_time_from_str(text_dict['opponent_time'])
 
         self.render_update_board()
@@ -585,14 +582,42 @@ class Engine:
 
     def process_pairing_list(self, text_dict):
         # here add buttons with ids
-        pass
+        if 'pairing_list' not in text_dict or text_dict['pairing_list'] is None:
+            pairings = []
+        else:
+            pairings_texts = str(text_dict['pairing_list']).split(';')
+            pairings = []
+            for p in pairings_texts:
+                if p != '':
+                    pairings.append(str(p).split(','))
+
+        self.render.set_pairing_list(pairings)
+
+    def start_game_by_pairing(self, pairing_id):
+        # make client
+        self._make_client()
+        # make request for connection
+        self.client.send_message('start_game_by_pairing', 'pairing_id={0}'.format(pairing_id))
+
+    def on_match_making_state(self):
+        # make client
+        self._make_client()
+        # make request for connection
+        self.client.send_message('find_pair_list', '')
+
+    def process_error(self, text_dict):
+        self.render.message = text_dict['message']
+        self.render.change_state(self.render, "fsm:Message")
+
 
     def process_win_pack(self, pack_data):
         while self.server_calculation:
             sleep(5.0 / 1000.0)
         self.server_calculation = True
         self.game_state = GameStates.MENU
-        self.render.avail_packs.append(pack_data['new_pack'])
+        if pack_data['new_pack'] not in self.render.avail_packs:
+            self.render.avail_packs.append(pack_data['new_pack'])
+            self.render.avail_packs.sort()
         self.render.win_pack = pack_data['new_pack']
         self.render.change_state(self.render, "fsm:WinPack")
         self.server_calculation = False

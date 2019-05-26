@@ -35,9 +35,11 @@ class TapMovementManager:
         if self.cur_clicked is None or self.game_state.figures[self.cur_clicked] is None:
             if self.game_state.figures[hiSq] is None:
                 return
-
-            if self.game_state.get_cur_turn_side() is Side.WHITE and self.game_state.figures[hiSq].getTag("figue_lat").isupper() or \
-                self.game_state.get_cur_turn_side() is Side.BLACK and self.game_state.figures[hiSq].getTag("figue_lat").islower():
+            cur_side = self.game_state.get_cur_turn_side()
+            if cur_side is None:
+                return
+            if cur_side is Side.WHITE and self.game_state.figures[hiSq].getTag("figue_lat").isupper() or \
+                cur_side is Side.BLACK and self.game_state.figures[hiSq].getTag("figue_lat").islower():
 
                 self.cur_clicked = hiSq
                 self.cur_clicked_pos = pos
@@ -72,9 +74,10 @@ class TapMovementManager:
 class FsmStateGameState(ScreenState):
     def __init__(self, render_fsm, whiteside_pack_name, blackside_pack_name, side, exit_link, check_move_func, get_cur_turn_side, on_exit_func=None):
         ScreenState.__init__(self)
-        self.exit_link = exit_link
+        self.exit_link = "fsm:MainMenu"
         self.button_sizes = (-1.5, 1.5, -0.4, 0.8)
         self.render_fsm_ref = render_fsm
+        self.render_fsm_ref.taskMgr.remove('camRotTask')
         self.side = side
         self.skysphere = None
         self.objMngr = FigureMngr(blackside_pack_name, whiteside_pack_name)

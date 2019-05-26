@@ -30,7 +30,7 @@ INSERT INTO chess.players (login, password_salt, rate, email, verified, user_pac
                           ('a', crypt('a', gen_salt('bf')), 1000, 'amin1@mail.com', 1::bit, '{1}'),
                           ('b', crypt('b', gen_salt('bf')), 1000, 'amin2@mail.com', 1::bit, '{1}'),
                           ('super', crypt('puper', gen_salt('bf')), 1000, 'super@mail.com', 1::bit,
-                           '{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}');
+                           '{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}');
 
 -- add jobs{1},
 TRUNCATE chess.jobs cascade;
