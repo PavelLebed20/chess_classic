@@ -92,6 +92,7 @@ class RenderFsm(ShowBase):
 
         # play default
         self.sound.turn(SoundTypes.MAIN, False)
+        self.sound.turn(SoundTypes.WIN, False)
 
         self.check_move_func_for_pawn_swap = None
 
