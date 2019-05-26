@@ -19,7 +19,8 @@ BEGIN
 
     FOR v_pairing_row IN
         SELECT * FROM chess.pairing
-        WHERE v_user_rate between chess.pairing.low_rate - 1 and chess.pairing.high_rate
+        WHERE (v_user_rate between chess.pairing.low_rate - 1 and chess.pairing.high_rate) and
+              chess.pairing.user_id != p_user_id
     LOOP
         begin
             SELECT * INTO v_user FROM chess.players WHERE chess.players.user_id = v_pairing_row.user_id limit 1;

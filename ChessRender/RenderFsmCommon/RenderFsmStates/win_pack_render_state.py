@@ -39,7 +39,7 @@ class FsmStateWinPack(ScreenState):
         self.screen_atributes.buttons["but:Next"] = ButtonFsm("-->", (0.5, 0, -0.5), None, None, None, (1.8, 0.8, 0.8))
         self.screen_atributes.buttons["but:Confirm"] = ButtonFsm("Confirm", (0, 0, -0.8), None, None, None, (2.2, 1, 1))
 
-        self.screen_atributes.screen_texts["scrtext:WinPack"] = ScreenTextFsm("You won new pack: " + str(new_pack), (0.0, 0.6))
+        self.screen_atributes.screen_texts["scrtext:WinPack"] = ScreenTextFsm("You won new pack: " + str(new_pack), (-0.6, 0.8))
 
         self.initialize_button_links()
 

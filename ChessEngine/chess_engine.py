@@ -63,7 +63,7 @@ class Engine:
         Initialize Engine class function
         """
         self.render = RenderFsm()
-        self.server_address = 'https://chessservertest.herokuapp.com'#'http://localhost:8000' # 'https://chessservertest.herokuapp.com'
+        self.server_address = 'http://localhost:8000'  # 'http://localhost:8000' 'https://chessservertest.herokuapp.com'
 
         self.render.on_application_exit = self.on_application_exit
         #### - functions to process data from users
@@ -656,7 +656,10 @@ class Engine:
             self.on_offline_game_exit()
             self.render.go_to_prev_state()
         if self.game_state == GameStates.ONLINE_GAME:
-            pass
+            # make client
+            self._make_client()
+            # make request for connection
+            self.client.send_message('surrender', '')
 
     def get_hist_movement_manager(self):
         if self.game_result == GameStates.ONLINE_GAME:

@@ -88,7 +88,7 @@ class RenderFsm(ShowBase):
         self.sound = Sound(self)
 
         # play default
-        self.sound.play(SoundTypes.MAIN, is_looped=True)
+        self.sound.turn(SoundTypes.MAIN, False)
 
         self.check_move_func_for_pawn_swap = None
 
