@@ -113,7 +113,7 @@ class Camera2D:
 
     def __init__(self, camera, lens, win_w, win_h, angle=WHITE_ANGLE):
         self.angle = angle
-        self.MAX_FOV = pow(win_w / win_h, 0.5) * 45
+        self.MAX_FOV = pow(win_w / win_h, 0.5) * 55
         self.lens = lens
         self.camera = camera
         self.z = 25
@@ -145,6 +145,8 @@ class Camera2D:
         pass
 
     def update_on_mouse_wheel(self, mouse_wheel):
+        if True:
+            return
         if self.fov_angle <= self.MIN_FOV and mouse_wheel > 0 or \
            self.fov_angle >= self.MAX_FOV and mouse_wheel < 0:
             return
@@ -155,3 +157,25 @@ class Camera2D:
         elif self.fov_angle > self.MAX_FOV:
             self.fov_angle = self.MAX_FOV
         self._set_pos()
+
+
+class CameraMenu:
+    def __init__(self, camera, lens):
+        self.lens = lens
+        self.camera = camera
+        self.radius = 15
+        self.z = 0
+        self.x = 0
+        self.y = 0
+
+        self.lookat_angle = 0
+
+    def update_on_task_rotate(self, task):
+        self.lookat_angle += 0.001
+        self._set_pos()
+        return Task.cont
+
+    def _set_pos(self):
+        self.camera.setPos(self.x, self.y, self.z)
+        self.camera.lookAt(cos(self.lookat_angle), sin(self.lookat_angle), sin(self.lookat_angle))
+        #self.lens.setFov(self.fov_angle)

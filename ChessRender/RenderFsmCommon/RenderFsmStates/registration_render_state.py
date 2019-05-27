@@ -28,7 +28,6 @@ class FsmStateRegistration(ScreenState):
         self.process_login = process_login
 
     def initialize_button_links(self):
-        self.screen_atributes.buttons["but:Confirm"].add_link("fsm:Login")
         self.screen_atributes.buttons["but:Confirm"].add_command(self.confirm_command)
         self.screen_atributes.buttons["but:Back"].add_link("fsm:Multiplayer")
 

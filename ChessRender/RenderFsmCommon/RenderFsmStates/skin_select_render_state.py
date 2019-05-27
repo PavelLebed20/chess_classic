@@ -15,6 +15,7 @@ from ChessRender.RenderFsmCommon.screen_states import ScreenState
 class FsmStateSkinSelect(ScreenState):
     def __init__(self, render_fsm, process_skin_select, avail_packs=["pack0", "pack1"]):
         ScreenState.__init__(self)
+        self.cur_bg_2d = None
         self.button_sizes = (-2, 2, -0.4, 0.8)
         self.render_fsm_ref = render_fsm
         self.lights = Lights(base, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
@@ -35,11 +36,6 @@ class FsmStateSkinSelect(ScreenState):
         self.screen_atributes.buttons["but:Next"] = ButtonFsm("-->", (0.5, 0, -0.5), None, None, None, (1.8, 0.8, 0.8))
         self.screen_atributes.buttons["but:Confirm"] = ButtonFsm("Confirm", (0.5, 0, -0.8), None, None, None, (2.2, 1, 1))
         self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (-0.5, 0, -0.8), None, None, None, (2.2, 1, 1))
-
-        #self.screen_atributes.option_lists["oplst:PackName"] = OptionListFsm("Pack",
-        #                                                                     avail_packs,
-        #                                                                     self.option_list_confirm,
-        #                                                                     (-0.8, 0 ,0.8))
 
         packs_in_list = []
         for pack in avail_packs:
@@ -101,6 +97,8 @@ class FsmStateSkinSelect(ScreenState):
         self.screen_atributes.buttons["but:2D/3D"].add_command(self.change_dimension)
 
     def change_dimension(self):
+        if self.cur_bg_2d is not None:
+            self.cur_bg_2d.removeNode()
         if self.dimension == Dimension._3D:
             self.dimension = Dimension._2D
             self.camera_p = Camera2D(base.camera, base.camLens, self.render_fsm_ref.cur_window_width, self.render_fsm_ref.cur_window_height)
@@ -114,6 +112,10 @@ class FsmStateSkinSelect(ScreenState):
         self.lights.unset()
         self.cur_model_node.removeNode()
         self.my_scrolled_list.removeNode()
+        self.render_fsm_ref.taskMgr.remove('camRotTask')
+        self.render_fsm_ref.taskMgr.add(self.render_fsm_ref.camera_m.update_on_task_rotate, 'camRotTask')
+        if self.cur_bg_2d is not None:
+            self.cur_bg_2d.removeNode()
 
     def get_next(self):
         self.cur_model_num += 1
@@ -135,15 +137,26 @@ class FsmStateSkinSelect(ScreenState):
         self.clear_state()
 
     def load_model_to_screen(self):
+        if self.cur_bg_2d is not None:
+            self.cur_bg_2d.removeNode()
         if self.cur_model_node is not None:
             self.cur_model_node.removeNode()
         if self.dimension == Dimension._3D:
+            if self.cur_bg_2d is not None:
+                self.cur_bg_2d.removeNode()
             self.cur_model_node = self.figure_manager.load_figure_model(self.models_order[self.cur_model_num])
+            self.cur_model_node.setPos(0, 0, 0)
         else:
+            self.cur_bg_2d = self.figure_manager.load_plane_textured(None)
+            self.cur_bg_2d.setPos(0, -3, -0.1)
+            self.cur_bg_2d.setHpr(180, -90, 0)
+            self.cur_bg_2d.setScale(3)
+            self.cur_bg_2d.reparentTo(self.render_fsm_ref.render)
+
             self.cur_model_node = self.figure_manager.load_figure_model_2D(self.models_order[self.cur_model_num])
             self.cur_model_node.setHpr(180, -90, 0)
+            self.cur_model_node.setPos(0, -3, 0)
 
-        self.cur_model_node.setPos(0, 0, 0)
         self.cur_model_node.setScale(3)
         self.cur_model_node.reparentTo(self.render_fsm_ref.render)
 

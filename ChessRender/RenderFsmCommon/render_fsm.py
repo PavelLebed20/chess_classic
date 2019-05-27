@@ -5,11 +5,13 @@ from direct.showbase.ShowBase import ShowBase, WindowProperties
 from direct.task import Task
 
 from ChessBoard.chess_figure import Side
+from ChessRender.RenderFsmCommon.Camera.camera3d import CameraMenu
 from ChessRender.RenderFsmCommon.RenderFsmStates.auth_confirm_state import FsmStateAuthConfirm
 from ChessRender.RenderFsmCommon.RenderFsmStates.game_render_state import FsmStateGameState
-from ChessRender.RenderFsmCommon.RenderFsmStates.load_render_state import FsmStateLoad
 from ChessRender.RenderFsmCommon.RenderFsmStates.login_render_state import FsmStateLogin
 from ChessRender.RenderFsmCommon.RenderFsmStates.main_menu_render_state import FsmStateMainMenu
+from ChessRender.RenderFsmCommon.RenderFsmStates.match_making_first_step_render_state import \
+    FsmStateMatchmakingFirstStep
 from ChessRender.RenderFsmCommon.RenderFsmStates.match_making_state import FsmStateMatchmaking
 from ChessRender.RenderFsmCommon.RenderFsmStates.multiplayer_menu_render_state import FsmStateMultiplayer
 from ChessRender.RenderFsmCommon.RenderFsmStates.registration_render_state import FsmStateRegistration
@@ -18,6 +20,8 @@ from ChessRender.RenderFsmCommon.RenderFsmStates.skin_select_render_state import
 from ChessRender.RenderFsmCommon.RenderFsmStates.win_pack_render_state import FsmStateWinPack
 from ChessRender.RenderFsmCommon.RenderFsmStates.window_settings_render_state import FsmStateWindowSettings, \
     DEFAULT16x9SCREEN_W, DEFAULT16x9SCREEN_H
+
+from ChessRender.RenderFsmCommon.RenderFsmStates.message_render_state import FsmStateMessage
 from ChessSound.Sound import Sound, SoundTypes
 
 
@@ -60,6 +64,9 @@ class RenderFsm(ShowBase):
 
         self.on_application_exit = None
 
+        self.on_press_giveup_button = None
+        self.get_hist_movement_manager = None
+
         self.get_cur_turn_side = None
 
         self.whiteside_pack_name = None
@@ -75,19 +82,48 @@ class RenderFsm(ShowBase):
         self.on_game_exit = None
         self.side = Side.WHITE
 
+        self.login = ''
+        self.email = ''
+
         self.avail_packs = ['pack0']
 
         # sound
         self.sound = Sound(self)
 
         # play default
-        self.sound.play(SoundTypes.MAIN, is_looped=True)
+        self.sound.turn(SoundTypes.MAIN, False)
+        self.sound.turn(SoundTypes.WIN, False)
 
         self.check_move_func_for_pawn_swap = None
 
         self.win_pack = None
 
+        self.prev_render_not_message_state_key = None
+
+        self.message = None
+
+        self.get_loacal_player_rating = None
+
+        self.init_sky_sphere()
+        self.camera_m = CameraMenu(base.camera, base.camLens)
+        self.taskMgr.add(self.camera_m.update_on_task_rotate, 'camRotTask')
+        self.on_match_making_state = None
+        self.start_game_by_pairing = None
+
+        self.refresh_matchmaking_pairlist = None
+
+    def init_sky_sphere(self):
+        self.skysphere = loader.loadModel("ChessRender/data/menu_cubemap1.bam")
+        self.skysphere.setBin('background', 1)
+        self.skysphere.setDepthWrite(0)
+        self.skysphere.reparentTo(render)
+        self.skysphere.setPos(0, 0, 0)
+        self.skysphere.setScale(25)
+
     def init_state_by_key(self, key):
+        if self.cur_state_key != "fsm:Message":
+            self.prev_render_not_message_state_key = self.cur_state_key
+
         self.cur_state_key = key
         if key == "fsm:MainMenu":
             return FsmStateMainMenu(self.is_client_connected_to_server,
@@ -97,6 +133,7 @@ class RenderFsm(ShowBase):
         elif key == "fsm:SinglePlayerLobby":
             return FsmStateSinglePlayerLobby(self.process_offline_with_computer, self.process_offline_with_firend, self.process_reset_save_data_friend, self.process_reset_save_data_computer)
         elif key == "fsm:GameState":
+            self.taskMgr.remove('camRotTask')
             if isinstance(self.cur_state, FsmStateSinglePlayerLobby):
                 return FsmStateGameState(self,
                                          self.whiteside_pack_name,
@@ -117,21 +154,28 @@ class RenderFsm(ShowBase):
         elif key == "fsm:Multiplayer":
             return FsmStateMultiplayer()
         elif key == "fsm:Login":
-            return FsmStateLogin(self.process_login)
+            return FsmStateLogin(self.process_login, self)
         elif key == "fsm:Registration":
             return FsmStateRegistration(self.process_registration)
-        elif key == "fsm:Load":
-            return FsmStateLoad()
+        elif key == "fsm:Message":
+            return FsmStateMessage(self.message, self)
+        elif key == "fsm:Matchmaking1Step":
+            self.on_match_making_state()
+            return FsmStateMatchmakingFirstStep(self.process_find_player, self.start_game_by_pairing, self)
         elif key == "fsm:Matchmaking":
-            return FsmStateMatchmaking(self.process_find_player)
+            return FsmStateMatchmaking(self.process_find_player, self)
         elif key == "fsm:SkinSelect":
+            self.taskMgr.remove('camRotTask')
             return FsmStateSkinSelect(self, self.process_skin_select, self.avail_packs)
         elif key == "fsm:AuthConfirm":
-            return FsmStateAuthConfirm(self.process_confirm_auth)
+            return FsmStateAuthConfirm(self.process_confirm_auth, self.email)
         elif key == "fsm:WinSettings":
             return FsmStateWindowSettings(self)
         elif key == "fsm:WinPack":
-            return FsmStateWinPack(self.win_pack)
+            self.taskMgr.remove('camRotTask')
+            return FsmStateWinPack(self, self.win_pack)
+        else:
+            assert (False, "Incorrect fsm state")
 
     def render(self):
         self.cur_state.render(self)
@@ -155,6 +199,9 @@ class RenderFsm(ShowBase):
             render_fsm.sound.turn_off_all()
         self.on_update_now = False
 
+    def go_to_prev_state(self):
+        self.change_state(self, self.prev_render_not_message_state_key)
+
     # Mouse functions
     def mouse_task(self, task):
         self.cur_state.mouse_task()
@@ -166,3 +213,6 @@ class RenderFsm(ShowBase):
     def mouse_release(self):
         self.cur_state.mouse_release()
 
+    def set_pairing_list(self, pairing_list):
+        if isinstance(self.cur_state, FsmStateMatchmakingFirstStep):
+            self.cur_state.set_pairing_list(pairing_list)

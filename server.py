@@ -99,9 +99,13 @@ def on_confirm_auth(data):
 
     paramsDict = supp.getParamsValMap(data)
 
-    query = "call chess.confirm_auth('{0}', '{1}')".format(paramsDict['email'],
-                                                             paramsDict['auth_code'])
-    execute_no_res_async(query)
+    query = "select chess.confirm_auth('{0}', '{1}')".format(paramsDict['email'],
+                                                           paramsDict['auth_code'])
+    res = int(execute_one_res_async(query)[0])
+    if res == 0:
+        # send error message
+        socketio.emit('error', 'message=wrong auth code or email', room=request.sid)
+
 
 
 @socketio.on('auth')
@@ -118,20 +122,9 @@ def on_auth(data):
                                                                   paramsDict['email'])
 
     res = execute_one_res_async(query)[0]
-    print("Auth code is " + str(res))
-    if res is not None:
-        """
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.ehlo()
-        server.login("chess.classic.official@gmail.com", "ChhessClassicc1488")
-        msg = "{0}, thank your for authorization on chess classic club.".format(paramsDict['login'])
-        msg += "Your authentication code is {0}.".format(res)
-
-        server.sendmail("chess.classic.official@gmail.com", [paramsDict['email']], msg)
-        server.quit()
-        print('Failed to send email to {}'.format(paramsDict['email']))
-        """
-        pass
+    if res == "":
+        # send error message
+        socketio.emit('error', 'message=Wrong registration params', room=request.sid)
 
 
 @socketio.on('login')
@@ -146,6 +139,8 @@ def on_login(data):
     user_id = int(execute_one_res_async(query)[0])
     if user_id < 0:
         print('Invalid user!')
+        # send error message
+        socketio.emit('error', 'message=Unknown login or password', room=request.sid)
         return
     clients[request.sid] = user_id
     user_client_map[user_id] = request.sid
@@ -163,6 +158,31 @@ def on_find_pair(data):
                                                            int(paramsDict['hight_rate']),
                                                            int(paramsDict['move_time']),
                                                            str(paramsDict['game_time']).rjust(2, '0'))
+        execute_no_res_async(query)
+
+
+@socketio.on('find_pair_list')
+def on_find_pair_list(data):
+    print("Message recieved: " + str(data))
+    if request.sid in clients and clients[request.sid] is not None:
+        query = "call chess.add_pairings_list({0})".format(clients[request.sid])
+        execute_no_res_async(query)
+
+
+@socketio.on('start_game_by_pairing')
+def on_find_pair_list(data):
+    paramsDict = supp.getParamsValMap(data)
+    print("Message recieved: " + str(data))
+    if request.sid in clients and clients[request.sid] is not None:
+        query = "call chess.start_game_by_pairing_id({0}, {1})".format(clients[request.sid], paramsDict['pairing_id'])
+        execute_no_res_async(query)
+
+
+@socketio.on('surrender')
+def on_surrender(data):
+    print("Message recieved: " + str(data))
+    if request.sid in clients and clients[request.sid] is not None:
+        query = "call chess.surrender({0})".format(clients[request.sid])
         execute_no_res_async(query)
 
 

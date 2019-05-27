@@ -6,7 +6,8 @@ import ServerComponents.Suppurt.support as supp
 
 class Client:
     def __init__(self, adress, on_login_call, on_update_call,
-                 on_update_time_call, on_avail_packs_call, on_win_pack_call):
+                 on_update_time_call, on_avail_packs_call, on_win_pack_call,
+                 on_find_pairing_list_call, on_error_call):
         self.sio = socketio.Client()
         self.sio.on('connect', self.on_connect)
         #self.sio.on('disconnect', self.on_disconnect)
@@ -16,13 +17,16 @@ class Client:
         self.sio.on('update_time', self.on_update_time)
         self.sio.on('avail_packs', self.on_avail_packs)
         self.sio.on('win_pack', self.on_win_pack)
+        self.sio.on('pairing_list', self.on_pairing_list)
+        self.sio.on('error', self.on_error)
 
         self.on_update_call = on_update_call
         self.on_login_call = on_login_call
         self.on_update_time_call = on_update_time_call
         self.on_avail_packs_call = on_avail_packs_call
         self.on_win_pack_call = on_win_pack_call
-
+        self.on_find_pairing_list_call = on_find_pairing_list_call
+        self.on_error_call = on_error_call
         try:
             self.sio.connect(adress)
         except:
@@ -91,4 +95,17 @@ class Client:
 
         if self.on_win_pack_call is not None:
             self.on_win_pack_call(paramsMap)
+
+    def on_pairing_list(self, data):
+        paramsMap = supp.getParamsValMap(data)
+        print('Recieved message: ' + str(paramsMap))
+        self.sio.emit('verify_message', "request_id={}".format(paramsMap['request_id']))
+        if self.on_find_pairing_list_call is not None:
+            self.on_find_pairing_list_call(paramsMap)
+
+    def on_error(self, data):
+        paramsMap = supp.getParamsValMap(data)
+        print('Recieved message: ' + str(paramsMap))
+        if self.on_error_call is not None:
+            self.on_error_call(paramsMap)
 

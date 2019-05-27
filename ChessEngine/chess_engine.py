@@ -5,6 +5,7 @@
 ###############################
 import copy
 import sys
+import threading
 from enum import Enum
 from time import sleep
 
@@ -14,6 +15,7 @@ from ChessAI.ChessPlayer.chess_player import Player
 from ChessAI.GameController.game_controller import GameController, MoveResult
 from ChessBoard.chess_board import Board
 from ChessBoard.chess_figure import Side
+from ChessEngine.hist_movement_manager import HistMovementManager
 from ChessRender.RenderFsmCommon.render_fsm import RenderFsm
 from direct.task.Task import Task
 
@@ -61,7 +63,7 @@ class Engine:
         Initialize Engine class function
         """
         self.render = RenderFsm()
-        self.server_address = 'https://chessservertest.herokuapp.com'
+        self.server_address = 'https://chessservertest.herokuapp.com'  # 'http://localhost:8000' 'https://chessservertest.herokuapp.com'
 
         self.render.on_application_exit = self.on_application_exit
         #### - functions to process data from users
@@ -72,10 +74,13 @@ class Engine:
         self.render.process_offline_with_firend = self.process_offline_game_with_firend
         self.render.process_reset_save_data_friend = self.process_reset_save_data_friend
         self.render.process_reset_save_data_computer = self.process_reset_save_data_computer
-
+        self.render.on_match_making_state = self.on_match_making_state
+        self.render.get_loacal_player_rating = self.get_loacal_player_rating
+        self.render.start_game_by_pairing = self.start_game_by_pairing
         self.render.get_cur_turn_side = self.get_cur_turn_side
         self.player_turn = None
 
+        self.render.on_press_giveup_button = self.on_localplayer_giveup
         self.render.on_offline_game_exit = self.on_offline_game_exit
         self.render.process_confirm_auth = self.process_confirm_auth
         self.render.on_game_exit = self.set_menu_state
@@ -83,6 +88,9 @@ class Engine:
         self.render.process_continue_online_game = self.on_continue_game
         self.render.change_state(self.render, "fsm:MainMenu")
         self.online_game_was_started = False
+
+        self.render.get_hist_movement_manager = self.get_hist_movement_manager
+        self.render.refresh_matchmaking_pairlist = self.refresh_matchmaking_pairlist
 
         self.offline_with_friend_match_data = None
         self.offline_with_computer_match_data = None
@@ -95,8 +103,9 @@ class Engine:
         self.render.whiteside_pack_name = self.whiteside_pack_name
         self.render.blackside_pack_name = self.blackside_pack_name
 
-        self.rate = 0
         self.login = ''
+        self.email = ''
+        self.password = ''
         self.client = None
         self.on_update_now = False
         self.game_state = GameStates.MENU
@@ -116,6 +125,10 @@ class Engine:
 
         self.pack_name = 'pack0'
 
+        self.withfriend_hist_movement_manager = HistMovementManager()
+        self.computer_hist_movement_manager = HistMovementManager()
+        self.online_hist_movement_manager = HistMovementManager()
+
         self.render.taskMgr.add(self.step, "step")
         self.render.run()
 
@@ -126,7 +139,9 @@ class Engine:
                                  on_update_call=self.on_update_game,
                                  on_update_time_call=self.on_update_time,
                                  on_avail_packs_call=self.on_avail_packs,
-                                 on_win_pack_call=self.process_win_pack)
+                                 on_win_pack_call=self.process_win_pack,
+                                 on_find_pairing_list_call=self.process_pairing_list,
+                                 on_error_call=self.process_error)
 
     def step(self, task):
         """
@@ -267,7 +282,7 @@ class Engine:
         else:
             player_turn = self.player_turn
         if player_turn is None:
-            assert (False)
+            return None
         return Side(player_turn)
 
     def set_menu_state(self):
@@ -301,7 +316,6 @@ class Engine:
             self.players = [LocalPlayer(Side.WHITE), MinmaxBot(Side.BLACK, self.game_controller)]
             self.offline_with_computer_match_data.white_player_data.player_init(self.players[0])
             self.offline_with_computer_match_data.black_player_data.player_init(self.players[1])
-
 
         self.render.side = Side.WHITE
         self.render.process_set_move_player = self.players[self.player_turn].set_move
@@ -337,7 +351,6 @@ class Engine:
             self.offline_with_friend_match_data.white_player_data.player_init(self.players[0])
             self.offline_with_friend_match_data.black_player_data.player_init(self.players[1])
 
-
         self.render.side = Side.WHITE
         self.render.process_set_move_player = self.players[self.player_turn].set_move
         self.game_result = -1
@@ -345,7 +358,6 @@ class Engine:
 
         self.offline_game_played = None
         self.current_offline_game_mode = OfflineGameMode.WITH_FRIEND
-
 
         self.game_state = GameStates.OFFLINE_GAME
 
@@ -362,8 +374,10 @@ class Engine:
         else:
             if self.current_offline_game_mode is OfflineGameMode.WITH_FRIEND:
                 self.offline_with_friend_match_data = None
+                self.withfriend_hist_movement_manager.clear()
             if self.current_offline_game_mode is OfflineGameMode.WITH_COMPUTER:
                 self.offline_with_computer_match_data = None
+                self.computer_hist_movement_manager.clear()
         self.game_state = GameStates.MENU
         self.offline_game_played = None
         self.players[0].stop_timer()
@@ -372,9 +386,11 @@ class Engine:
 
 
     def process_reset_save_data_friend(self):
+        self.withfriend_hist_movement_manager.clear()
         self.offline_with_friend_match_data = None
 
     def process_reset_save_data_computer(self):
+        self.computer_hist_movement_manager.clear()
         self.offline_with_computer_match_data = None
 
     def process_login(self, text_dict):
@@ -387,11 +403,17 @@ class Engine:
         keys are one the string const of the form L_SOME (see. UIPrimitives.room)
         values are strings (print by user)
         """
+        self.login_process_thead = threading.Thread(target=self.login_process_theading,
+                                                    args=(text_dict,))
+        self.login_process_thead.start()
 
+    def login_process_theading(self, text_dict):
+        print("a")
         login = text_dict["Login"]
         password = text_dict["Password"]
 
         self.login = str(login)
+        self.password = str(password)
 
         self.online_game_was_started = False
 
@@ -408,10 +430,19 @@ class Engine:
         email = text_dict["Email"]
         password = text_dict["Password"]
 
+        # save params
+        self.email = email
+        self.login = login
+        self.password = password
+
         # make client
         self._make_client()
         # make request for connection
         self.client.send_message('auth', 'login={0}&email={1}=&password={2}'.format(login, email, password))
+        # go to confirm menu
+        self.render.login = login
+        self.render.email = email
+        self.render.change_state(self.render, "fsm:AuthConfirm")
 
     def process_confirm_auth(self, text_dict):
         email = text_dict["Email"]
@@ -421,12 +452,16 @@ class Engine:
         self._make_client()
         # make request for connection
         self.client.send_message('confirm_auth', 'email={0}&auth_code={1}'.format(email, auth_code))
+        sleep(0.5)
+        # make request for connection
+        self.client.send_message('login', 'login={0}&password={1}'.format(self.login, self.password))
         self.render.change_state(self.render, "fsm:MainMenu")
 
     def on_login(self, text_dict):
         while self.server_calculation:
             sleep(5.0 / 1000.0)
         self.server_calculation = True
+
         if self.render.cur_state_key == "fsm:GameState":
             return
         if 'not_verified' in text_dict:
@@ -439,7 +474,7 @@ class Engine:
 
     def on_continue_game(self):
         if self.online_game_was_started is False:
-            self.render.change_state(self.render, "fsm:Matchmaking")
+            self.render.change_state(self.render, "fsm:Matchmaking1Step")
             return
         self.render.change_state(self.render, "fsm:GameState")
         self.render.cur_state.update_camera(self.local_player.side)
@@ -454,6 +489,8 @@ class Engine:
         self.game_state = GameStates.MENU
         self.game_result = -1
         self.delta_rate = 0
+
+        self.current_move = int(text_dict['next_move'])
 
         if text_dict['board'] is None:
             self.chess_board = Board()
@@ -506,7 +543,6 @@ class Engine:
         self.online_player.update_login(text_dict['opponent_login'])
         self.online_player.update_rate(text_dict['opponent_rate'])
 
-        self.current_move = int(text_dict['next_move'])
         self.online_player.init_time_from_str(text_dict['opponent_time'])
 
         self.render_update_board()
@@ -542,6 +578,15 @@ class Engine:
     def render_update_board(self):
         board_str = self.game_controller.export_to_chess_board_str()
         self.chess_board = Board(board_str)
+
+        if self.game_result == GameStates.ONLINE_GAME:
+            self.online_hist_movement_manager.make_screen(board_str)
+        else:
+            if self.current_offline_game_mode == OfflineGameMode.WITH_FRIEND:
+                self.withfriend_hist_movement_manager.make_screen(board_str)
+            else:
+                self.computer_hist_movement_manager.make_screen(board_str)
+
         self.render.cur_state.update_board(board_str)
 
     def process_find_player(self, text_dict):
@@ -571,12 +616,43 @@ class Engine:
                                  'low_rate={0}&hight_rate={1}&game_time={2}&move_time={3}'
                                  .format(min_rate, max_rate, game_time, move_time))
 
+    def process_pairing_list(self, text_dict):
+        # here add buttons with ids
+        if 'pairing_list' not in text_dict or text_dict['pairing_list'] is None:
+            pairings = []
+        else:
+            pairings_texts = str(text_dict['pairing_list']).split(';')
+            pairings = []
+            for p in pairings_texts:
+                if p != '':
+                    pairings.append(str(p).split(','))
+
+        self.render.set_pairing_list(pairings)
+
+    def start_game_by_pairing(self, pairing_id):
+        # make client
+        self._make_client()
+        # make request for connection
+        self.client.send_message('start_game_by_pairing', 'pairing_id={0}'.format(pairing_id))
+
+    def on_match_making_state(self):
+        # make client
+        self._make_client()
+        # make request for connection
+        self.client.send_message('find_pair_list', '')
+
+    def process_error(self, text_dict):
+        self.render.message = text_dict['message']
+        self.render.change_state(self.render, "fsm:Message")
+
     def process_win_pack(self, pack_data):
         while self.server_calculation:
             sleep(5.0 / 1000.0)
         self.server_calculation = True
         self.game_state = GameStates.MENU
-        self.render.avail_packs.append(pack_data['new_pack'])
+        if pack_data['new_pack'] not in self.render.avail_packs:
+            self.render.avail_packs.append(pack_data['new_pack'])
+            self.render.avail_packs.sort()
         self.render.win_pack = pack_data['new_pack']
         self.render.change_state(self.render, "fsm:WinPack")
         self.server_calculation = False
@@ -586,6 +662,29 @@ class Engine:
             self.client.disconnect()
         sys.exit()
 
+    def get_loacal_player_rating(self):
+        return self.rate
 
+    def on_localplayer_giveup(self):
+        if self.game_state == GameStates.OFFLINE_GAME:
+            self.game_result = 0
+            self.on_offline_game_exit()
+            self.render.go_to_prev_state()
+        if self.game_state == GameStates.ONLINE_GAME:
+            # make client
+            self._make_client()
+            # make request for connection
+            print('Send surrender message')
+            self.client.send_message('surrender', '')
 
+    def get_hist_movement_manager(self):
+        if self.game_result == GameStates.ONLINE_GAME:
+            return self.online_hist_movement_manager
+        else:
+            if self.current_offline_game_mode == OfflineGameMode.WITH_FRIEND:
+                return self.withfriend_hist_movement_manager
+            else:
+                return self.computer_hist_movement_manager
 
+    def refresh_matchmaking_pairlist(self):
+        self.on_match_making_state()

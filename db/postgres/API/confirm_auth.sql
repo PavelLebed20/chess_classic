@@ -1,9 +1,8 @@
-CREATE OR REPLACE PROCEDURE chess.confirm_auth(
+CREATE OR REPLACE FUNCTION chess.confirm_auth(
 	p_email varchar(128),
 	p_auth_code varchar(64))
-LANGUAGE 'plpgsql'
+	RETURNS INTEGER AS $$
 
-AS $BODY$
 DECLARE
     v_user_id integer;
 BEGIN
@@ -13,10 +12,12 @@ BEGIN
      limit 1
      into v_user_id;
      if v_user_id isnull then
-         return;
+         return 0;
      end if;
     UPDATE chess.players SET verified = 1::bit WHERE chess.players.user_id = v_user_id;
     UPDATE chess.auth_codes SET send = 1::bit WHERE chess.auth_codes.send = 1::bit;
+
+    return 1;
 end;
 
-$BODY$
+$$ LANGUAGE plpgsql;
