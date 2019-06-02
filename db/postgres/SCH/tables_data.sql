@@ -28,13 +28,11 @@ INSERT INTO chess.players (login, password_salt, rate, email, verified, user_pac
                           ('a', crypt('a', gen_salt('bf')), 1000, 'amin1@mail.com', 1::bit, '{1}'),
                           ('b', crypt('b', gen_salt('bf')), 1000, 'amin2@mail.com', 1::bit, '{1}'),
                           ('super', crypt('puper', gen_salt('bf')), 1000, 'super@mail.com', 1::bit,
-                           '{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 13}') ON CONFLICT DO NOTHING;
+                           '{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}') ON CONFLICT DO NOTHING;
 
 -- update user ratings
 UPDATE chess.players SET rate = 1200 WHERE rate < 1200;
-update chess.players SET user_packs = '{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 13}' WHERE login = 'super';
 -- add jobs{1},
-TRUNCATE chess.jobs cascade;
 INSERT INTO chess.jobs (proc_name, delta_execution) VALUES
                        ('chess.job_stop_messages', TIME '00:01:00'),
                        ('chess.job_game_time_sync', TIME '00:00:05');
