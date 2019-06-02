@@ -1,4 +1,11 @@
 # Release Notes
+## Version 2.3.0 (Sprint 8) (02.06.2019)
+### New Features
+* Add more real-looking lighting preset
+* Add database update script
+* Better configuration for executable file
+* New packs
+# Release Notes
 ## Version 2.2.0 (Sprint 7) (26.05.2019)
 ### New Features
 * Quick pairing choose from existing pairing responses

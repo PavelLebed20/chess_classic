@@ -4,33 +4,24 @@ from panda3d.core import PointLight, VBase4, AmbientLight, DirectionalLight, LVe
 class Lights:
     def __init__(self, base, width, height):
         self.base = base
-        #self.width, self.height = width, height
-        #self.direct_light = []
-        #self.spot_light_node = []
-        #self.point_light = []
-        #self.ambient_light = None
+        self.width, self.height = width, height
+
         self.setup_lights()
-        #base.render.setShaderAuto()
+        self.light1 = self.init_light(0, -10, 20)
+       # self.light2 = self.init_light(0, 10, 20)
 
-        #self.point_light[0].node().setShadowCaster(True)
+        self.base.render.setLight(self.light1)
+       # self.base.render.setLight(self.light2)
 
-        light1 = self.init_light(10, 10, 15)
-        light2 = self.init_light(-10, -10, 15)
-        #light3 = self.init_light(-10, -10, 15)
-        #light4 = self.init_light(10, -10, 15)
-
-        self.base.render.setLight(light1)
-        self.base.render.setLight(light2)
-        #self.base.render.setLight(light3)
-        #self.base.render.setLight(light4)
         self.base.render.setShaderAuto()
 
     def init_light(self, x, y, z):
         light = self.base.render.attachNewNode(Spotlight("Spot"))
         light.node().setScene(self.base.render)
-        light.node().setShadowCaster(True)
-        light.node().getLens().setFov(40)
-        light.node().getLens().setNearFar(10, 100)
+        light.node().setShadowCaster(True, 1024 * 2, 1024 * 2)
+        light.node().getLens().setFov(35)
+        #light.node().showFrustum()
+        light.node().getLens().setNearFar(10, 30)
         light.setPos(x, y, z)
         light.lookAt(0, 0, 0)
         return light
@@ -50,11 +41,11 @@ class Lights:
         self.ambient_light = self.base.render.attachNewNode(ambientLight)
         self.base.render.setLight(self.base.render.attachNewNode(ambientLight))
 
-    def setup_direct_light(self, angle_1, angle_2, angle_3):
+    def setup_direct_light(self, angle_1, angle_2, angle_3, x, y, z):
         directionalLight = DirectionalLight("directionalLight")
         directionalLight.setDirection(LVector3(angle_1, angle_2, angle_3))
         directionalLight.setColor((0.6, 0.6, 0.6, 1))
-        directionalLight.setShadowCaster(True, self.width, self.height)
+        directionalLight.setShadowCaster(True, 2048, 2048)
         light = self.base.render.attachNewNode(directionalLight)
         self.direct_light.append(light)
         self.base.render.setLight(light)
