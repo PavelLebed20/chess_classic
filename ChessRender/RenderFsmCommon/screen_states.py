@@ -3,7 +3,9 @@ from direct.gui.DirectEntry import DirectEntry
 from direct.gui.DirectOptionMenu import DirectOptionMenu
 from direct.gui.DirectRadioButton import DirectRadioButton
 from direct.gui.OnscreenText import OnscreenText
+from panda3d.core import TransparencyAttrib
 
+screen_style = True
 
 class ScreenAtributes:
     def __init__(self):
@@ -24,6 +26,7 @@ class ScreenState:
         self.radio_button_var = [0]
 
         self.button_sizes = (-3, 3, -0.4, 0.8) # default sizes
+        self.image_sizes = (5, 1, 1) # default sizes
 
     def initialize_button_links(self):
         pass
@@ -58,14 +61,38 @@ class ScreenState:
             else:
                 button_sizes = button.new_size
 
-            gui_button = DirectButton(text=button.title, scale=0.2,
+            if screen_style:
+                if button.image_sizes is None:
+                    image_sizes = self.image_sizes
+                else:
+                    image_sizes = button.image_sizes
+
+                texture_default = loader.loadTexture("ChessRender\data\\button.png")
+                texture_rolled_on = loader.loadTexture("ChessRender\data\\button1.png")
+                texture_pushed = loader.loadTexture("ChessRender\data\\button2.png")
+
+                gui_button = DirectButton(text=button.title, scale=0.2,
                                       command=commad_and_link,
                                       extraArgs=[command_lambda, link_lambda, render_fsm, button],
                                       pos=(pos[0], pos[1], pos[2]),
-                                      frameColor=((0.8, 0.8, 0.8, 0.8), (0.4, 0.4, 0.4, 0.8), (0.4, 0.4, 0.8, 0.8),
-                                                  (0.1, 0.1, 0.1, 0.8)),
-                                      frameSize=button_sizes
-                                     )
+                                      frameColor=(0.8, 0.8, 0.8, 0.0),
+                                      frameSize=button_sizes,
+                                      image=[texture_default, texture_pushed, texture_rolled_on],
+                                      image_scale=image_sizes,
+                                      image_pos=(0, 0, 0.25)
+                                      )
+                gui_button.setTransparency(TransparencyAttrib.MAlpha)
+
+            else:
+                gui_button = DirectButton(text=button.title, scale=0.2,
+                                          command=commad_and_link,
+                                          extraArgs=[command_lambda, link_lambda, render_fsm, button],
+                                          pos=(pos[0], pos[1], pos[2]),
+                                          frameColor=((0.8, 0.8, 0.8, 0.8), (0.4, 0.4, 0.4, 0.8), (0.4, 0.4, 0.8, 0.8),
+                                                      (0.1, 0.1, 0.1, 0.8)),
+                                          frameSize=button_sizes,
+                                          )
+            gui_button.setScale(button.scale)
             self.screen_atributes.scene_nodes.append(gui_button)
 
 
@@ -77,7 +104,8 @@ class ScreenState:
             gui_text_field = DirectEntry(initialText=text_field.initial_text,
                                          scale=0.1,
                                          pos=(pos[0], pos[1], pos[2]),
-                                         numLines=2,
+                                         numLines=1,
+                                         width = 15,
                                          obscured=text_field.need_hide,
                                         )
             self.gui_text_fields[text_field.title] = gui_text_field
@@ -87,7 +115,7 @@ class ScreenState:
             screen_text = self.screen_atributes.screen_texts[screen_text_key]
             pos = screen_text.position
 
-            gui_screen_text = OnscreenText(text=screen_text.text, pos=(pos[0], pos[1]))
+            gui_screen_text = OnscreenText(text=screen_text.text, pos=(pos[0], pos[1]), bg=(1, 1, 1, 1))
 
             self.screen_atributes.scene_nodes.append(gui_screen_text)
 

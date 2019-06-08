@@ -85,12 +85,12 @@ class Camera3D:
         self.old_x = new_x
         self.old_y = new_y
 
-    def prepare_task_goto_player_side_position(self, side):
+    def prepare_task_goto_player_side_position(self, side, steps=60):
         if side is Side.WHITE:
             self.need_to_change = self.WHITE_ANGLE - self.angle
         else:
             self.need_to_change = self.BLACK_ANGLE - self.angle
-        self.steps = 50
+        self.steps = steps
         self.change_step = self.need_to_change / self.steps
 
     def task_goto_player_side_position(self, task):
@@ -103,6 +103,7 @@ class Camera3D:
             return Task.done
         return Task.cont
 
+
 class Camera2D:
     MAX_FOV = 45
     MIN_FOV = 20
@@ -112,12 +113,15 @@ class Camera2D:
 
     def __init__(self, camera, lens, win_w, win_h, angle=WHITE_ANGLE):
         self.angle = angle
-        self.MAX_FOV = pow(win_w / win_h, 0.5) * 45
+        self.MAX_FOV = pow(win_w / win_h, 0.5) * 55
         self.lens = lens
         self.camera = camera
         self.z = 25
         self.x = 0
-        self.y = 0
+        if angle == 180: #WHITE_ANGLE
+            self.y = -0.4
+        else:
+            self.y = 0.4
 
         self.fov_angle = (self.MAX_FOV + self.MIN_FOV) / 2
 
@@ -125,14 +129,10 @@ class Camera2D:
         self._set_pos()
         self.camera.setH(angle)
 
-
     def set_default(self):
         pass
 
     def update_pos(self, new_x, new_y):
-        pass
-
-    def update_on_mouse_wheel(self, mouse_wheel):
         pass
 
     def _set_pos(self):
@@ -145,6 +145,8 @@ class Camera2D:
         pass
 
     def update_on_mouse_wheel(self, mouse_wheel):
+        if True:
+            return
         if self.fov_angle <= self.MIN_FOV and mouse_wheel > 0 or \
            self.fov_angle >= self.MAX_FOV and mouse_wheel < 0:
             return
@@ -155,3 +157,25 @@ class Camera2D:
         elif self.fov_angle > self.MAX_FOV:
             self.fov_angle = self.MAX_FOV
         self._set_pos()
+
+
+class CameraMenu:
+    def __init__(self, camera, lens):
+        self.lens = lens
+        self.camera = camera
+        self.radius = 15
+        self.z = 0
+        self.x = 0
+        self.y = 0
+
+        self.lookat_angle = 0
+
+    def update_on_task_rotate(self, task):
+        self.lookat_angle += 0.001
+        self._set_pos()
+        return Task.cont
+
+    def _set_pos(self):
+        self.camera.setPos(self.x, self.y, self.z)
+        self.camera.lookAt(cos(self.lookat_angle), sin(self.lookat_angle), sin(self.lookat_angle))
+        #self.lens.setFov(self.fov_angle)

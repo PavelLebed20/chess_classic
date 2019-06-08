@@ -31,12 +31,15 @@ offline game against AI with chess board and figures skinning.
 * https://www.python.org/downloads/release/python-372/ - download python 3.7.2
 ### run commands:
 * python -m pip install --upgrade pip
-* pip install panda3d python_socketio psycopg2 smtplib validate_email py3DNS
+* pip install panda3d python_socketio psycopg2 smtplib validate_email requests
 ## Install sql server
 * https://www.openscg.com/postgresql/installers/- install PostgreSQL 11.2 
 * set mixed authorization mode
 * Run postgeSQL
 * run db/postgrs/install_full.py
+## Download archive
+* https://yadi.sk/d/E8n5qVb3lquqGw - link to a disk with installation archive
+
 # Git workflow
 * Main demonstration branch - *master*
 * Main coding branch - *develop*

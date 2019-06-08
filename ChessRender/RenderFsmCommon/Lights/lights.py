@@ -5,33 +5,47 @@ class Lights:
     def __init__(self, base, width, height):
         self.base = base
         self.width, self.height = width, height
-        self.direct_light = []
-        self.spot_light_node = []
-        self.point_light = []
-        self.ambient_light = None
-        self.setup_lights()
 
+        self.setup_lights()
+        self.light1 = self.init_light(0, -10, 20)
+       # self.light2 = self.init_light(0, 10, 20)
+
+        self.base.render.setLight(self.light1)
+       # self.base.render.setLight(self.light2)
+
+        self.base.render.setShaderAuto()
+
+    def init_light(self, x, y, z):
+        light = self.base.render.attachNewNode(Spotlight("Spot"))
+        light.node().setScene(self.base.render)
+        light.node().setShadowCaster(True, 1024 * 2, 1024 * 2)
+        light.node().getLens().setFov(35)
+        #light.node().showFrustum()
+        light.node().getLens().setNearFar(10, 30)
+        light.setPos(x, y, z)
+        light.lookAt(0, 0, 0)
+        return light
 
     def setup_lights(self):  # This function sets up some default lighting
         self.setup_ambient_light()
         #self.setup_point_light(3.5, -3.5, 2)
         #self.setup_point_light(3.5, 3.5, 2)
-        #self.setup_point_light(0, 0, 5)
+        #self.setup_point_light(0, 10, 10)
         #self.setup_point_light(0, -5, -5)
         #self.setup_point_light(-3.5, -3.5, 2)
-        self.setup_direct_light(0, 0, -1)
+        #self.setup_direct_light(0, 0, -1)
 
     def setup_ambient_light(self):
         ambientLight = AmbientLight("ambientLight")
-        ambientLight.setColor((.7, .7, .7, 1))
+        ambientLight.setColor((.7, .5, .4, 0.7))
         self.ambient_light = self.base.render.attachNewNode(ambientLight)
         self.base.render.setLight(self.base.render.attachNewNode(ambientLight))
 
-    def setup_direct_light(self, angle_1, angle_2, angle_3):
+    def setup_direct_light(self, angle_1, angle_2, angle_3, x, y, z):
         directionalLight = DirectionalLight("directionalLight")
         directionalLight.setDirection(LVector3(angle_1, angle_2, angle_3))
         directionalLight.setColor((0.6, 0.6, 0.6, 1))
-        directionalLight.setShadowCaster(True, self.width, self.height)
+        directionalLight.setShadowCaster(True, 2048, 2048)
         light = self.base.render.attachNewNode(directionalLight)
         self.direct_light.append(light)
         self.base.render.setLight(light)
@@ -58,13 +72,14 @@ class Lights:
     def unset(self):
         # turn off lights
         self.base.render.clearLight()
-        for light in self.direct_light:
-            light.removeNode()
+#        for light in self.direct_light:
+#            light.removeNode()
 
-        for light in self.spot_light_node:
-            light.removeNode()
+#        for light in self.spot_light_node:
+#            light.removeNode()
 
-        for light in self.point_light:
-            light.removeNode()
+#        for light in self.point_light:
+#            light.removeNode()
 
-        self.ambient_light.removeNode()
+        if self.ambient_light is not None:
+            self.ambient_light.removeNode()

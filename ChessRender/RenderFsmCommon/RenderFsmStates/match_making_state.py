@@ -5,9 +5,10 @@ from ChessRender.RenderFsmCommon.text_field_fsm import TextFieldFsm
 
 
 class FsmStateMatchmaking(ScreenState):
-    def __init__(self, process_find_player):
+    def __init__(self, process_find_player, render_fsm):
         ScreenState.__init__(self)
 
+        self.render_fsm_ref = render_fsm
         self.screen_atributes.buttons["but:Back"] = ButtonFsm("Back", (0, 0, -0.8))
         self.screen_atributes.buttons["but:Confirm"] = ButtonFsm("Confirm", (0, 0, -0.5))
 
@@ -20,6 +21,7 @@ class FsmStateMatchmaking(ScreenState):
         self.screen_atributes.screen_texts["scrtext:Addition time"] = ScreenTextFsm("Addition time:    ", (-0.85, 0.3))
         self.screen_atributes.screen_texts["scrtext:Min rate"] = ScreenTextFsm("Min rate:              ", (-0.85, 0.1))
         self.screen_atributes.screen_texts["scrtext:Max rate"] = ScreenTextFsm("Max rate:              ", (-0.85, -0.1))
+        self.screen_atributes.screen_texts["scrtext:My rate"] = ScreenTextFsm("Your's rate: {}".format(render_fsm.get_loacal_player_rating()), (-0.85, 0.8))
 
         self.initialize_button_links()
 
@@ -28,10 +30,12 @@ class FsmStateMatchmaking(ScreenState):
 
         self.process_matchmaking = process_find_player
 
+        self.render_fsm_ref.message = "Loading..."
+
     def initialize_button_links(self):
-        self.screen_atributes.buttons["but:Confirm"].add_link("fsm:Load")
+        self.screen_atributes.buttons["but:Confirm"].add_link("fsm:Message")
         self.screen_atributes.buttons["but:Confirm"].add_command(self.confirm_command)
-        self.screen_atributes.buttons["but:Back"].add_link("fsm:MainMenu")
+        self.screen_atributes.buttons["but:Back"].add_link("fsm:Matchmaking1Step")
 
     def confirm_command(self):
         process_matchmaking_arg = {"MatchTime": self.gui_text_fields["text_field_match_time"].get(),
